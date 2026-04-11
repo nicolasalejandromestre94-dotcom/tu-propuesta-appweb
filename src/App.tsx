@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, MessageCircle, Edit3, Eye, Image as ImageIcon, 
-  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload
+  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, LogOut, Lock
 } from 'lucide-react';
-import { BrowserRouter, Routes, Route, useParams, useNavigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
 // =====================================================================
-// 🚨 TUS LLAVES DE SUPABASE YA ESTÁN CONECTADAS ACÁ ABAJO 🚨
+// 🚨 TUS LLAVES DE SUPABASE
 // =====================================================================
 const supabaseUrl = 'https://pdyqdbmvhmqnzgoxtjfw.supabase.co';
 const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
@@ -15,15 +15,109 @@ const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function App() {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-zinc-900"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AdminDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/editar/:id" element={<AdminEditor />} />
+        <Route path="/" element={<Navigate to="/admin" replace />} />
+        
+        {/* RUTAS PROTEGIDAS (Solo vos podés entrar) */}
+        <Route path="/admin" element={session ? <AdminDashboard /> : <Login />} />
+        <Route path="/admin/editar/:id" element={session ? <AdminEditor /> : <Login />} />
+        
+        {/* RUTA PÚBLICA (La que le pasás al cliente) */}
         <Route path="/ver/:id" element={<VistaCliente />} />
       </Routes>
     </BrowserRouter>
+  );
+}
+
+// --- VISTA 0: LOGIN (NUEVO) ---
+function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) setError('Usuario o contraseña incorrectos');
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4 font-sans">
+      <div className="bg-white p-10 rounded-[3rem] border border-zinc-100 shadow-2xl w-full max-w-md">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-amber-600">
+            <Lock size={32} />
+          </div>
+          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic">STUDIO<span className="text-amber-600">.MUD</span></h1>
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mt-2">Acceso Privado</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          {error && <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold text-center border border-red-100">{error}</div>}
+          
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Email</label>
+            <input 
+              type="email" 
+              required
+              className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500 transition" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Contraseña</label>
+            <input 
+              type="password" 
+              required
+              className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500 transition" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition disabled:opacity-50 flex justify-center mt-8 shadow-xl shadow-zinc-200"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin text-white" /> : 'Ingresar'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -59,8 +153,12 @@ function AdminDashboard() {
   const borrarProyecto = async (id: string) => {
     if(window.confirm('¿Borrar propuesta definitivamente?')) {
       await supabase.from('proyectos').delete().eq('id', id);
-      fetchProyectos(); // Recargar la lista
+      fetchProyectos();
     }
+  };
+
+  const cerrarSesion = async () => {
+    await supabase.auth.signOut();
   };
 
   if (cargando) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
@@ -73,9 +171,14 @@ function AdminDashboard() {
             <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic">STUDIO<span className="text-amber-600">.MUD</span></h1>
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Gestor de Proyectos</p>
           </div>
-          <button onClick={nuevoProyecto} className="bg-zinc-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-zinc-800 transition shadow-xl shadow-zinc-200">
-            <Plus size={16} /> Nueva Propuesta
-          </button>
+          <div className="flex gap-4">
+            <button onClick={nuevoProyecto} className="bg-amber-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-amber-700 transition shadow-xl shadow-amber-200">
+              <Plus size={16} /> Nueva Propuesta
+            </button>
+            <button onClick={cerrarSesion} className="bg-zinc-200 text-zinc-600 px-4 py-3 rounded-2xl hover:bg-red-100 hover:text-red-600 transition" title="Cerrar Sesión">
+              <LogOut size={16} />
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -127,30 +230,25 @@ function AdminEditor() {
   }, [id]);
 
   const update = async (dataToUpdate: any) => {
-    setP((prev: any) => ({ ...prev, ...dataToUpdate })); // Actualiza la pantalla al instante
-    await supabase.from('proyectos').update(dataToUpdate).eq('id', id); // Lo guarda en la nube
+    setP((prev: any) => ({ ...prev, ...dataToUpdate }));
+    await supabase.from('proyectos').update(dataToUpdate).eq('id', id);
   };
 
-  // 🚀 SUBIR FOTO A SUPABASE STORAGE
   const handleFileUpload = async (e: any, tipo: string) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setSubiendo(prev => ({ ...prev, [tipo]: true }));
     const fileExt = file.name.split('.').pop();
-    const fileName = `${id}_${tipo}_${Math.random()}.${fileExt}`; // Nombre único
+    const fileName = `${id}_${tipo}_${Math.random()}.${fileExt}`;
 
     try {
-      // 1. Guardar la foto en el balde "proyectos"
       const { error: uploadError } = await supabase.storage.from('proyectos').upload(fileName, file);
-      
       if (uploadError) throw uploadError;
 
-      // 2. Pedirle a Supabase el Link público de la foto que acabamos de subir
       const { data } = supabase.storage.from('proyectos').getPublicUrl(fileName);
       const url = data.publicUrl;
 
-      // 3. Guardar el link en el proyecto
       if (tipo === 'obra') {
         update({ imagenes: { ...p.imagenes, obra: url } });
       } else {
@@ -191,20 +289,18 @@ function AdminEditor() {
               {copiado ? <Check size={16} className="inline mr-2"/> : <LinkIcon size={16} className="inline mr-2"/>}
               {copiado ? 'Copiado' : 'Copiar Link'}
             </button>
-            <Link to={`/ver/${id}`} target="_blank" className="flex-1 md:flex-none bg-amber-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-700 transition shadow-xl shadow-amber-600/30">
+            <Link to={`/ver/${id}`} target="_blank" className="flex-1 md:flex-none bg-zinc-900 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition shadow-xl shadow-zinc-200">
               <Eye size={18}/> Vista Cliente
             </Link>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* SECCIÓN VISUAL HÍBRIDA */}
           <div className="bg-white p-10 rounded-[3.5rem] border border-zinc-100 shadow-sm space-y-8">
             <h2 className="font-black text-[10px] uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-3">
               <ImageIcon size={18} className="text-amber-600"/> Archivos Visuales
             </h2>
             
-            {/* Foto Obra */}
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">Foto Obra Cruda</label>
               {p.imagenes.obra && (
@@ -219,7 +315,6 @@ function AdminEditor() {
               </div>
             </div>
 
-            {/* Foto Render */}
             <div className="space-y-4 pt-4 border-t border-zinc-100">
               <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest block">Render MUD</label>
               {p.imagenes.propuestas[0] && (
@@ -235,7 +330,6 @@ function AdminEditor() {
             </div>
           </div>
 
-          {/* DATOS */}
           <div className="bg-white p-10 rounded-[3.5rem] border border-zinc-100 shadow-sm space-y-8">
             <h2 className="font-black text-[10px] uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-3">
               <DollarSign size={18} className="text-amber-600"/> Presupuesto & Datos

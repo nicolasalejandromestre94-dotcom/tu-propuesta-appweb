@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  CheckCircle2, MessageCircle, Edit3, Eye, Image as ImageIcon, 
+  CheckCircle2, MessageCircle, Edit3, Eye, EyeOff, Image as ImageIcon, 
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, LogOut, Lock
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
@@ -40,21 +40,22 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/admin" replace />} />
         
-        {/* RUTAS PROTEGIDAS (Solo vos podés entrar) */}
+        {/* RUTAS PROTEGIDAS */}
         <Route path="/admin" element={session ? <AdminDashboard /> : <Login />} />
         <Route path="/admin/editar/:id" element={session ? <AdminEditor /> : <Login />} />
         
-        {/* RUTA PÚBLICA (La que le pasás al cliente) */}
+        {/* RUTA PÚBLICA */}
         <Route path="/ver/:id" element={<VistaCliente />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
-// --- VISTA 0: LOGIN (NUEVO) ---
+// --- VISTA 0: LOGIN ---
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -99,13 +100,22 @@ function Login() {
           
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Contraseña</label>
-            <input 
-              type="password" 
-              required
-              className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500 transition" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <div className="relative">
+              <input 
+                type={mostrarPassword ? "text" : "password"} 
+                required
+                className="w-full bg-zinc-50 border-none p-4 pr-12 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500 transition" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+              />
+              <button 
+                type="button"
+                onClick={() => setMostrarPassword(!mostrarPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-amber-600 transition"
+              >
+                {mostrarPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, MessageCircle, Edit3, Eye, Image as ImageIcon, 
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, LogOut, Lock, ArrowLeftRight, ChevronRight
@@ -138,28 +138,34 @@ function AdminDashboard() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {proyectos.map(p => {
-            const primerEnv = p.ambientes?.[0] || {};
-            const thumb = primerEnv.render || primerEnv.obra || "";
-            return (
-              <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 overflow-hidden hover:shadow-2xl transition-all duration-500 group">
-                <div className="h-48 bg-zinc-100 relative">
-                  {thumb ? <img src={thumb} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Vista" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 italic text-xs">Sin imagen</div>}
-                  <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-900 shadow-sm">{p.cliente}</div>
-                </div>
-                <div className="p-8">
-                  <h3 className="font-black text-xl leading-tight mb-2 tracking-tight text-zinc-900">{primerEnv.titulo || "Carpeta sin título"}</h3>
-                  <p className="text-xs text-zinc-400 font-bold mb-6">{p.ambientes?.length} {p.ambientes?.length === 1 ? 'Ambiente' : 'Ambientes'}</p>
-                  <div className="flex justify-between items-center pt-6 border-t border-zinc-50">
-                    <Link to={`/admin/editar/${p.id}`} className="text-amber-600 font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 hover:opacity-70"><Edit3 size={14}/> Editar</Link>
-                    <button onClick={() => { if(window.confirm('¿Borrar carpeta?')) supabase.from('proyectos').delete().eq('id', p.id).then(fetchProyectos); }} className="text-zinc-200 hover:text-red-500"><Trash2 size={20}/></button>
+        {proyectos.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-200">
+            <p className="text-zinc-400 font-bold">Aún no hay proyectos. ¡Creá tu primera carpeta!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {proyectos.map(p => {
+              const primerEnv = p.ambientes?.[0] || {};
+              const thumb = primerEnv.render || primerEnv.obra || "";
+              return (
+                <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 overflow-hidden hover:shadow-2xl transition-all duration-500 group">
+                  <div className="h-48 bg-zinc-100 relative">
+                    {thumb ? <img src={thumb} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Vista" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 italic text-xs">Sin imagen</div>}
+                    <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-900 shadow-sm">{p.cliente}</div>
+                  </div>
+                  <div className="p-8">
+                    <h3 className="font-black text-xl leading-tight mb-2 tracking-tight text-zinc-900">{primerEnv.titulo || "Carpeta sin título"}</h3>
+                    <p className="text-xs text-zinc-400 font-bold mb-6">{p.ambientes?.length} {p.ambientes?.length === 1 ? 'Ambiente' : 'Ambientes'}</p>
+                    <div className="flex justify-between items-center pt-6 border-t border-zinc-50">
+                      <Link to={`/admin/editar/${p.id}`} className="text-amber-600 font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 hover:opacity-70"><Edit3 size={14}/> Editar</Link>
+                      <button onClick={() => { if(window.confirm('¿Borrar carpeta?')) supabase.from('proyectos').delete().eq('id', p.id).then(fetchProyectos); }} className="text-zinc-200 hover:text-red-500"><Trash2 size={20}/></button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -387,19 +393,20 @@ function VistaCliente() {
 
   useEffect(() => {
     if (!id) return;
-    const unsubscribe = onSnapshot(doc(db, 'proyectos', id), (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
+    // Solución del error: Fetch directo a Supabase (sin onSnapshot de Firebase)
+    const fetchProyecto = async () => {
+      const { data } = await supabase.from('proyectos').select('*').eq('id', id).single();
+      if (data) {
         setP(data);
         if (data.configuracion?.cantAmbientes > 1 && data.configuracion?.navegacion === 'index') {
           setShowIndex(true);
         }
       }
-    });
-    return () => unsubscribe();
+    };
+    fetchProyecto();
   }, [id]);
 
-  // Hook simple para animar al scrollear
+  // Hook para animar al scrollear (Efecto Apple)
   useEffect(() => {
     if(!p || showIndex) return;
     const observer = new IntersectionObserver((entries) => {
@@ -491,7 +498,7 @@ function VistaCliente() {
               </div>
             )}
 
-            {/* SLIDER MAGICO COMPONENTE */}
+            {/* SLIDER MÁGICO */}
             <div className="relative aspect-[4/5] w-full mb-5 mt-2">
               <SliderAntesDespues env={env} activeTab={activeTab} />
             </div>
@@ -558,7 +565,7 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
     setTimeout(() => setVal(30), 650);
     setTimeout(() => setVal(50), 1100);
     setTimeout(() => setAnim(''), 1550);
-  }, [activeTab]); // Se ejecuta cada vez que cambia el tab
+  }, [activeTab]); // Se ejecuta al cambiar ambiente
 
   const handleDrag = (e: any) => { setAnim(''); setVal(e.target.value); };
   const snap = (v: number) => { setAnim('transition-all duration-300 ease-out'); setVal(v); setTimeout(() => setAnim(''), 300); };
@@ -568,10 +575,10 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <img src={imgDer} className="absolute inset-0 w-full h-full object-cover" />
+      <img src={imgDer || "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800"} className="absolute inset-0 w-full h-full object-cover" />
       
       <div className={`absolute top-0 left-0 h-full overflow-hidden ${anim}`} style={{ width: `${val}%` }}>
-        <img src={imgIzq} className="absolute top-0 left-0 w-[100vw] h-full object-cover max-w-none md:w-[400px]" />
+        <img src={imgIzq || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"} className="absolute top-0 left-0 w-[100vw] h-full object-cover max-w-none md:w-[400px]" />
       </div>
       
       <div className={`absolute top-0 bottom-0 w-[3px] bg-white z-10 -translate-x-1/2 shadow-[0_0_10px_rgba(0,0,0,0.3)] ${anim}`} style={{ left: `${val}%` }}>
@@ -584,8 +591,8 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
       <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
 
       <div className="absolute bottom-6 left-6 flex bg-white/90 backdrop-blur-md p-1 rounded-full shadow-xl border border-white z-30 pointer-events-auto">
-        <button onClick={()=>snap(100)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white' : 'text-zinc-500'}`}>{env.lblIzq}</button>
-        <button onClick={()=>snap(0)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white' : 'text-zinc-500'}`}>{env.lblDer}</button>
+        <button onClick={()=>snap(100)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white' : 'text-zinc-500'}`}>{env.lblIzq || 'Antes'}</button>
+        <button onClick={()=>snap(0)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white' : 'text-zinc-500'}`}>{env.lblDer || 'Render'}</button>
       </div>
     </div>
   );

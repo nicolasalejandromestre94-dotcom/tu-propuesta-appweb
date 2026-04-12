@@ -154,7 +154,6 @@ function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {proyectos.map(p => {
               const primerEnv = p.ambientes?.[0] || {};
-              // Fallback para imágenes viejas
               const thumbObra = primerEnv.galeriaObra?.[0] || primerEnv.obra || "";
               const thumbRender = primerEnv.galeriaRender?.[0] || primerEnv.render || "";
               const thumb = thumbRender || thumbObra;
@@ -162,7 +161,7 @@ function AdminDashboard() {
               return (
                 <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 overflow-hidden hover:shadow-2xl transition-all duration-500 group">
                   <div className="h-48 bg-zinc-100 relative">
-                    {thumb ? <img src={thumb} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Vista" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 italic text-xs">Sin imagen</div>}
+                    {thumb ? <img src={thumb} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" alt="Vista" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 italic text-xs">Sin imagen</div>}
                     <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-900 shadow-sm">{p.cliente}</div>
                   </div>
                   <div className="p-8">
@@ -234,7 +233,6 @@ function AdminEditor() {
     setActiveTab(0);
   };
 
-  // MANEJO DE GALERÍAS MÚLTIPLES
   const handleFileUpload = async (e: any, tipo: 'obra' | 'render') => {
     const files = Array.from(e.target.files as FileList);
     if (!files.length) return;
@@ -258,7 +256,6 @@ function AdminEditor() {
     }
 
     if (nuevasUrls.length > 0) {
-      // Manejamos retrocompatibilidad por las dudas
       const arrName = tipo === 'obra' ? 'galeriaObra' : 'galeriaRender';
       const fallbackOldStr = tipo === 'obra' ? p.ambientes[activeTab].obra : p.ambientes[activeTab].render;
       
@@ -277,12 +274,10 @@ function AdminEditor() {
   const env = p.ambientes[activeTab] || {};
   const c = p.configuracion;
 
-  // Lógica para mostrar la galería visualmente en el admin
   const renderGaleriaAdmin = (tipo: 'obra' | 'render') => {
     const isObra = tipo === 'obra';
     const arrField = isObra ? 'galeriaObra' : 'galeriaRender';
     
-    // Retrocompatibilidad si tienen datos viejos
     let fotos = env[arrField];
     if (!fotos && env[tipo]) fotos = [env[tipo]];
     if (!fotos) fotos = [];
@@ -306,7 +301,8 @@ function AdminEditor() {
         <div className="flex flex-wrap gap-3">
           {fotos.map((url: string, i: number) => (
             <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group shadow-sm ring-1 ring-black/5">
-              <img src={url} className="w-full h-full object-cover" />
+              {/* Bug 3 Corregido: object-center para que la miniatura no se deforme feo */}
+              <img src={url} className="w-full h-full object-cover object-center" />
               <button onClick={() => {
                 const nuevas = fotos.filter((_:any, idx:number) => idx !== i);
                 updateEnv(arrField, nuevas);
@@ -341,7 +337,6 @@ function AdminEditor() {
           </div>
         </header>
 
-        {/* CONFIG GENERAL */}
         <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none"></div>
           <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Configuración de Carpeta</h2>
@@ -382,7 +377,6 @@ function AdminEditor() {
           </div>
         </div>
 
-        {/* GESTOR MULTI AMBIENTE */}
         <div>
           <div className="flex justify-between items-end mb-4">
             <h2 className="text-xl font-black text-zinc-900">Editor de Ambientes</h2>
@@ -404,7 +398,6 @@ function AdminEditor() {
               <button onClick={() => removeAmbiente(activeTab)} className="absolute top-6 right-6 text-zinc-300 hover:text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={16}/></button>
             )}
 
-            {/* INPUTS CLARAMENTE EDITABLES */}
             <div className="grid grid-cols-2 gap-6">
               {c.cantAmbientes === 2 && (
                 <div>
@@ -418,11 +411,9 @@ function AdminEditor() {
               </div>
             </div>
 
-            {/* FOTOS GALERÍA Y SLIDER */}
             <div className="pt-6 border-t border-zinc-100">
               <h3 className="text-[10px] font-black uppercase text-zinc-400 mb-4">Fotos & Slider interactivo</h3>
               
-              {/* Botones del slider editables */}
               <div className="grid grid-cols-2 gap-6 mb-8 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
                 <div>
                   <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Texto Botón Izquierdo</label>
@@ -435,7 +426,16 @@ function AdminEditor() {
               </div>
 
               <div className="relative">
-                <button onClick={() => updateEnv('invertido', !env.invertido)} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-zinc-200 shadow-xl rounded-full p-3 text-zinc-400 hover:text-amber-600 hover:border-amber-400 z-10 hover:scale-110 active:scale-95 transition-all flex flex-col items-center" title="Invertir Posición Izq/Der">
+                {/* Bug 2 Corregido: Ahora cruza las letras además de la foto */}
+                <button onClick={() => {
+                  const nuevosAmb = [...p.ambientes];
+                  const ambiente = nuevosAmb[activeTab];
+                  ambiente.invertido = !ambiente.invertido;
+                  const tempLbl = ambiente.lblIzq;
+                  ambiente.lblIzq = ambiente.lblDer;
+                  ambiente.lblDer = tempLbl;
+                  updateGlobal({ ambientes: nuevosAmb });
+                }} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-zinc-200 shadow-xl rounded-full p-3 text-zinc-400 hover:text-amber-600 hover:border-amber-400 z-10 hover:scale-110 active:scale-95 transition-all flex flex-col items-center" title="Invertir Posición Izq/Der">
                   <ArrowLeftRight size={20}/>
                 </button>
 
@@ -446,7 +446,6 @@ function AdminEditor() {
               </div>
             </div>
 
-            {/* PRESUPUESTO EDITABLE */}
             <div className="pt-6 border-t border-zinc-100">
               <h3 className="text-[10px] font-black uppercase text-zinc-400 mb-4">Presupuesto en {c.moneda}</h3>
               <div className="mb-6">
@@ -524,7 +523,6 @@ function VistaCliente() {
   const env = p.ambientes[activeTab] || {};
   const isMultiple = c.cantAmbientes > 1;
 
-  // Calculo Inteligente de Total
   let totalSuma = 0;
   if (isMultiple) {
     totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0);
@@ -539,7 +537,6 @@ function VistaCliente() {
     <div className="min-h-screen bg-zinc-950 flex justify-center items-start md:py-10 font-sans">
       <div className="w-full max-w-md bg-white min-h-screen md:min-h-[90vh] md:rounded-[3rem] overflow-hidden flex flex-col shadow-[0_50px_100px_rgba(0,0,0,0.9)] relative">
         
-        {/* HEADER OSCURO */}
         <div className={`bg-[#111111] pt-6 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'}`}>
           <header className="flex justify-between items-center mb-4 px-2">
             <h1 className="font-black text-[26px] tracking-tighter italic text-white leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
@@ -548,7 +545,6 @@ function VistaCliente() {
             </span>
           </header>
           
-          {/* TABS VISUALES */}
           {isMultiple && !showIndex && c.navegacion === 'tabs' && (
             <div className="flex overflow-x-auto gap-1.5 items-end hide-scroll">
               {p.ambientes.map((a:any, i:number) => (
@@ -560,21 +556,19 @@ function VistaCliente() {
           )}
         </div>
 
-        {/* PANTALLA: ÍNDICE */}
         {showIndex && (
           <div className="flex-1 bg-zinc-50 overflow-y-auto p-6 pt-10">
             <h2 className="text-3xl font-black text-zinc-900 tracking-tight leading-tight mb-2">Proyecto<br/>{p.cliente}</h2>
             <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
             <div className="space-y-4">
               {p.ambientes.map((a:any, i:number) => {
-                // Sacar imagen principal de la galería correspondiente
                 const fotosParaThumb = a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]);
                 const imgThumb = fotosParaThumb[0] || "";
                 
                 return (
                   <div key={i} onClick={() => selectEnvFromIndex(i)} className="bg-white rounded-3xl p-3 border border-zinc-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-amber-300 transition-colors group">
                     <div className="w-20 h-20 rounded-2xl bg-zinc-100 overflow-hidden shrink-0 ring-1 ring-black/5">
-                      {imgThumb && <img src={imgThumb} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />}
+                      {imgThumb && <img src={imgThumb} className="w-full h-full object-cover object-center group-hover:scale-110 transition duration-500" />}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-black text-lg text-zinc-900">{a.tab}</h3>
@@ -588,7 +582,6 @@ function VistaCliente() {
           </div>
         )}
 
-        {/* PANTALLA: DETALLE AMBIENTE */}
         {!showIndex && (
           <div className="flex-1 overflow-y-auto bg-white pb-32 hide-scroll scroll-smooth">
             
@@ -600,7 +593,6 @@ function VistaCliente() {
               </div>
             )}
 
-            {/* SLIDER MÁGICO CON GALERÍAS INDEPENDIENTES */}
             <div className="relative aspect-[4/5] w-full mb-5 mt-2 px-2">
               <SliderAntesDespues env={env} activeTab={activeTab} />
             </div>
@@ -640,7 +632,6 @@ function VistaCliente() {
           </div>
         )}
 
-        {/* FOOTER WPP */}
         <div className="absolute bottom-0 w-full p-4 bg-white/95 backdrop-blur-md border-t border-zinc-100 z-30">
           <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta del proyecto y quiero avanzar.`} target="_blank" rel="noreferrer" className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
@@ -655,7 +646,7 @@ function VistaCliente() {
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO CON SOPORTE PARA GALERÍAS ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO CON SOPORTE PARA GALERÍAS CORREGIDO ---
 function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
@@ -663,7 +654,6 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
   const [idxDer, setIdxDer] = useState(0);
 
   useEffect(() => {
-    // Resetear galerías y hacer animación inicial suave
     setIdxIzq(0); setIdxDer(0);
     setAnim('transition-all duration-[450ms] cubic-bezier(0.25, 1, 0.5, 1)');
     setTimeout(() => setVal(70), 200);
@@ -675,7 +665,6 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
   const handleDrag = (e: any) => { setAnim(''); setVal(e.target.value); };
   const snap = (v: number) => { setAnim('transition-all duration-300 ease-out'); setVal(v); setTimeout(() => setAnim(''), 300); };
 
-  // Construir arrays seguros
   let baseArrObra = env.galeriaObra || [];
   if (baseArrObra.length === 0 && env.obra) baseArrObra = [env.obra];
   let baseArrRender = env.galeriaRender || [];
@@ -697,10 +686,10 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
       
       {/* FONDO (Derecha) */}
       <div className="absolute inset-0 w-full h-full">
-        <img src={imgDer} className="w-full h-full object-cover" />
-        {/* Navegación Fondo */}
+        <img src={imgDer} className="w-full h-full object-cover object-center" />
+        {/* Bug 1 Corregido: z-30 para las flechas */}
         {arrDer.length > 1 && (
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-30">
             <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
             <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronRight size={18}/></button>
             <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest">{idxDer+1}/{arrDer.length}</div>
@@ -710,10 +699,10 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
       
       {/* FRENTE (Izquierda, Recortado) */}
       <div className={`absolute top-0 left-0 h-full overflow-hidden ${anim}`} style={{ width: `${val}%` }}>
-        <img src={imgIzq} className="absolute top-0 left-0 w-[100vw] h-full object-cover max-w-none md:w-[400px]" />
-        {/* Navegación Frente */}
+        <img src={imgIzq} className="absolute top-0 left-0 w-[100vw] h-full object-cover object-center max-w-none md:w-[400px]" />
+        {/* Bug 1 Corregido: z-30 para las flechas */}
         {arrIzq.length > 1 && (
-          <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px]">
+          <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px] z-30">
             <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
             <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronRight size={18}/></button>
             <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest">{idxIzq+1}/{arrIzq.length}</div>

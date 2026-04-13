@@ -487,12 +487,101 @@ function AdminEditor() {
   );
 }
 
-// --- VISTA 3: CLIENTE (SIMULADOR CELULAR REAL CON GALERÍAS) ---
+// =====================================================================
+// 🕵️ MOTOR ESPÍA (ANALYTICS HOOK)
+// =====================================================================
+function useAnalytics(proyectoId: string, ambienteTab: string) {
+  // Generamos un ID único de sesión cada vez que el cliente abre el link
+  const [sessionId] = useState(() => crypto.randomUUID());
+  
+  // Usamos refs para no re-renderizar a cada rato
+  const maxScroll = useRef(0);
+  const sliderMovs = useRef(0);
+
+  // Recopila el contexto (Fingerprinting básico)
+  const getContext = () => {
+    return {
+      userAgent: navigator.userAgent,
+      pantalla: `${window.innerWidth}x${window.innerHeight}`,
+      idioma: navigator.language,
+      // La IP real y la geo la procesará Supabase de fondo o en el panel
+      plataforma: navigator.platform
+    };
+  };
+
+  const logEvent = async (tipo: string, detalle = {}) => {
+    if (!proyectoId) return;
+    try {
+      await supabase.from('eventos_analitica').insert([{
+        proyecto_id: proyectoId,
+        sesion_id: sessionId,
+        tipo: tipo,
+        detalle: { ...detalle, ambiente: ambienteTab },
+        contexto: getContext()
+      }]);
+    } catch(e) {
+      console.error('Error silencioso de analytics', e);
+    }
+  };
+
+  // Evento de Inicio y Fin de sesión
+  useEffect(() => {
+    logEvent('SESSION_START', { url: window.location.href });
+    
+    const handleUnload = () => {
+      logEvent('SESSION_END', { scroll_max: maxScroll.current, slider_total: sliderMovs.current });
+    };
+    
+    // Detectamos cuando cierra la pestaña
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      handleUnload();
+    }
+  }, [proyectoId, ambienteTab]);
+
+  // Sensor de Clics y Coordenadas X, Y
+  const trackClick = (zona: string, e: React.MouseEvent, materialNombre?: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    // Calculamos el porcentaje exacto (X, Y) dentro de la zona
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    
+    logEvent('CLICK_ZONA', { zona, x, y, material: materialNombre });
+  };
+
+  // Sensor de Scroll
+  const trackScroll = (e: any) => {
+    const el = e.target;
+    const pct = Math.round((el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100);
+    if (pct > maxScroll.current) {
+      maxScroll.current = pct;
+      // Guardamos hitos de scroll (25%, 50%, 75%, 100%)
+      if (pct === 25 || pct === 50 || pct === 75 || pct === 100) {
+        logEvent('SCROLL_DEPTH', { depth: pct });
+      }
+    }
+  };
+
+  // Sensor del Slider
+  const trackSliderMove = () => { sliderMovs.current++; };
+
+  return { trackClick, trackScroll, trackSliderMove, logEvent };
+}
+
+
+// --- VISTA 3: CLIENTE (SIMULADOR CELULAR REAL CON GALERÍAS Y ESPÍA) ---
 function VistaCliente() {
   const { id } = useParams();
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
+
+  // 🔌 CONECTAMOS EL ESPÍA AL PROYECTO ACTUAL
+  const { trackClick, trackScroll, trackSliderMove, logEvent } = useAnalytics(
+    id || '', 
+    p?.ambientes?.[activeTab]?.tab || 'Global'
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -583,7 +672,7 @@ function VistaCliente() {
         )}
 
         {!showIndex && (
-          <div className="flex-1 overflow-y-auto bg-white pb-32 hide-scroll scroll-smooth">
+          <div onScroll={trackScroll} className="flex-1 overflow-y-auto bg-white pb-32 hide-scroll scroll-smooth relative">
             
             {isMultiple && c.navegacion === 'index' && (
               <div className="px-4 pt-4 pb-2">
@@ -593,8 +682,9 @@ function VistaCliente() {
               </div>
             )}
 
-            <div className="relative aspect-[4/5] w-full mb-5 mt-2 px-2">
-              <SliderAntesDespues env={env} activeTab={activeTab} />
+            {/* ZONA 1: RENDER Y SLIDER */}
+            <div onClick={(e) => trackClick('Z1_RENDER', e)} className="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default">
+              <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} />
             </div>
 
             <div className="px-6 mb-6 reveal-elem opacity-0 translate-y-4 transition-all duration-500">
@@ -603,14 +693,15 @@ function VistaCliente() {
             </div>
 
             <div className="px-6 space-y-3">
-              <div className="bg-[#1a1a1a] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100">
-                <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
+              {/* ZONA 2: PRECIO E INVERSIÓN */}
+              <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-[#1a1a1a] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100 cursor-default active:scale-[0.98]">
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] mb-1">Costo de este Ambiente</p>
                 <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-amber-500 font-black text-sm">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
-                  <p className="text-4xl font-black tracking-tighter text-white">{env.total}</p>
+                  <p className="text-4xl font-black tracking-tighter text-white pointer-events-none">{env.total}</p>
                 </div>
-                <div className="space-y-2 border-t border-zinc-800 pt-4">
+                <div className="space-y-2 border-t border-zinc-800 pt-4 pointer-events-none">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-zinc-400 font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>{env.lbl1}</span>
                     <span className="font-black text-amber-500">{env.val1}</span>
@@ -623,7 +714,7 @@ function VistaCliente() {
               </div>
 
               {isMultiple && (
-                <div className="bg-[#FAF8F5] border border-[#E8E2D9] rounded-2xl p-5 flex justify-between items-center shadow-sm reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-200">
+                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-[#FAF8F5] border border-[#E8E2D9] rounded-2xl p-5 flex justify-between items-center shadow-sm reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-200">
                   <span className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.2em]">Total Proyecto</span>
                   <span className="text-zinc-900 font-black text-lg">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
                 </div>
@@ -633,7 +724,13 @@ function VistaCliente() {
         )}
 
         <div className="absolute bottom-0 w-full p-4 bg-white/95 backdrop-blur-md border-t border-zinc-100 z-30">
-          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta del proyecto y quiero avanzar.`} target="_blank" rel="noreferrer" className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
+          <a 
+            href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta del proyecto y quiero avanzar.`} 
+            target="_blank" 
+            rel="noreferrer" 
+            onClick={() => logEvent('WPP_CLICK', { action: 'Intento de Contacto' })}
+            className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform"
+          >
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
         </div>
@@ -646,8 +743,8 @@ function VistaCliente() {
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO CON SOPORTE PARA GALERÍAS CORREGIDO ---
-function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number }) {
+// --- SUB-COMPONENTE: SLIDER MÁGICO CON SENSOR ---
+function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, activeTab: number, onSliderMove: () => void }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
   const [idxIzq, setIdxIzq] = useState(0);
@@ -662,8 +759,18 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
     setTimeout(() => setAnim(''), 1550);
   }, [activeTab]);
 
-  const handleDrag = (e: any) => { setAnim(''); setVal(e.target.value); };
-  const snap = (v: number) => { setAnim('transition-all duration-300 ease-out'); setVal(v); setTimeout(() => setAnim(''), 300); };
+  const handleDrag = (e: any) => { 
+    setAnim(''); 
+    setVal(e.target.value); 
+    // Notificamos al espía cada vez que arrastran el slider
+    onSliderMove();
+  };
+  const snap = (v: number) => { 
+    setAnim('transition-all duration-300 ease-out');
+    setVal(v); 
+    onSliderMove();
+    setTimeout(() => setAnim(''), 300); 
+  };
 
   let baseArrObra = env.galeriaObra || [];
   if (baseArrObra.length === 0 && env.obra) baseArrObra = [env.obra];
@@ -682,12 +789,11 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-md border-4 border-white ring-1 ring-black/5">
+    <div className="relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-md border-4 border-white ring-1 ring-black/5 cursor-default pointer-events-auto">
       
       {/* FONDO (Derecha) */}
-      <div className="absolute inset-0 w-full h-full">
+      <div className="absolute inset-0 w-full h-full pointer-events-none">
         <img src={imgDer} className="w-full h-full object-cover object-center" />
-        {/* Bug 1 Corregido: z-30 para las flechas */}
         {arrDer.length > 1 && (
           <div className="absolute inset-0 pointer-events-none z-30">
             <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
@@ -698,9 +804,8 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
       </div>
       
       {/* FRENTE (Izquierda, Recortado) */}
-      <div className={`absolute top-0 left-0 h-full overflow-hidden ${anim}`} style={{ width: `${val}%` }}>
+      <div className={`absolute top-0 left-0 h-full overflow-hidden pointer-events-none ${anim}`} style={{ width: `${val}%` }}>
         <img src={imgIzq} className="absolute top-0 left-0 w-[100vw] h-full object-cover object-center max-w-none md:w-[400px]" />
-        {/* Bug 1 Corregido: z-30 para las flechas */}
         {arrIzq.length > 1 && (
           <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px] z-30">
             <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
@@ -722,8 +827,8 @@ function SliderAntesDespues({ env, activeTab }: { env: any, activeTab: number })
 
       {/* PÍLDORA DE BOTONES */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex bg-white/95 backdrop-blur-md p-1 rounded-full shadow-xl border border-zinc-200 z-30 pointer-events-auto">
-        <button onClick={()=>snap(100)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblIzq || 'Antes'}</button>
-        <button onClick={()=>snap(0)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblDer || 'Render'}</button>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblIzq || 'Antes'}</button>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblDer || 'Render'}</button>
       </div>
     </div>
   );

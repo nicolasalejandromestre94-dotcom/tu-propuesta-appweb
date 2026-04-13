@@ -43,7 +43,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
+     <Routes>
         <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/admin" element={session ? <AdminDashboard /> : <Login />} />
         <Route path="/admin/editar/:id" element={session ? <AdminEditor /> : <Login />} />

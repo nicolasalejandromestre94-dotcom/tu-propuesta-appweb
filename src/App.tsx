@@ -47,6 +47,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/admin" element={session ? <AdminDashboard /> : <Login />} />
         <Route path="/admin/editar/:id" element={session ? <AdminEditor /> : <Login />} />
+        <Route path="/admin/analytics/:id" element={session ? <AdminAnalytics /> : <Login />} />
         <Route path="/ver/:id" element={<VistaCliente />} />
       </Routes>
     </BrowserRouter>
@@ -333,6 +334,9 @@ function AdminEditor() {
               }} 
               className="px-4 py-2 bg-zinc-100 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-200 transition"
             >{copiado ? '¡Copiado!' : 'Copiar Link'}</button>
+            <Link to={`/admin/analytics/${id}`} className="px-4 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
+           <Eye size={14}/> Analíticas
+         </Link>
             <Link to={`/ver/${id}`} target="_blank" className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md hover:bg-amber-700 transition"><Eye size={14}/> Ver App</Link>
           </div>
         </header>
@@ -829,6 +833,174 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex bg-white/95 backdrop-blur-md p-1 rounded-full shadow-xl border border-zinc-200 z-30 pointer-events-auto">
         <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblIzq || 'Antes'}</button>
         <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblDer || 'Render'}</button>
+      </div>
+    </div>
+  );
+}
+
+
+// =====================================================================
+// 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS)
+// =====================================================================
+function AdminAnalytics() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [p, setP] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchData = async () => {
+      const { data: proyecto } = await supabase.from('proyectos').select('*').eq('id', id).single();
+      if (proyecto) setP(proyecto);
+    };
+    fetchData();
+  }, [id]);
+
+  if (!p) return <div className="min-h-screen flex items-center justify-center bg-zinc-900"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
+
+  const env = p.ambientes[activeTab] || {};
+  
+  const mockD = {
+    scroll: "100%", slider: "28", friccion: "5",
+    espectadores: [
+        { id: "e1", rol: "Titular", disp: "iPhone 15 Pro", geo: "Nordelta, PBA", isp: "Fibertel", red: "Wi-Fi", bat: "85%", status: "Online", statusClass: "text-green-600 bg-green-100" },
+        { id: "e2", rol: "Secundario", disp: "MacBook Air", geo: "Palermo, CABA", isp: "iPlan", red: "Wi-Fi", bat: "100%", status: "Hace 5m", statusClass: "text-zinc-500 bg-zinc-100" }
+    ],
+    variantes: [ { n: "Madera Natural", c: 12 }, { n: "Blanco Puro", c: 2 } ],
+    wppEstado: "Dudó en Comprar", wppDesc: "Tocó 'Aprobar' pero cerró WhatsApp sin enviar.",
+    z1: { t: "04:15", c: 28, dots: [{x:50,y:85,c:'dot-red'},{x:45,y:85,c:'dot-orange'},{x:70,y:40,c:'dot-yellow'}] },
+    z2: { t: "01:10", c: 5, dots: [{x:70,y:50,c:'dot-red'},{x:75,y:55,c:'dot-red'},{x:65,y:45,c:'dot-orange'}] },
+    z3: { t: "03:05", c: 12, dots: [{x:30,y:50,c:'dot-red'},{x:35,y:45,c:'dot-orange'}] },
+    aiPerfil: "Fricción por Precio", aiDiag: "Alta viralidad (2 IPs). Validaron los renders pero dudaron en el precio.", aiJugada: "Ofrecer financiación."
+  };
+
+  const renderDots = (dots: any[]) => dots.map((d, i) => (
+    <div key={i} className={`absolute rounded-full pointer-events-none mix-blend-screen -translate-x-1/2 -translate-y-1/2 ${d.c === 'dot-red' ? 'bg-[radial-gradient(circle,rgba(255,50,50,1)_0%,rgba(255,50,50,0)_70%)] w-14 h-14' : d.c === 'dot-orange' ? 'bg-[radial-gradient(circle,rgba(255,120,0,0.9)_0%,rgba(255,120,0,0)_70%)] w-11 h-11' : 'bg-[radial-gradient(circle,rgba(255,200,0,0.8)_0%,rgba(255,200,0,0)_70%)] w-10 h-10'}`} style={{ left: `${d.x}%`, top: `${d.y}%` }} />
+  ));
+
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-start p-8 overflow-x-hidden bg-zinc-100 font-sans">
+      <div className="w-full max-w-[1250px] mb-4 flex justify-between items-end border-b border-zinc-200 pb-4">
+        <div>
+          <button onClick={() => navigate(`/admin/editar/${id}`)} className="text-zinc-400 hover:text-zinc-900 font-black text-[10px] uppercase tracking-widest mb-2"><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
+          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic leading-none">STUDIO<span className="text-amber-600">.MUD</span></h1>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Centro de Comando Analítico</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="bg-white border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">Descargar CSV</button>
+        </div>
+      </div>
+
+      <div className="w-full max-w-[1250px] flex flex-col lg:flex-row gap-6">
+        
+        {/* COLUMNA 1: CELULAR */}
+        <div className="w-[360px] shrink-0 flex flex-col h-[812px]">
+          <div className="w-full h-full bg-white border-[10px] border-zinc-900 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-5 bg-zinc-900 rounded-b-2xl z-50"></div>
+            <div className="bg-[#111111] pt-8 pb-0 px-4 relative z-50 flex flex-col">
+              <div className="mb-4">
+                <h1 className="font-black text-lg text-white leading-none">{p.cliente}</h1>
+                <p className="text-[8px] text-amber-500 uppercase tracking-widest font-bold mt-1">Análisis Visual en vivo</p>
+              </div>
+              <div className="flex overflow-x-auto gap-1 items-end hide-scroll">
+                {p.ambientes.map((a:any, i:number) => (
+                  <button key={i} onClick={() => setActiveTab(i)} className={`shrink-0 px-4 py-2.5 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-white text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>{a.tab || `Ambiente ${i+1}`}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 bg-zinc-50 relative hide-scroll overflow-y-auto pb-10">
+              <div className="relative w-full h-[320px] mb-4">
+                <div className="absolute inset-0 bg-zinc-100 rounded-b-[1.5rem] overflow-hidden">
+                  <img src={env.obra || env.galeriaObra?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'} className="w-full h-full object-cover" />
+                </div>
+                <div className="absolute inset-0 z-40 pointer-events-none bg-black/50 backdrop-blur-[2px] rounded-b-[1.5rem] border border-white/5 transition-all">
+                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-lg p-2 flex flex-col shadow-lg border-l-2 border-blue-500">
+                    <span className="text-[7px] font-black uppercase text-blue-300 tracking-widest">Z1: Render</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5"><span className="text-sm font-black text-white">{mockD.z1.t}</span><span className="text-[9px] font-bold text-zinc-300">• {mockD.z1.c} clics</span></div>
+                  </div>
+                  {renderDots(mockD.z1.dots)}
+                </div>
+              </div>
+              
+              <div className="px-6 mb-4"><h2 className="text-xl font-black text-zinc-900 italic opacity-20">{env.titulo}</h2></div>
+              
+              <div className="px-6 mb-4 relative">
+                <div className="bg-[#1a1a1a] rounded-[1.5rem] p-5 opacity-50"><p className="text-zinc-500 text-[8px] font-black uppercase">Inversión Total</p><p className="text-3xl font-black text-white">{env.total}</p></div>
+                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/50 backdrop-blur-[2px] rounded-[1.5rem] border border-white/5 transition-all">
+                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-lg p-2 flex flex-col shadow-lg border-l-2 border-red-500">
+                    <span className="text-[7px] font-black uppercase text-red-300 tracking-widest">Z2: Precio</span>
+                    <div className="flex items-baseline gap-1 mt-0.5"><span className="text-sm font-black text-white">{mockD.z2.t}</span><span className="text-[9px] font-bold text-red-300">• {mockD.z2.c} clics</span></div>
+                  </div>
+                  {renderDots(mockD.z2.dots)}
+                </div>
+              </div>
+
+              <div className="px-6 relative h-[180px]">
+                <div className="opacity-30"><h3 className="text-base font-black text-zinc-900 mb-2">Materiales</h3><div className="w-[180px] bg-white rounded-2xl p-3 border"><div className="aspect-square bg-zinc-200 rounded-xl mb-2"></div></div></div>
+                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/50 backdrop-blur-[2px] rounded-2xl border border-white/5 transition-all">
+                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-lg p-2 flex flex-col shadow-lg border-l-2 border-amber-500">
+                    <span className="text-[7px] font-black uppercase text-amber-300 tracking-widest">Z3: Detalles</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5"><span className="text-sm font-black text-white">{mockD.z3.t}</span><span className="text-[9px] font-bold text-zinc-300">• {mockD.z3.c} clics</span></div>
+                  </div>
+                  {renderDots(mockD.z3.dots)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMNA 2: KPIS Y ESPECTADORES */}
+        <div className="flex-1 flex flex-col gap-4 h-[812px] overflow-y-auto hide-scroll">
+          <div className="grid grid-cols-3 gap-3 shrink-0">
+            <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">Scroll</p><div className="flex items-center gap-1"><span className="text-2xl font-black text-emerald-600">{mockD.scroll}</span></div></div>
+            <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">Slider</p><span className="text-2xl font-black text-blue-600">{mockD.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
+            <div className="bg-red-50 p-4 rounded-2xl border border-red-100 flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-1">Fricción (Rage)</p><span className="text-2xl font-black text-red-600">{mockD.friccion}</span></div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm relative shrink-0">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Espectadores Detectados</h2>
+              <div className="flex items-center gap-1.5 bg-amber-100 border border-amber-200 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest text-amber-700">
+                  {mockD.espectadores.length} IPs Activas
+              </div>
+            </div>
+            <div className="space-y-2">
+              {mockD.espectadores.map((e, idx) => (
+                <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden p-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-zinc-200 rounded-md text-[10px] font-black text-zinc-500 flex items-center justify-center">{idx + 1}</div>
+                      <div><span className="text-xs font-black text-zinc-800 block">{e.rol}</span><span className="text-[9px] text-zinc-500">{e.disp} • {e.geo}</span></div>
+                  </div>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${e.statusClass}`}>{e.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 shadow-lg relative overflow-hidden shrink-0 mt-auto">
+              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">Acción Final (Embudo)</p>
+              <span className="text-xl font-black text-amber-400 block mb-0.5">{mockD.wppEstado}</span>
+              <p className="text-[10px] text-zinc-300 font-medium leading-tight">{mockD.wppDesc}</p>
+          </div>
+        </div>
+
+        {/* COLUMNA 3: IA */}
+        <div className="flex-1 flex flex-col gap-4 h-[812px]">
+          <div className="bg-indigo-950 rounded-[2rem] p-7 shadow-xl relative overflow-hidden flex flex-col shrink-0">
+            <div className="flex items-center gap-3 mb-5 relative z-10">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><CheckCircle2 size={18}/></div>
+                <div><h3 className="text-sm font-black text-white uppercase tracking-widest leading-none">Asistente IA</h3></div>
+            </div>
+            <div className="space-y-4 relative z-10 flex-1">
+                <div><span className="bg-indigo-900/50 border border-indigo-700 text-indigo-200 text-[10px] font-bold px-3 py-1.5 rounded-xl inline-block">{mockD.aiPerfil}</span></div>
+                <div><p className="text-xs text-zinc-300 leading-relaxed font-medium">{mockD.aiDiag}</p></div>
+                <div className="bg-green-900/30 border border-green-500/30 p-4 rounded-xl mt-2"><span className="text-[9px] font-black uppercase tracking-widest text-green-400 block mb-1">Acción Sugerida</span><p className="text-xs text-green-100 font-medium">{mockD.aiJugada}</p></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

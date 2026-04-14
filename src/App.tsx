@@ -1252,12 +1252,14 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
               <div className="w-2.5 h-2.5 bg-white rounded-full shadow-sm relative z-10 group-hover:scale-125 transition-transform"></div>
             </button>
             
-            {/* Tooltip Inteligente (Tarjeta Clásica) */}
+            {/* === NUEVA ETIQUETA HOTSPOT (DISEÑO ELEGANTE) === */}
             {activeTooltip === punto.id && (
-              <div className={`absolute ${getTooltipPos(punto.x, punto.y)} w-48 ${isDark ? 'bg-[#1a1a1a]/95' : 'bg-white/95'} backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border ${isDark ? 'border-white/5' : 'border-zinc-200'} animate-in fade-in zoom-in-95 duration-200`}>
-                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2 right-2 ${colors.textMuted} hover:${colors.textMain}`}><X size={14} /></button>
-                <span className={`block text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Detalle</span>
-                <span className={`block text-sm font-bold ${colors.textMain} leading-tight`}>{punto.material}</span>
+              <div className={`absolute ${getTooltipPos(punto.x, punto.y)} w-max min-w-[160px] max-w-[220px] ${isDark ? 'bg-[#111111]/95' : 'bg-white/95'} backdrop-blur-xl p-3.5 pr-8 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] z-50 border ${isDark ? 'border-white/10' : 'border-zinc-200/80'} animate-in fade-in zoom-in-95 duration-200`}>
+                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2.5 right-2.5 ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'} transition-colors`}><X size={14} /></button>
+                <div className="flex flex-col">
+                    <span className={`block text-[7px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-amber-500/80' : 'text-amber-600/80'} mb-1`}>Detalle</span>
+                    <span className={`block text-[13px] font-serif tracking-wide ${isDark ? 'text-zinc-100' : 'text-zinc-900'} leading-snug`}>{punto.material}</span>
+                </div>
               </div>
             )}
           </div>

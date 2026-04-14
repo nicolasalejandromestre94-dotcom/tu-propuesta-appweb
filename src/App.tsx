@@ -4,7 +4,7 @@ import {
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
-  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, DownloadCloud, ThumbsUp
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -16,17 +16,21 @@ const supabaseUrl = 'https://pdyqdbmvhmqnzgoxtjfw.supabase.co';
 const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// =====================================================================
-// 🚨 MICROSOFT CLARITY ID
-// =====================================================================
 const CLARITY_PROJECT_ID = "wb6kh8g7tb"; 
 
-// Función auxiliar para parsear y sumar precios (remueve puntos y "USD"/"ARS")
 const parsePrice = (str: string) => {
   if (!str) return 0;
   const cleaned = str.toString().replace(/[^0-9]/g, '');
   const parsed = parseInt(cleaned, 10);
   return isNaN(parsed) ? 0 : parsed;
+};
+
+// Función global para Wpp Genérico
+const handleShareWpp = (id: string, e?: React.MouseEvent) => {
+  if (e) e.stopPropagation();
+  const url = `${window.location.origin}/ver/${id}`;
+  const text = `¡Hola! Aquí tienes tu propuesta de diseño interactiva de STUDIO.MUD: ${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
 
 export default function App() {
@@ -103,7 +107,7 @@ function Login() {
   );
 }
 
-// --- VISTA 1: DASHBOARD ADMINISTRADOR (SMART CARDS) ---
+// --- VISTA 1: DASHBOARD ---
 function AdminDashboard() {
   const [proyectos, setProyectos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -125,7 +129,8 @@ function AdminDashboard() {
       items: [
         { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
         { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
-      ]
+      ],
+      variantes: [] // Nueva propiedad para Z3
     };
     const { data, error } = await supabase.from('proyectos').insert([{
       cliente: "Nuevo Cliente", whatsapp: "549",
@@ -191,19 +196,22 @@ function AdminDashboard() {
                       <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1 mb-4 truncate">{primerEnv.titulo || "Sin título"}</p>
                     </div>
                     
-                    <div className="grid grid-cols-4 gap-2 pt-4 border-t border-zinc-100">
+                    <div className="grid grid-cols-5 gap-1.5 pt-4 border-t border-zinc-100">
                       <button onClick={() => navigate(`/admin/editar/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-colors">
-                        <Edit3 size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Editar</span>
+                        <Edit3 size={14}/> <span className="text-[6px] font-black uppercase tracking-widest">Editar</span>
                       </button>
                       <button onClick={() => navigate(`/admin/analytics/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 bg-amber-50/50 rounded-xl transition-colors border border-amber-100">
-                        <Activity size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Métricas</span>
+                        <Activity size={14}/> <span className="text-[6px] font-black uppercase tracking-widest">Stats</span>
+                      </button>
+                      <button onClick={(e) => handleShareWpp(p.id, e)} className="flex flex-col items-center justify-center gap-1 py-2 text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[#25D366]/10 rounded-xl transition-colors border border-[#25D366]/20">
+                        <MessageCircle size={14}/> <span className="text-[6px] font-black uppercase tracking-widest">Wpp</span>
                       </button>
                       <button onClick={(e) => handleCopy(p.id, e)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors relative">
-                        {copiedStates[p.id] ? <Check size={16} className="text-green-500"/> : <Link2 size={16}/>}
-                        <span className={`text-[7px] font-black uppercase tracking-widest ${copiedStates[p.id] ? 'text-green-500' : ''}`}>{copiedStates[p.id] ? 'Copiado' : 'Link'}</span>
+                        {copiedStates[p.id] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>}
+                        <span className={`text-[6px] font-black uppercase tracking-widest ${copiedStates[p.id] ? 'text-green-500' : ''}`}>{copiedStates[p.id] ? 'OK' : 'Link'}</span>
                       </button>
                       <button onClick={() => { if(window.confirm('¿Borrar carpeta?')) supabase.from('proyectos').delete().eq('id', p.id).then(fetchProyectos); }} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">
-                        <Trash2 size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Borrar</span>
+                        <Trash2 size={14}/> <span className="text-[6px] font-black uppercase tracking-widest">Borrar</span>
                       </button>
                     </div>
                   </div>
@@ -217,14 +225,19 @@ function AdminDashboard() {
   );
 }
 
-// --- VISTA 2: EDITOR MULTI-AMBIENTE ---
+// --- VISTA 2: EDITOR MULTI-AMBIENTE Y Z3 ---
 function AdminEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [subiendo, setSubiendo] = useState({ obra: false, render: false });
+  const [activeVarTab, setActiveVarTab] = useState(0); // Pestaña de Variante Z3 Activa
+  const [subiendo, setSubiendo] = useState({ obra: false, render: false, variante: false });
   const [copiedStates, setCopiedStates] = useState<any>({});
+  
+  // Ref para calcular coordenadas en el lienzo Z3
+  const z3CanvasRef = useRef<HTMLDivElement>(null);
+  const [editingPoint, setEditingPoint] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProyecto = async () => {
@@ -262,7 +275,8 @@ function AdminEditor() {
       items: [
         { id: crypto.randomUUID(), lbl: 'Materiales', val: '0', incluido: true },
         { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: '0', incluido: true }
-      ]
+      ],
+      variantes: []
     };
     const nuevosAmb = [...p.ambientes, nuevo];
     updateGlobal({ ambientes: nuevosAmb, configuracion: { ...p.configuracion, cantAmbientes: nuevosAmb.length > 1 ? 2 : 1 } });
@@ -277,46 +291,122 @@ function AdminEditor() {
     setActiveTab(0);
   };
 
-  const handleFileUpload = async (e: any, tipo: 'obra' | 'render') => {
+  const handleFileUpload = async (e: any, tipo: 'obra' | 'render' | 'variante') => {
     const files = Array.from(e.target.files as FileList);
     if (!files.length) return;
     setSubiendo(prev => ({ ...prev, [tipo]: true }));
-    const nuevasUrls: string[] = [];
-    for (let file of files) {
-      const ext = file.name.split('.').pop();
-      const fileName = `${id}_${activeTab}_${tipo}_${Math.random()}.${ext}`;
-      try {
-        const { error } = await supabase.storage.from('proyectos').upload(fileName, file);
-        if (!error) {
-          const { data } = supabase.storage.from('proyectos').getPublicUrl(fileName);
-          nuevasUrls.push(data.publicUrl);
+    const file = files[0]; // Para Z3 variante tomamos 1 sola foto por ahora
+    const ext = file.name.split('.').pop();
+    const fileName = `${id}_${activeTab}_${tipo}_${Math.random()}.${ext}`;
+    
+    try {
+      const { error } = await supabase.storage.from('proyectos').upload(fileName, file);
+      if (!error) {
+        const { data } = supabase.storage.from('proyectos').getPublicUrl(fileName);
+        
+        if (tipo === 'obra' || tipo === 'render') {
+          const arrName = tipo === 'obra' ? 'galeriaObra' : 'galeriaRender';
+          let currentArr = p.ambientes[activeTab][arrName] || [];
+          updateEnv(arrName, [...currentArr, data.publicUrl]);
+        } else if (tipo === 'variante') {
+           // Actualiza la imagen de la variante activa
+           const vars = p.ambientes[activeTab].variantes || [];
+           if (vars[activeVarTab]) {
+              const newVars = [...vars];
+              newVars[activeVarTab].img = data.publicUrl;
+              updateEnv('variantes', newVars);
+           }
         }
-      } catch (err) { console.error("Error", err); }
-    }
-    if (nuevasUrls.length > 0) {
-      const arrName = tipo === 'obra' ? 'galeriaObra' : 'galeriaRender';
-      let currentArr = p.ambientes[activeTab][arrName] || [];
-      updateEnv(arrName, [...currentArr, ...nuevasUrls]);
-    }
+      }
+    } catch (err) { console.error("Error", err); }
+    
     setSubiendo(prev => ({ ...prev, [tipo]: false }));
   };
 
+  // --- FUNCIONES EDITOR Z3 ---
+  const handleAddVariante = () => {
+    const envAt = p.ambientes[activeTab];
+    const vars = envAt.variantes || [];
+    const nueva = { id: crypto.randomUUID(), nombre: `Opción ${vars.length + 1}`, img: '', puntos: [] };
+    updateEnv('variantes', [...vars, nueva]);
+    setActiveVarTab(vars.length);
+  };
+
+  const handleRemoveVariante = (idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("¿Eliminar variante?")) return;
+    const envAt = p.ambientes[activeTab];
+    const vars = envAt.variantes || [];
+    const newVars = vars.filter((_:any, i:number) => i !== idx);
+    updateEnv('variantes', newVars);
+    setActiveVarTab(0);
+  };
+
+  const updateVarianteName = (val: string) => {
+    const vars = [...(p.ambientes[activeTab].variantes || [])];
+    if (vars[activeVarTab]) {
+      vars[activeVarTab].nombre = val;
+      updateEnv('variantes', vars);
+    }
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Si estamos editando un punto o no hay imagen, no agregamos
+    if (editingPoint || !z3CanvasRef.current) return;
+    const envAt = p.ambientes[activeTab];
+    const vars = envAt.variantes || [];
+    const varActual = vars[activeVarTab];
+    if (!varActual || !varActual.img) return;
+
+    const rect = z3CanvasRef.current.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+
+    const newPuntoId = crypto.randomUUID();
+    const nuevoPunto = { id: newPuntoId, x, y, material: 'Nuevo Material' };
+    
+    const newVars = [...vars];
+    newVars[activeVarTab].puntos = [...(varActual.puntos || []), nuevoPunto];
+    updateEnv('variantes', newVars);
+    setEditingPoint(newPuntoId); // Abrimos para editar al instante
+  };
+
+  const updatePuntoMaterial = (puntoId: string, val: string) => {
+    const vars = [...(p.ambientes[activeTab].variantes || [])];
+    const varActual = vars[activeVarTab];
+    if (varActual) {
+      varActual.puntos = varActual.puntos.map((pt:any) => pt.id === puntoId ? { ...pt, material: val } : pt);
+      updateEnv('variantes', vars);
+    }
+  };
+
+  const removePunto = (puntoId: string) => {
+    const vars = [...(p.ambientes[activeTab].variantes || [])];
+    const varActual = vars[activeVarTab];
+    if (varActual) {
+      varActual.puntos = varActual.puntos.filter((pt:any) => pt.id !== puntoId);
+      updateEnv('variantes', vars);
+      setEditingPoint(null);
+    }
+  };
+
   const handleAddItem = () => {
-    const itemsActuales = env.items || [
-      { id: crypto.randomUUID(), lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
-      { id: crypto.randomUUID(), lbl: env.lbl2 || 'Diseño', val: env.val2 || '0', incluido: true }
+    const envAt = p.ambientes[activeTab];
+    const itemsActuales = envAt.items || [
+      { id: crypto.randomUUID(), lbl: 'Materiales', val: '0', incluido: true },
+      { id: crypto.randomUUID(), lbl: 'Diseño', val: '0', incluido: true }
     ];
     updateEnv('items', [...itemsActuales, { id: crypto.randomUUID(), lbl: 'Nuevo Ítem', val: '0', incluido: false }]);
   };
 
   const updateItem = (itemId: string, key: string, value: any) => {
-    const itemsActuales = env.items || [];
+    const itemsActuales = p.ambientes[activeTab].items || [];
     const nuevos = itemsActuales.map((it:any) => it.id === itemId ? { ...it, [key]: value } : it);
     updateEnv('items', nuevos);
   };
 
   const deleteItem = (itemId: string) => {
-    const itemsActuales = env.items || [];
+    const itemsActuales = p.ambientes[activeTab].items || [];
     updateEnv('items', itemsActuales.filter((it:any) => it.id !== itemId));
   };
 
@@ -324,10 +414,9 @@ function AdminEditor() {
 
   const env = p.ambientes[activeTab] || {};
   const c = p.configuracion;
-  const currentItems = env.items || [
-    { id: crypto.randomUUID(), lbl: env.lbl1 || 'Concepto 1', val: env.val1 || '0', incluido: true },
-    { id: crypto.randomUUID(), lbl: env.lbl2 || 'Concepto 2', val: env.val2 || '0', incluido: true }
-  ];
+  const currentItems = env.items || [];
+  const variantes = env.variantes || [];
+  const varActual = variantes[activeVarTab];
 
   const renderDropzone = (tipo: 'obra' | 'render') => {
     const isObra = tipo === 'obra';
@@ -378,8 +467,11 @@ function AdminEditor() {
               {copiedStates['editorLink'] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>} 
               {copiedStates['editorLink'] ? '¡Link Copiado!' : 'Copiar Link'}
             </button>
-            <button onClick={() => navigate(`/admin/analytics/${id}`)} className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
-              <Activity size={14}/> Analíticas
+            <button onClick={() => handleShareWpp(id)} className="px-5 py-2.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-[#25D366] hover:text-white transition">
+              <MessageCircle size={14}/> Enviar por Wpp
+            </button>
+            <button onClick={() => alert("La descarga de póster estará disponible en la próxima actualización de backend. Por ahora usa la tarjeta de enlace genérica.")} className="px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-emerald-100 transition">
+              <DownloadCloud size={14}/> Generar Portada Wpp
             </button>
             <button onClick={() => window.open(`/ver/${id}`, '_blank')} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md shadow-amber-600/20 hover:bg-amber-700 transition">
               <Play size={14}/> Ver App
@@ -387,35 +479,35 @@ function AdminEditor() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white p-6 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[3rem] pointer-events-none"></div>
               <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><Settings size={14}/> Configuración Global</h2>
               <div className="space-y-5">
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Nombre Cliente</label>
-                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.cliente} onChange={e=>updateGlobal({cliente: e.target.value})} />
+                  <input className="w-full bg-zinc-50 px-4 py-3.5 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.cliente} onChange={e=>updateGlobal({cliente: e.target.value})} />
                 </div>
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">WhatsApp (Botón Final)</label>
-                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.whatsapp} onChange={e=>updateGlobal({whatsapp: e.target.value})} />
+                  <input className="w-full bg-zinc-50 px-4 py-3.5 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.whatsapp} onChange={e=>updateGlobal({whatsapp: e.target.value})} />
                 </div>
                 <div className="pt-4 border-t border-zinc-100">
                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Estructura</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
-                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Ambientes</span>
-                      <div className="flex">
-                        <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===1?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>1 Solo</button>
-                        <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===2?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>Varios</button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-zinc-50 p-1.5 rounded-xl border border-zinc-200 flex flex-col relative">
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white px-2 text-[7px] font-black text-zinc-400 uppercase tracking-widest">Ambientes</span>
+                      <div className="flex mt-2">
+                        <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===1?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>1 Solo</button>
+                        <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===2?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>Varios</button>
                       </div>
                     </div>
-                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
-                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Moneda</span>
-                      <div className="flex">
-                        <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='USD'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>USD</button>
-                        <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='ARS'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>ARS</button>
+                    <div className="bg-zinc-50 p-1.5 rounded-xl border border-zinc-200 flex flex-col relative">
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white px-2 text-[7px] font-black text-zinc-400 uppercase tracking-widest">Moneda</span>
+                      <div className="flex mt-2">
+                        <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='USD'?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>USD</button>
+                        <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='ARS'?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>ARS</button>
                       </div>
                     </div>
                   </div>
@@ -437,16 +529,16 @@ function AdminEditor() {
                 <button onClick={() => removeAmbiente(activeTab)} className="absolute top-6 right-6 text-zinc-300 hover:text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={16}/></button>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                 {c.cantAmbientes === 2 && (
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-amber-600 ml-1 mb-1 block">Nombre en Índice</label>
-                    <input className="w-full bg-amber-50 px-4 py-3 rounded-xl font-bold text-amber-900 outline-none border border-amber-200 focus:border-amber-500 focus:bg-white transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
+                    <label className="text-[9px] font-black uppercase tracking-widest text-amber-600 ml-1 mb-2 block">Nombre en Índice</label>
+                    <input className="w-full bg-amber-50/50 px-4 py-3.5 rounded-xl font-bold text-amber-900 outline-none border border-amber-200 focus:border-amber-500 focus:bg-white transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
                   </div>
                 )}
                 <div className={c.cantAmbientes === 1 ? 'col-span-2' : ''}>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Título del Banner</label>
-                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-black text-lg text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Título del Banner</label>
+                  <input className="w-full bg-zinc-50 px-4 py-3.5 rounded-xl font-black text-lg text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
                 </div>
               </div>
 
@@ -469,26 +561,26 @@ function AdminEditor() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-zinc-100">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
+              <div className="pt-8 border-t border-zinc-100">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
                 
-                <div className="bg-[#111] rounded-3xl p-6 relative overflow-hidden shadow-xl mb-6">
+                <div className="bg-[#111] rounded-[2rem] p-8 relative overflow-hidden shadow-xl mb-6">
                    <div className="absolute -right-6 -top-6 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
                    <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-2">Monto Total Base</label>
                    <div className="flex items-center gap-3 relative z-10">
-                     <span className="text-amber-500 font-black text-2xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
-                     <input className="bg-transparent text-white font-black text-5xl outline-none w-full tracking-tighter" value={env.total} onChange={e=>updateEnv('total', e.target.value)} placeholder="0" />
+                     <span className="text-amber-500 font-black text-3xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
+                     <input className="bg-transparent text-white font-black text-6xl outline-none w-full tracking-tighter" value={env.total} onChange={e=>updateEnv('total', e.target.value)} placeholder="0" />
                    </div>
                 </div>
 
-                <div className="space-y-3 mb-4 bg-zinc-50 p-4 rounded-3xl border border-zinc-100">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 block">Desglose de Ítems (Opcional)</label>
+                <div className="space-y-4 bg-zinc-50 p-6 rounded-[2rem] border border-zinc-100">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 block mb-2">Desglose de Ítems (Opcional)</label>
                   {currentItems.map((item:any) => (
-                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center gap-3 p-3 rounded-2xl border transition-colors ${item.incluido ? 'bg-white border-zinc-200 shadow-sm' : 'bg-amber-50 border-amber-200'}`}>
-                      <input className="flex-1 bg-transparent px-2 py-2 rounded-xl text-xs font-bold outline-none focus:bg-zinc-50" value={item.lbl} onChange={e=>updateItem(item.id, 'lbl', e.target.value)} placeholder="Ej: Materiales" />
-                      <div className="flex items-center gap-3">
-                        <input className={`w-32 bg-transparent px-2 py-2 rounded-xl text-sm font-black outline-none focus:bg-zinc-50 ${item.incluido ? 'text-zinc-900' : 'text-amber-600'}`} value={item.val} onChange={e=>updateItem(item.id, 'val', e.target.value)} placeholder="Valor" />
-                        <div onClick={() => updateItem(item.id, 'incluido', !item.incluido)} className="flex items-center gap-2 cursor-pointer bg-white border border-zinc-200 p-1.5 rounded-xl w-[110px] shrink-0" title="¿Suma al total o es extra?">
+                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl border transition-colors ${item.incluido ? 'bg-white border-zinc-200 shadow-sm' : 'bg-amber-50/50 border-amber-200 border-dashed'}`}>
+                      <input className="flex-1 bg-transparent px-2 py-2 rounded-lg text-sm font-bold outline-none" value={item.lbl} onChange={e=>updateItem(item.id, 'lbl', e.target.value)} placeholder="Ej: Materiales" />
+                      <div className="flex items-center justify-end gap-4 shrink-0">
+                        <input className={`w-28 bg-transparent text-right text-sm font-black outline-none ${item.incluido ? 'text-zinc-900' : 'text-amber-600'}`} value={item.val} onChange={e=>updateItem(item.id, 'val', e.target.value)} placeholder="Valor" />
+                        <div onClick={() => updateItem(item.id, 'incluido', !item.incluido)} className="flex items-center gap-2 cursor-pointer bg-white border border-zinc-200 p-1.5 rounded-xl w-[100px] shrink-0" title="¿Suma al total o es extra?">
                           <div className={`w-8 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out ${item.incluido ? 'bg-emerald-500' : 'bg-zinc-300'}`}>
                             <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${item.incluido ? 'translate-x-3' : 'translate-x-0'}`}></div>
                           </div>
@@ -503,6 +595,90 @@ function AdminEditor() {
                   </button>
                 </div>
               </div>
+
+              {/* EDITOR Z3 REAL */}
+              <div className="pt-10 mt-10 border-t border-zinc-100">
+                <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2"><Layers size={16} className="text-amber-500"/> Z3: Editor de Materiales</h3>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Sube una imagen base y haz clic para agregar puntos interactivos con nombres editables.</p>
+                
+                <div className="bg-zinc-50 p-6 rounded-[2rem] border border-zinc-200 flex flex-col lg:flex-row gap-6">
+                  
+                  {/* Panel Izquierdo: Variantes */}
+                  <div className="w-full lg:w-1/3 flex flex-col gap-3">
+                     {variantes.map((v:any, idx:number) => (
+                       <div key={v.id} onClick={() => setActiveVarTab(idx)} className={`p-4 rounded-2xl border transition-colors cursor-pointer group flex flex-col relative ${activeVarTab === idx ? 'bg-white border-amber-400 shadow-sm' : 'bg-transparent border-zinc-200 hover:bg-white'}`}>
+                          {activeVarTab === idx && <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-amber-400 rounded-l-2xl"></div>}
+                          <div className="flex justify-between items-center ml-2">
+                             {activeVarTab === idx ? (
+                               <input 
+                                 className="font-black text-sm text-zinc-900 bg-zinc-50 px-2 py-1 rounded w-[85%] outline-none focus:border-amber-500 border border-transparent" 
+                                 value={v.nombre} 
+                                 onChange={(e) => updateVarianteName(e.target.value)} 
+                               />
+                             ) : (
+                               <h4 className="font-bold text-sm text-zinc-500 group-hover:text-zinc-900 transition-colors truncate">{v.nombre}</h4>
+                             )}
+                             <button onClick={(e) => handleRemoveVariante(idx, e)} className="text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14}/></button>
+                          </div>
+                          <p className={`text-[9px] font-bold uppercase tracking-widest mt-2 ml-2 ${activeVarTab === idx ? 'text-amber-600' : 'text-zinc-400'}`}>{(v.puntos || []).length} Puntos agregados</p>
+                       </div>
+                     ))}
+                     
+                     <button onClick={handleAddVariante} className="mt-2 py-4 border-2 border-dashed border-zinc-300 rounded-2xl text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-600 hover:border-amber-300 transition-all flex items-center justify-center gap-2">
+                        <Plus size={14}/> Variante Nueva
+                     </button>
+                  </div>
+
+                  {/* Panel Derecho: Lienzo */}
+                  <div className="w-full lg:w-2/3 relative aspect-[4/5] bg-zinc-200 rounded-[2rem] overflow-hidden border border-zinc-300 shadow-inner group flex items-center justify-center">
+                     {!varActual ? (
+                        <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">Selecciona o crea una variante</span>
+                     ) : !varActual.img ? (
+                        <label className="flex flex-col items-center justify-center opacity-60 hover:opacity-100 cursor-pointer transition w-full h-full">
+                           {subiendo.variante ? <Loader2 size={30} className="animate-spin text-amber-500 mb-2"/> : <UploadCloud size={30} className="mb-2 text-zinc-500"/>}
+                           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Subir Imagen Base Z3</span>
+                           <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, 'variante')} />
+                        </label>
+                     ) : (
+                        <div className="w-full h-full relative cursor-crosshair" onClick={handleCanvasClick} ref={z3CanvasRef}>
+                           <img src={varActual.img} className="w-full h-full object-cover opacity-90" alt="Z3 Canvas" />
+                           <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white flex items-center gap-2 shadow-xl pointer-events-none z-10">
+                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Haz clic para colocar un punto
+                           </div>
+                           
+                           {/* Renderizar Puntos Reales */}
+                           {(varActual.puntos || []).map((pt:any) => (
+                             <div key={pt.id} className="absolute z-20" style={{ top: `${pt.y}%`, left: `${pt.x}%`, transform: 'translate(-50%, -50%)' }}>
+                                <div 
+                                  onClick={(e) => { e.stopPropagation(); setEditingPoint(editingPoint === pt.id ? null : pt.id); }} 
+                                  className={`w-6 h-6 rounded-full border-2 border-white shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center cursor-pointer hover:scale-110 transition-transform ${editingPoint === pt.id ? 'bg-red-500' : 'bg-amber-500'}`}
+                                >
+                                   <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+
+                                {editingPoint === pt.id && (
+                                  <div onClick={(e) => e.stopPropagation()} className="absolute top-8 left-1/2 -translate-x-1/2 w-56 bg-white p-4 rounded-2xl shadow-2xl border border-zinc-200 animate-in zoom-in-95 duration-200 z-50 cursor-default">
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 block">Nombre del Material / Detalle</label>
+                                    <input 
+                                      className="w-full bg-zinc-100 px-3 py-2 rounded-xl text-xs font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-3" 
+                                      value={pt.material}
+                                      onChange={(e) => updatePuntoMaterial(pt.id, e.target.value)}
+                                      autoFocus 
+                                    />
+                                    <div className="flex justify-between items-center border-t border-zinc-100 pt-3">
+                                      <button onClick={() => removePunto(pt.id)} className="text-[9px] text-red-500 font-black uppercase tracking-widest hover:text-red-700 flex items-center gap-1"><Trash2 size={12}/> Borrar</button>
+                                      <button onClick={() => setEditingPoint(null)} className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-black">Guardar</button>
+                                    </div>
+                                  </div>
+                                )}
+                             </div>
+                           ))}
+                        </div>
+                     )}
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -526,7 +702,6 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
     
-    // Mejor detección de plataforma
     let plat = "Web";
     const ua = navigator.userAgent;
     if (/android/i.test(ua)) plat = "Android";
@@ -618,7 +793,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 }
 
 // =====================================================================
-// 📱 VISTA 3: CLIENTE FINAL (CON MODO CLARO/OSCURO)
+// 📱 VISTA 3: CLIENTE FINAL (CON TRIPLE BOTONERA Z3)
 // =====================================================================
 function VistaCliente() {
   const { id } = useParams();
@@ -627,7 +802,6 @@ function VistaCliente() {
   const [showIndex, setShowIndex] = useState(false);
   const [isSimulatingLoad, setIsSimulatingLoad] = useState(true);
   
-  // MODO CLARO/OSCURO DEL CLIENTE
   const [clientTheme, setClientTheme] = useState('dark');
   const isDark = clientTheme === 'dark';
   
@@ -677,14 +851,31 @@ function VistaCliente() {
 
   const c = p.configuracion;
   const env = p.ambientes[activeTab] || {};
-  const isMultiple = c.cantAmbientes > 1;
+  
+  const hasMultipleEnvs = p.ambientes && p.ambientes.length > 1;
+  const isMultipleDisplay = c.cantAmbientes > 1 && hasMultipleEnvs;
+  
   let totalSuma = 0;
-  if (isMultiple) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
+  if (isMultipleDisplay) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
 
-  const currentItems = env.items || [
-    { id: 1, lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
-    { id: 2, lbl: env.lbl2 || 'Diseño y Montaje', val: env.val2 || '0', incluido: true }
-  ];
+  const currentItems = env.items || [];
+  const variantes = env.variantes || [];
+
+  const handleShareClient = async () => {
+    logEvent('COMPARTIR_CLICK');
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Propuesta: ${env.titulo || 'STUDIO.MUD'}`,
+          text: `Mirá esta propuesta de diseño de STUDIO.MUD`,
+          url: window.location.href,
+        });
+      } catch (err) { console.log('Error sharing', err); }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Enlace copiado al portapapeles");
+    }
+  };
 
   return (
     <div className={`min-h-screen ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
@@ -697,32 +888,20 @@ function VistaCliente() {
 
       <div className={`w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] ${colors.bgMain} md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] ${colors.borderMain} relative z-10 flex flex-col overflow-hidden ring-1 ${isDark ? 'ring-white/10' : 'ring-black/5'} transition-colors duration-500`}>
         
-        {/* HEADER CLIENTE */}
-        <div className={`${colors.bgCard} pt-6 md:pt-10 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'} border-b ${colors.borderSub}`}>
-          <header className="flex justify-between items-center mb-4 px-2">
-            <div>
-              <h1 className={`font-black text-[26px] tracking-tighter italic ${colors.textMain} leading-none`}>STUDIO<span className="text-amber-500">.MUD</span></h1>
-              <span className={`text-[7px] ${isDark ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-zinc-100 text-zinc-600 border-zinc-200'} px-2 py-0.5 rounded-full uppercase tracking-widest font-bold mt-1 inline-block border`}>
-                {isMultiple ? 'Proyecto Integral' : 'Diseño a Medida'}
-              </span>
-            </div>
-            {/* BOTÓN TEMA CLIENTE */}
-            <button 
-              onClick={() => setClientTheme(isDark ? 'light' : 'dark')}
-              className={`p-2 rounded-full transition-colors ${isDark ? 'bg-zinc-800 text-amber-400 hover:bg-zinc-700' : 'bg-zinc-100 text-indigo-500 hover:bg-zinc-200'}`}
-              title="Cambiar Modo de Lectura"
-            >
-              {isDark ? <Sun size={16}/> : <Moon size={16}/>}
-            </button>
-          </header>
-          
-          {isMultiple && !showIndex && c.navegacion === 'tabs' && (
-            <div className="flex overflow-x-auto gap-1.5 items-end hide-scroll">
-              {p.ambientes.map((a:any, i:number) => (
-                <button key={i} onClick={() => {setActiveTab(i); setShowIndex(false);}} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? `${colors.bgMain} ${colors.textMain} shadow-sm` : `${isDark ? 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300' : 'bg-zinc-200/50 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700'}`}`}>{a.tab}</button>
-              ))}
-            </div>
-          )}
+        {/* HEADER SÓLIDO COMPACTO */}
+        <div className={`${colors.bgCard} pt-6 pb-4 px-5 z-40 flex justify-between items-center shadow-md border-b ${colors.borderSub}`}>
+           <div>
+             <h1 className={`font-black text-[20px] tracking-tighter italic ${colors.textMain} leading-none`}>STUDIO<span className="text-amber-500">.MUD</span></h1>
+             <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-bold mt-1 block">Diseño a Medida</span>
+           </div>
+           <div className="flex gap-3">
+             <button onClick={handleShareClient} className={`${colors.textMuted} hover:${colors.textMain} transition-colors`} title="Compartir Proyecto">
+               <Share2 size={18} />
+             </button>
+             <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="text-amber-500 hover:text-amber-400 transition-colors" title="Modo Claro">
+               {isDark ? <Sun size={18} /> : <Moon size={18} />}
+             </button>
+           </div>
         </div>
 
         {/* INDEX MÚLTIPLES AMBIENTES */}
@@ -748,70 +927,81 @@ function VistaCliente() {
         {/* VISTA DE AMBIENTE INDIVIDUAL */}
         {!showIndex && (
           <div onScroll={trackScroll} className={`flex-1 overflow-y-auto ${colors.bgMain} pb-32 hide-scroll scroll-smooth relative transition-colors`}>
-            {isMultiple && c.navegacion === 'index' && (
-              <div className="px-4 pt-4 pb-2"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
+            
+            {/* TABS SI HAY VARIOS Y NAVEGACION TABS */}
+            {isMultipleDisplay && c.navegacion === 'tabs' && (
+              <div className={`flex overflow-x-auto gap-1.5 items-end hide-scroll px-4 pt-4 mb-2`}>
+                {p.ambientes.map((a:any, i:number) => (
+                  <button key={i} onClick={() => {setActiveTab(i); setShowIndex(false);}} className={`shrink-0 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? `${isDark?'bg-zinc-800 text-white':'bg-zinc-900 text-white'} shadow-sm` : `${colors.bgCard} ${colors.textMuted} border ${colors.borderMain}`}`}>{a.tab}</button>
+                ))}
+              </div>
+            )}
+            {isMultipleDisplay && c.navegacion === 'index' && (
+              <div className="px-4 pt-4 mb-2"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
             {/* Z1: RENDER */}
             <div 
               onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
-              onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both"
+              onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative h-[60vh] min-h-[450px] w-full mb-6 cursor-default animate-in fade-in fill-mode-both"
             >
-              <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
+              <div className={`w-full h-full overflow-hidden shadow-2xl relative ${isDark ? 'bg-zinc-950' : 'bg-zinc-200'} rounded-b-[2.5rem] border-b ${isDark ? 'border-white/5' : 'border-zinc-300'}`}>
+                 <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
+              </div>
             </div>
 
-            <div className="px-6 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+            <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
               <h2 className={`text-3xl font-black ${colors.textMain} leading-tight tracking-tighter italic`}>{env.titulo}</h2>
-              <p className={`${colors.textMuted} font-medium text-xs mt-1`}>{p.cliente}</p>
+              <p className={`${colors.textMuted} font-medium text-sm mt-1`}>{p.cliente}</p>
             </div>
 
-            <div className="px-5 space-y-4">
-              {/* Z2: PRECIO */}
+            <div className="px-5 space-y-6">
+              {/* Z2: PRECIO LIMPIO SIN OPCIONAL */}
               <div 
                 onMouseEnter={() => handleZoneEnter('Z2')} onMouseLeave={() => handleZoneLeave('Z2')} onTouchStart={() => handleZoneEnter('Z2')} onTouchEnd={() => handleZoneLeave('Z2')}
                 onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className={`${isDark ? 'bg-[#111111] border-white/5 text-white' : 'bg-white border-zinc-200 text-zinc-900'} rounded-[2rem] p-6 shadow-xl relative overflow-hidden border animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both transition-colors`}
               >
-                <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
-                <p className={`${colors.textMuted} text-[8px] font-black uppercase tracking-[0.3em] mb-1 flex items-center gap-1.5`}><Info size={12}/> Inversión del Ambiente</p>
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-amber-500 font-black text-lg">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                <p className={`${colors.textMuted} text-[8px] font-black uppercase tracking-[0.3em] mb-2 flex items-center gap-1.5`}><Info size={12}/> Inversión del Ambiente</p>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-amber-500 font-black text-xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
                   <p className={`text-4xl font-black tracking-tighter ${colors.textMain} pointer-events-none`}>{env.total}</p>
                 </div>
-                <div className={`space-y-3 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-100'} pt-4 pointer-events-none transition-colors`}>
+                <div className={`space-y-4 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-100'} pt-5 pointer-events-none transition-colors`}>
                   {currentItems.map((item:any) => (
-                    <div key={item.id} className="flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${item.incluido ? 'bg-amber-500' : 'border border-zinc-500'}`}></div>
-                        <span className={`${item.incluido ? (isDark?'text-zinc-300':'text-zinc-700') : colors.textMuted} font-bold`}>{item.lbl}</span>
+                    <div key={item.id} className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-3">
+                        {item.incluido ? <CheckCircle2 size={16} className="text-emerald-500" /> : <div className={`w-4 h-4 rounded-full border-2 ${isDark?'border-zinc-700':'border-zinc-300'}`}></div>}
+                        <span className={`${item.incluido ? (isDark?'text-zinc-200':'text-zinc-800') : colors.textMuted} font-${item.incluido?'bold':'medium'}`}>{item.lbl}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {!item.incluido && <span className={`${isDark ? 'bg-zinc-800 text-zinc-400 border-zinc-700' : 'bg-zinc-100 text-zinc-500 border-zinc-200'} text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border`}>Opcional</span>}
-                        <span className={`font-black ${item.incluido ? 'text-amber-500' : colors.textMuted}`}>{item.val}</span>
-                      </div>
+                      <span className={`font-black ${item.incluido ? 'text-amber-500' : colors.textMuted}`}>{item.val}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {isMultiple && (
+              {/* TOTAL (SOLO SE MUESTRA SI HAY MÁS DE 1 AMBIENTE EN EL PROYECTO) */}
+              {isMultipleDisplay && (
                 <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
                   <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
-                  <p className="text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total Proyecto (Todos los ambientes)</p>
+                  <p className="text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total General (Todos los ambientes)</p>
                   <span className={`${colors.textMain} font-black text-xl transition-colors`}>{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
                 </div>
               )}
 
-              {/* Z3 ALTERNATIVAS */}
-              <div onMouseEnter={() => handleZoneEnter('Z3')} onMouseLeave={() => handleZoneLeave('Z3')} onTouchStart={() => handleZoneEnter('Z3')} onTouchEnd={() => handleZoneLeave('Z3')} className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
-                 <Z3Alternativas trackClick={trackClick} isDark={isDark} colors={colors} />
-              </div>
+              {/* Z3 ALTERNATIVAS CON TRIPLE BOTÓN */}
+              {variantes.length > 0 && (
+                <div onMouseEnter={() => handleZoneEnter('Z3')} onMouseLeave={() => handleZoneLeave('Z3')} onTouchStart={() => handleZoneEnter('Z3')} onTouchEnd={() => handleZoneLeave('Z3')} className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
+                   <Z3Alternativas variantes={variantes} trackClick={trackClick} logEvent={logEvent} wppNum={p.whatsapp} isDark={isDark} colors={colors} />
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* BOTÓN FLOTANTE WPP */}
-        <div className={`absolute bottom-0 left-0 w-full p-4 ${isDark ? 'bg-[#0A0A0A]/90 border-zinc-900' : 'bg-white/90 border-zinc-100'} backdrop-blur-md border-t z-30 transition-colors`}>
-          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
+        {/* BOTÓN FLOTANTE WPP FIJO */}
+        <div className={`absolute bottom-0 left-0 w-full p-5 ${isDark ? 'bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent' : 'bg-gradient-to-t from-white via-white/95 to-transparent'} z-30 pt-10 pointer-events-none transition-colors`}>
+          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="pointer-events-auto w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
         </div>
@@ -847,7 +1037,7 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className={`relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-xl border-4 ${isDark ? 'border-zinc-900 ring-white/10' : 'border-white ring-black/5'} ring-1 cursor-default pointer-events-auto transition-colors`}>
+    <div className={`relative w-full h-full cursor-default pointer-events-auto transition-colors`}>
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         <img src={arrDer[idxDer]} className="w-full h-full object-cover object-center" />
         {arrDer.length > 1 && (
@@ -868,63 +1058,130 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
           </div>
         )}
       </div>
-      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.5)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
           <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
         </div>
       </div>
       <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
-      <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
+      <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1.5 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
       </div>
     </div>
   );
 }
 
-// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS (ADAPTABLE) ---
-function Z3Alternativas({ trackClick, isDark = true, colors }: { trackClick: (zona: string, e: React.MouseEvent, material?: string) => void, isDark?: boolean, colors?: any }) {
+// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS (TRIPLE BOTONERA) ---
+function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true, colors }: { variantes: any[], trackClick: any, logEvent: any, wppNum: string, isDark?: boolean, colors?: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [likedMap, setLikedMap] = useState<{[key:string]: boolean}>({});
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [noteText, setNoteText] = useState("");
 
-  const variantes = [
-    { id: "v1", nombre: "Madera Natural", img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800", puntos: [{ id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" }] },
-    { id: "v2", nombre: "Laca Oscura", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800", puntos: [{ id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" }] }
-  ];
+  const nextSlide = () => { setActiveSlide((i) => (i + 1) % variantes.length); setActiveTooltip(null); setIsCommenting(false); setNoteText(""); };
+  const prevSlide = () => { setActiveSlide((i) => (i - 1 + variantes.length) % variantes.length); setActiveTooltip(null); setIsCommenting(false); setNoteText(""); };
+  const varActual = variantes[activeSlide];
+  const isLiked = likedMap[varActual.id] || false;
 
-  const nextSlide = () => { setActiveSlide((i) => (i + 1) % variantes.length); setActiveTooltip(null); };
-  const prevSlide = () => { setActiveSlide((i) => (i - 1 + variantes.length) % variantes.length); setActiveTooltip(null); };
-  const varianteActual = variantes[activeSlide];
+  const handleLike = () => {
+    const newLiked = !isLiked;
+    setLikedMap(prev => ({...prev, [varActual.id]: newLiked}));
+    if (newLiked) logEvent('Z3_LIKE', { material: varActual.nombre });
+  };
+
+  const handleDirectWpp = () => {
+    const text = `¡Hola! Estuve viendo la propuesta y me encantó la opción de material: *${varActual.nombre}*. ¿Podemos avanzar con esta?`;
+    logEvent('WPP_CLICK', { tipo: 'direct_z3', material: varActual.nombre });
+    window.open(`https://wa.me/${wppNum}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleSendNoteWpp = () => {
+    const text = `Nota sobre opción *${varActual.nombre}*:\n\n"${noteText}"`;
+    logEvent('Z3_NOTE_WPP', { material: varActual.nombre, nota: noteText });
+    setIsCommenting(false);
+    window.open(`https://wa.me/${wppNum}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleShareVar = async () => {
+    logEvent('COMPARTIR_CLICK', { tipo: 'variante_z3', material: varActual.nombre });
+    if (navigator.share) {
+      try { await navigator.share({ title: `Mirá esta opción: ${varActual.nombre}`, url: window.location.href }); } catch(e){}
+    } else {
+      navigator.clipboard.writeText(window.location.href); alert("Link copiado al portapapeles.");
+    }
+  };
+
+  if(!varActual) return null;
 
   return (
     <div id="sensor-Z3" data-zona="Z3" className="mt-6 mb-6">
       <div className="px-2 mb-4">
-        <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-zinc-900'} italic tracking-tight leading-none transition-colors`}>Variantes y Materiales</h3>
-        <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'} font-bold uppercase tracking-widest mt-1 transition-colors`}>Toca los puntos para ver opciones</p>
+        <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-zinc-900'} italic tracking-tight leading-none transition-colors`}>Variantes de Material</h3>
+        <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'} font-bold uppercase tracking-widest mt-1 transition-colors`}>Toca los puntos para detalles</p>
       </div>
-      <div className={`relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl border-4 ${isDark ? 'border-zinc-900 ring-white/10 bg-zinc-950' : 'border-white ring-black/5 bg-zinc-100'} ring-1 transition-colors`}>
-        <img key={varianteActual.id} src={varianteActual.img} className="w-full h-full object-cover animate-in fade-in duration-500 opacity-90" alt="Variante" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
-        {varianteActual.puntos.map((punto) => (
+      <div className={`relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-[4px] ${isDark ? 'border-zinc-900 ring-white/5 bg-black' : 'border-white ring-black/5 bg-zinc-100'} ring-1 transition-colors group`}>
+        
+        <img key={varActual.id} src={varActual.img} className={`w-full h-full object-cover transition-all duration-700 ${isCommenting ? 'opacity-50 blur-sm scale-105' : 'opacity-90'}`} alt="Variante" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
+        
+        {/* MODAL COMENTARIO */}
+        {isCommenting && (
+          <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md p-5 flex flex-col justify-end animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-[#111] border border-white/10 rounded-3xl p-5 shadow-2xl relative">
+                <button onClick={() => setIsCommenting(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white bg-zinc-800/50 rounded-full p-1 transition-colors"><X size={16}/></button>
+                <h4 className="text-white font-black text-sm mb-1 flex items-center gap-2"><MessageSquarePlus size={16} className="text-amber-500"/> Dejar una nota</h4>
+                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mb-4">Sobre: {varActual.nombre}</p>
+                <textarea 
+                  className="w-full bg-black/50 text-white border border-zinc-800 rounded-2xl p-4 text-sm resize-none focus:border-amber-500 focus:outline-none mb-4 shadow-inner" 
+                  rows={3} placeholder="Ej: Me gusta esta opción, pero ¿se puede hacer en un tono más brillante?" autoFocus value={noteText} onChange={e=>setNoteText(e.target.value)}
+                ></textarea>
+                <div className="flex gap-2">
+                  <button onClick={handleShareVar} className="bg-zinc-800 text-white px-4 py-3.5 rounded-xl hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0" title="Compartir esta opción"><Share2 size={16}/></button>
+                  <button onClick={handleSendNoteWpp} className="flex-1 bg-[#25D366] text-white font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">Enviar Nota por Wpp</button>
+                </div>
+            </div>
+          </div>
+        )}
+
+        {/* PUNTOS INTERACTIVOS */}
+        {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white/30 transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white/30 transition-all hover:scale-110 active:scale-95 bg-amber-500 shadow-amber-500/50`}>
               <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span><div className="w-2.5 h-2.5 bg-white rounded-full"></div>
             </button>
             {activeTooltip === punto.id && (
               <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-[#111]/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-12 origin-bottom' : 'top-12 origin-top'}`}>
                 <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
-                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Material</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
+                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Detalle</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
               </div>
             )}
           </div>
         ))}
-        <div className="absolute bottom-6 left-0 w-full px-4 flex justify-between items-end pointer-events-none z-10">
-          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-black hover:text-white transition-all"><ChevronLeft size={20}/></button>
-          <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto flex flex-col items-center border border-white/5">
-            <span className="text-[9px] text-white font-black uppercase tracking-widest">{varianteActual.nombre}</span>
-            <div className="flex gap-1.5 mt-1.5">{variantes.map((_, idx) => (<div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/20'}`}></div>))}</div>
+
+        {/* BARRA INFERIOR DE 3 BOTONES */}
+        <div className="absolute bottom-0 left-0 w-full p-4 flex flex-col gap-4 z-20">
+          <div className="flex justify-between items-center px-2">
+            <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="w-8 h-8 bg-black/50 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-black transition-all"><ChevronLeft size={16}/></button>
+            <div className="flex flex-col items-center pointer-events-none">
+              <span className="text-[11px] text-white font-black uppercase tracking-widest drop-shadow-md">{varActual.nombre}</span>
+              <div className="flex gap-1.5 mt-2">{variantes.map((_, idx) => (<div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/30'}`}></div>))}</div>
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="w-8 h-8 bg-black/50 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-black transition-all"><ChevronRight size={16}/></button>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-black hover:text-white transition-all"><ChevronRight size={20}/></button>
+
+          <div className="flex justify-between items-center gap-2">
+             <button onClick={handleLike} className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-md border transition-all duration-300 shrink-0 ${isLiked ? 'bg-red-500/20 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] scale-105' : 'bg-white/10 border-white/10 text-white hover:bg-white/20'}`} title="Me gusta esta opción">
+               <Heart size={20} className={isLiked ? "fill-red-500" : ""} />
+             </button>
+             <button onClick={() => setIsCommenting(!isCommenting)} className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-md border transition-all duration-300 shrink-0 ${isCommenting ? 'bg-amber-500/20 border-amber-500/50 text-amber-500' : 'bg-white/10 border-white/10 text-white hover:bg-white/20'}`} title="Dejar una nota">
+               <MessageSquarePlus size={20} />
+             </button>
+             <button onClick={handleDirectWpp} className="flex-1 h-12 bg-[#25D366] text-white rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
+               <MessageCircle size={16} fill="white" /> Consultar
+             </button>
+          </div>
         </div>
       </div>
       {activeTooltip && <div className="fixed inset-0 z-10" onClick={() => setActiveTooltip(null)}></div>}
@@ -933,7 +1190,7 @@ function Z3Alternativas({ trackClick, isDark = true, colors }: { trackClick: (zo
 }
 
 // =====================================================================
-// 📊 VISTA 4: CENTRO DE COMANDO ANALÍTICO (REALTIME V4 - HEATMAP LASER)
+// 📊 VISTA 4: CENTRO ANALÍTICO (3 COLUMNAS, SCROLL ESPEJO Y 2 PODIOS)
 // =====================================================================
 function AdminAnalytics() {
   const { id } = useParams();
@@ -967,7 +1224,7 @@ function AdminAnalytics() {
   }, [id, activeTab, timeFilter]);
 
   const purgarDatos = async () => {
-    if (!window.confirm('⚠️ ATENCIÓN: ¿Estás seguro de resetear este tablero? Se borrará TODO el historial de la pestaña actual. Irreversible.')) return;
+    if (!window.confirm('⚠️ ATENCIÓN: ¿Estás seguro de resetear este tablero? Se borrará TODO el historial. Irreversible.')) return;
     await supabase.from('eventos_analitica').delete().eq('proyecto_id', id);
     window.location.reload();
   };
@@ -981,7 +1238,7 @@ function AdminAnalytics() {
       return true;
     });
 
-    const evsAmbiente = eventos.filter((e: any) => e.detalle?.ambiente === ambienteActual || e.tipo === 'WPP_CLICK');
+    const evsAmbiente = eventos.filter((e: any) => e.detalle?.ambiente === ambienteActual || e.tipo.includes('WPP') || e.tipo === 'Z3_LIKE');
     const sesiones = [...new Set(evsAmbiente.map((e: any) => e.sesion_id))];
 
     const endsAndUpdates = evsAmbiente.filter((e: any) => e.tipo === 'SESSION_END' || e.tipo === 'SESSION_UPDATE');
@@ -996,25 +1253,35 @@ function AdminAnalytics() {
     const maxScroll = latestUpdates.length ? Math.max(...latestUpdates.map((e: any) => e.detalle?.scroll_max || 0)) : 0;
     const totalSliders = latestUpdates.reduce((acc: number, curr: any) => acc + (curr.detalle?.slider_total || 0), 0);
     const friccionEvents = evsAmbiente.filter((e: any) => e.tipo === 'FRICCION').length;
-    const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     
+    // PODIO 1: CLICS (Exploración)
+    const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     const getDots = (zonaId: string, colorClass: string) => clicks.filter((e: any) => e.detalle?.zona === zonaId).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
-
     const dotsZ1 = getDots('Z1_RENDER', 'dot-blue');
     const dotsZ2 = getDots('Z2_PRECIO', 'dot-red');
     const dotsZ3 = getDots('Z3_DETALLES', 'dot-yellow');
     
-    const materiales = clicks.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
-    const rankingMap = materiales.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});
-    const rankingArray = Object.entries(rankingMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => (b.c as number) - (a.c as number));
+    const matsClics = clicks.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
+    const rankingClicsMap = matsClics.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});
+    const rankingClics = Object.entries(rankingClicsMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => (b.c as number) - (a.c as number));
+
+    // PODIO 2: ME GUSTA (Corazones Z3)
+    const likes = evsAmbiente.filter((e:any) => e.tipo === 'Z3_LIKE');
+    const matsLikes = likes.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
+    const rankingLikesMap = matsLikes.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});
+    const rankingLikes = Object.entries(rankingLikesMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => (b.c as number) - (a.c as number));
+
+    // Z4 MOCKS: Clics en Whatsapp
+    const wppClicks = evsAmbiente.filter((e:any) => e.tipo.includes('WPP') || e.tipo === 'Z3_NOTE_WPP');
 
     const dataCruda = evsAmbiente.slice(-30).map((e: any) => {
       const time = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       let txt = e.tipo; let color = "text-zinc-500";
       if (e.tipo === 'SESSION_START') { txt = `NEW_IP: ${e.contexto?.geo || 'Local'}`; color = "text-blue-400"; }
       if (e.tipo === 'CLICK_ZONA') { txt = `CLICK (${e.detalle?.zona?.replace('Z1_','')?.replace('Z2_','')?.replace('Z3_','')})`; color = "text-amber-400"; }
-      if (e.tipo === 'WPP_CLICK') { txt = "INTENTO DE CONTACTO"; color = "text-green-400"; }
+      if (e.tipo.includes('WPP')) { txt = "WPP_CONTACT"; color = "text-green-400"; }
       if (e.tipo === 'FRICCION') { txt = "RAGE CLICK"; color = "text-red-400"; }
+      if (e.tipo === 'Z3_LIKE') { txt = `FAVORITO Z3 (${e.detalle?.material})`; color = "text-pink-400"; }
       return { time, txt, color };
     });
 
@@ -1031,30 +1298,24 @@ function AdminAnalytics() {
       return { Z1: (acc.Z1 || 0) + (t.Z1 || 0), Z2: (acc.Z2 || 0) + (t.Z2 || 0), Z3: (acc.Z3 || 0) + (t.Z3 || 0) };
     }, { Z1: 0, Z2: 0, Z3: 0 });
 
-    const granTotalMs = totalTimes.Z1 + totalTimes.Z2 + totalTimes.Z3;
-
     setAnalytics({
-      scroll: `${maxScroll}%`, slider: totalSliders.toString(), friccion: friccionEvents.toString(), tiempoTotal: formatTime(granTotalMs),
+      scroll: `${maxScroll}%`, slider: totalSliders.toString(), friccion: friccionEvents.toString(), tiempoTotal: formatTime(totalTimes.Z1 + totalTimes.Z2 + totalTimes.Z3),
       espectadores: sesiones.map((s, i) => {
         const evsDeSesion = evsAmbiente.filter((e: any) => e.sesion_id === s);
         const startEv = evsDeSesion.find((e: any) => e.tipo === 'SESSION_START');
         const ultimoEvento = evsDeSesion[evsDeSesion.length - 1];
-        
         const fechaUltimo = ultimoEvento ? new Date(ultimoEvento.created_at) : new Date();
         const diffMinutos = Math.floor((now - fechaUltimo.getTime()) / 60000);
         let statusRel = 'Hace ' + diffMinutos + 'm';
         if (diffMinutos < 2) statusRel = 'Online';
         if (diffMinutos > 1440) statusRel = 'Ayer+';
-
-        const statusAbs = fechaUltimo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
         const ctx = startEv?.contexto || {};
-        
         return {
           id: s, rol: i === 0 ? "Titular" : `Visita #${i+1}`, disp: ctx.plataforma || "Web", geo: ctx.geo || "Desconocido", isp: ctx.red || "-", bat: ctx.bateria || "-",
-          statusRel, statusAbs, statusClass: diffMinutos < 2 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : (isDark ? "text-zinc-400 bg-zinc-800 border-zinc-700" : "text-zinc-600 bg-zinc-200 border-zinc-300")
+          statusRel, statusAbs: fechaUltimo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }), statusClass: diffMinutos < 2 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : (isDark ? "text-zinc-400 bg-zinc-800 border-zinc-700" : "text-zinc-600 bg-zinc-200 border-zinc-300")
         };
       }),
-      ranking: rankingArray, logs: dataCruda,
+      rankingClics, rankingLikes, logs: dataCruda, wppClicks: wppClicks.length,
       z1: { t: formatTime(totalTimes.Z1), c: dotsZ1.length, dots: dotsZ1 },
       z2: { t: formatTime(totalTimes.Z2), c: dotsZ2.length, dots: dotsZ2 },
       z3: { t: formatTime(totalTimes.Z3), c: dotsZ3.length, dots: dotsZ3 }
@@ -1062,16 +1323,13 @@ function AdminAnalytics() {
   };
 
   if (!p || !analytics) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
-
   const env = p.ambientes[activeTab] || {};
   const imgBg = env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800";
-  
-  // RENDER DOTS ESTILO MIRA LÁSER
+
   const renderDots = (dots: any[]) => dots.map((d, i) => {
     let ringColor = "border-blue-500"; let dotColor = "bg-blue-400";
     if (d.c === 'dot-red') { ringColor = "border-red-500"; dotColor = "bg-red-500"; }
     if (d.c === 'dot-yellow') { ringColor = "border-amber-400"; dotColor = "bg-amber-400"; }
-    
     return (
       <div key={i} className="absolute pointer-events-none -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-50" style={{ left: `${d.x}%`, top: `${d.y}%` }}>
          <div className={`w-8 h-8 rounded-full border-[3px] ${ringColor} opacity-70 animate-pulse`}></div>
@@ -1087,10 +1345,9 @@ function AdminAnalytics() {
           <button onClick={() => navigate(`/admin/editar/${id}`)} className={`${colors.textMuted} hover:${colors.textMain} font-black text-[10px] uppercase tracking-widest mb-2 transition-colors`}><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
           <h1 className="text-3xl font-black tracking-tighter italic leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
           <p className={`text-[10px] font-bold ${colors.textMuted} uppercase tracking-widest mt-1 flex items-center gap-2`}>
-            Centro de Comando Analítico <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+            Centro Analítico <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
           </p>
         </div>
-        
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <select value={timeFilter} onChange={e=>setTimeFilter(e.target.value)} className={`appearance-none pl-9 pr-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors outline-none cursor-pointer ${isDark ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-zinc-700 border-zinc-200 shadow-sm hover:bg-zinc-50'}`}>
@@ -1111,157 +1368,166 @@ function AdminAnalytics() {
         </div>
       </div>
 
-      <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* 3 COLUMNAS PC */}
+      <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* COL 1: CELULAR ANALÍTICO (SCROLLABLE MOCK) */}
-        <div className="lg:col-span-4 flex flex-col h-[850px]">
+        {/* COL 1: EL TELÉFONO ESPEJO */}
+        <div className="flex flex-col h-[850px]">
           <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
-            
-            {/* Header del Teléfono Analítico */}
             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
-            <div className={`pt-10 pb-0 px-5 relative z-50 ${isDark ? 'bg-[#111]' : 'bg-zinc-100'}`}>
+            <div className={`pt-10 pb-0 px-5 relative z-40 ${isDark ? 'bg-[#111] border-white/5' : 'bg-zinc-100'} border-b`}>
               <h1 className={`font-black text-2xl leading-none tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'} px-1 truncate`}>{p.cliente}</h1>
-              <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2 mb-4 px-1">Análisis Visual</p>
-              <div className="flex gap-1 overflow-x-auto hide-scroll pb-0">
+              <div className="flex gap-1 overflow-x-auto hide-scroll mt-4 pb-0">
                 {p.ambientes.map((a:any, i:number) => (
-                  <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
+                  <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm border border-b-0') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
                 ))}
               </div>
             </div>
-
-            {/* EL LIENZO DEL TELÉFONO (AHORA CON SCROLL) */}
-            <div className={`flex-1 overflow-y-auto hide-scroll relative ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
-              
-              <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-[150%] object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
-              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none h-[150%]"></div>
-
-              {/* Zonas simuladas respetando alturas reales */}
-              <div className="relative z-10 flex flex-col pb-20">
-                 
-                 {/* Z1 Dummy */}
-                 <div className="relative aspect-[4/5] w-full mt-4 px-2 mb-6">
-                    <div className="absolute inset-2 border border-dashed border-blue-500/30 rounded-[2.5rem]"></div>
-                    <div className="absolute top-5 left-5 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                      <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
+            {/* LIENZO SCROLLEABLE */}
+            <div className={`flex-1 overflow-y-auto hide-scroll relative ${isDark ? 'bg-[#0A0A0A]' : 'bg-white'} scroll-smooth`}>
+               <div className="relative z-10 flex flex-col pb-32">
+                 <div className="relative h-[65vh] min-h-[500px] w-full mb-8 rounded-b-[3rem] overflow-hidden">
+                    <img src={imgBg} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
+                    <div className="absolute inset-0 border-b-2 border-dashed border-blue-500/50 bg-blue-500/10"></div>
+                    <div className="absolute top-6 left-4 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
+                      <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest">Z1: Render</span>
                       <div className="text-white font-black text-xs">{analytics.z1.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z1.c} clics</span></div>
                     </div>
                     {renderDots(analytics.z1.dots)}
                  </div>
-
-                 <div className="px-6 mb-6">
-                    <h2 className="text-3xl font-black text-white/20 leading-tight tracking-tighter italic blur-[2px]">Título Oculto</h2>
-                 </div>
-
-                 {/* Z2 Dummy */}
-                 <div className="relative w-full px-5 mb-6">
-                    <div className="relative bg-white/5 border border-dashed border-red-500/30 rounded-[2rem] h-32">
-                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                        <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
+                 <div className="px-6 mb-8 text-transparent blur-sm selection:bg-transparent"><h2 className="text-4xl font-black italic">{env.titulo}</h2></div>
+                 <div className="relative w-full px-5 mb-10">
+                    <div className="relative bg-red-500/10 border-2 border-dashed border-red-500/50 rounded-[2rem] h-40 overflow-hidden">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
+                        <span className="text-[8px] font-black uppercase text-red-400 tracking-widest">Z2: Precio</span>
                         <div className="text-white font-black text-xs">{analytics.z2.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z2.c} clics</span></div>
                       </div>
                       {renderDots(analytics.z2.dots)}
                     </div>
                  </div>
-
-                 {/* Z3 Dummy */}
-                 <div className="relative w-full px-5 mb-8">
-                    <div className="relative w-full aspect-[4/5] rounded-[2.5rem] border border-dashed border-amber-500/30 bg-white/5">
-                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                        <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
+                 <div className="relative w-full px-5 mb-24">
+                    <div className="relative w-full aspect-[4/5] rounded-[2.5rem] border-2 border-dashed border-amber-500/50 bg-amber-500/10 overflow-hidden">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
+                        <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest">Z3: Detalles</span>
                         <div className="text-white font-black text-xs">{analytics.z3.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z3.c} clics</span></div>
                       </div>
                       {renderDots(analytics.z3.dots)}
                     </div>
                  </div>
-
-              </div>
+                 {/* Z4 WHATSAPP AL FINAL DEL SCROLL */}
+                 <div className="relative w-full px-5 pb-10">
+                    <div className="w-full bg-[#25D366]/20 border-2 border-dashed border-[#25D366] text-[#25D366] py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 relative overflow-hidden">
+                      <MessageCircle size={20} /> Z4: Botón WhatsApp
+                      {analytics.wppClicks > 0 && (
+                        <div className="absolute top-[50%] left-[80%] z-50">
+                           <div className="w-12 h-12 rounded-full border-[3px] border-[#25D366] opacity-80 absolute -top-6 -left-6 animate-ping"></div>
+                           <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_15px_#25D366] absolute -top-1 -left-1"></div>
+                        </div>
+                      )}
+                    </div>
+                 </div>
+               </div>
+               <div className="absolute top-2 right-1 w-1.5 h-24 bg-white/20 rounded-full pointer-events-none"></div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
-          <div className="grid grid-cols-4 gap-3 shrink-0">
-            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
-            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Scroll</p><span className="text-xl font-black text-emerald-500">{analytics.scroll}</span></div>
-            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Slider</p><span className="text-xl font-black text-blue-500">{analytics.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
-            <div className={`${isDark ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-100'} p-4 rounded-2xl border shadow-sm transition-colors`}><p className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-1">Rage</p><span className="text-xl font-black text-red-500">{analytics.friccion}</span></div>
+        {/* COL 2: KPI, ESPECTADORES Y PODIO DE LIKES */}
+        <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
+          <div className="grid grid-cols-2 gap-4 shrink-0">
+            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-2xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
+            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Scroll</p><span className="text-2xl font-black text-emerald-500">{analytics.scroll}</span></div>
+            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Slider</p><span className="text-2xl font-black text-blue-500">{analytics.slider}<span className="text-xs text-blue-500/50 ml-1">mv</span></span></div>
+            <div className={`${isDark ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-100'} p-5 rounded-3xl shadow-sm transition-colors`}><p className="text-[9px] font-black uppercase tracking-widest text-red-500 mb-1">Rage Clicks</p><span className="text-2xl font-black text-red-500">{analytics.friccion}</span></div>
           </div>
 
-          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores Activos</h2>
-              <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'} transition-colors`}>{analytics.espectadores.length} IPs</div>
-            </div>
-            <div className="space-y-3">
-              {analytics.espectadores.map((e:any, idx:number) => {
-                const isExpanded = expandedUser === idx;
-                return (
-                  <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
-                    {/* ACORDEÓN COMPACTADO */}
-                    <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
-                        <div className="flex flex-col">
-                          <span className={`text-sm font-black ${colors.textMain} truncate max-w-[100px] md:max-w-none leading-tight`}>{e.rol}</span>
-                          {!isExpanded && <span className={`text-[9px] font-bold ${colors.textMuted} mt-0.5`}><Smartphone size={8} className="inline mr-0.5"/>{e.disp}</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md border flex items-center gap-1 ${e.statusClass}`}>
-                          {e.statusRel} <span className="opacity-60 font-black tracking-widest">({e.statusAbs})</span>
-                        </span>
-                        <ChevronRight size={16} className={`${colors.textMuted} transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                      </div>
-                    </div>
-                    {isExpanded && (
-                      <div className={`p-4 pt-0 grid grid-cols-2 gap-4 mt-2 border-t ${isDark ? 'border-zinc-700/50' : 'border-zinc-200/60'}`}>
-                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Smartphone size={10}/> Dispositivo</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.disp}</span></div>
-                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><MapPin size={10}/> Ubicación</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.geo}</span></div>
-                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Wifi size={10}/> Red & ISP</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.isp}</span></div>
-                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><BatteryMedium size={10}/> Batería</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.bat}</span></div>
-                      </div>
-                    )}
+          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm flex flex-col shrink-0 transition-colors h-64`}>
+             <div className="flex justify-between items-center mb-4">
+               <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores</h2>
+               <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{analytics.espectadores.length} IPs</span>
+             </div>
+             <div className="space-y-3 overflow-y-auto pr-2 hide-scroll">
+               {analytics.espectadores.map((e:any, idx:number) => {
+                 const isExpanded = expandedUser === idx;
+                 return (
+                   <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
+                     <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-3.5 flex justify-between items-center cursor-pointer">
+                       <div className="flex items-center gap-3">
+                         <div className={`w-7 h-7 rounded-xl text-[10px] font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
+                         <div className="flex flex-col">
+                            <span className={`text-sm font-black ${colors.textMain} leading-none`}>{e.rol}</span>
+                            {!isExpanded && <span className={`text-[9px] font-bold ${colors.textMuted} mt-1`}><Smartphone size={10} className="inline mr-1 -mt-0.5"/>{e.disp}</span>}
+                         </div>
+                       </div>
+                       <div className="flex items-center gap-3">
+                         <span className={`text-[9px] font-black px-2.5 py-1.5 rounded-lg border ${e.statusClass}`}>{e.statusRel}</span>
+                         <ChevronRight size={16} className={`${colors.textMuted} transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                       </div>
+                     </div>
+                     {isExpanded && (
+                       <div className={`px-4 pb-4 pt-1 grid grid-cols-2 gap-y-4 gap-x-2 border-t ${isDark ? 'border-zinc-700/50' : 'border-zinc-200/60'} mt-1`}>
+                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><Smartphone size={10}/> Disp.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.disp}</span></div>
+                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><MapPin size={10}/> Ubi.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.geo}</span></div>
+                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><Wifi size={10}/> Red</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.isp}</span></div>
+                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><BatteryMedium size={10}/> Bat.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.bat}</span></div>
+                       </div>
+                     )}
+                   </div>
+                 );
+               })}
+             </div>
+          </div>
+
+          {/* NUEVO PODIO 2: CORAZONES (ME GUSTA) */}
+          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm flex-1 transition-colors flex flex-col`}>
+            <h2 className={`text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4 flex items-center gap-2`}><Heart size={14} className="fill-pink-500"/> Favoritos Z3 (Me Gusta)</h2>
+            <div className="space-y-2 overflow-y-auto hide-scroll">
+                {analytics.rankingLikes && analytics.rankingLikes.length > 0 ? analytics.rankingLikes.map((r:any, i:number) => (
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${i === 0 ? (isDark ? 'bg-pink-500/10 border-pink-500/20' : 'bg-pink-50 border-pink-200') : (isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-50 border-zinc-200')}`}>
+                    <div className="flex items-center gap-3"><span className="text-lg">{i === 0 ? '🏆' : <span className={`text-xs font-black px-1 ${colors.textMuted}`}>{i+1}º</span>}</span><span className={`text-sm font-bold ${i === 0 ? (isDark?'text-pink-500':'text-pink-700') : colors.textMain}`}>{r.n}</span></div>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1 ${i === 0 ? (isDark ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-200 text-pink-800') : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600')}`}><Heart size={10} className={i===0?"fill-pink-400":""}/> {r.c}</span>
                   </div>
-                );
-              })}
+                )) : <div className={`text-center p-4 text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Aún no hay "Me gusta"</div>}
             </div>
           </div>
+        </div>
+
+        {/* COL 3: IA, PODIO CLICS Z3 Y DATA CRUDA */}
+        <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
           
+          {/* PODIO 1: CLICS */}
           <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
-            <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-6`}>Ranking Materiales Z3</h2>
+            <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-4 flex items-center gap-2`}><Monitor size={14}/> Exploración Z3 (Clics)</h2>
             <div className="space-y-2">
-                {analytics.ranking.length > 0 ? analytics.ranking.map((r:any, i:number) => (
-                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${i === 0 ? (isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') : (isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-50 border-zinc-200')}`}>
-                    <div className="flex items-center gap-3"><span className="text-lg">{i === 0 ? '🏆' : <span className={`text-xs font-black px-1 ${colors.textMuted}`}>{i+1}º</span>}</span><span className={`text-sm font-bold ${i === 0 ? (isDark?'text-amber-500':'text-amber-700') : colors.textMain}`}>{r.n}</span></div>
-                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${i === 0 ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-200 text-amber-800') : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600')}`}>{r.c} clics</span>
+                {analytics.rankingClics && analytics.rankingClics.length > 0 ? analytics.rankingClics.map((r:any, i:number) => (
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-50 border-zinc-200'}`}>
+                    <div className="flex items-center gap-3"><span className={`text-xs font-black px-1 ${colors.textMuted}`}>{i+1}º</span><span className={`text-sm font-bold ${colors.textMain}`}>{r.n}</span></div>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'}`}>{r.c} clics</span>
                   </div>
                 )) : <div className={`text-center p-4 text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Sin clics en Z3</div>}
             </div>
           </div>
-        </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px]">
-          <div className={`rounded-[2.5rem] p-8 shadow-xl border relative overflow-hidden flex flex-col shrink-0 transition-colors ${isDark ? 'bg-indigo-950/40 border-indigo-500/20' : 'bg-indigo-50 border-indigo-200'}`}>
-            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
-            <div className="flex items-center gap-4 mb-6 relative z-10">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-colors ${isDark ? 'bg-indigo-500 text-white shadow-indigo-500/20 ring-1 ring-indigo-400/50' : 'bg-indigo-600 text-white shadow-indigo-200'}`}><Cpu size={24} strokeWidth={2}/></div>
-                <div><h3 className={`text-base font-black uppercase tracking-widest leading-none mb-1 transition-colors ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[9px] uppercase tracking-widest font-bold transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia de Ventas</p></div>
-            </div>
-            <div className="space-y-5 relative z-10">
-                <div><span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg inline-block border transition-colors ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-indigo-200 border-indigo-300 text-indigo-800'}`}>Analítico en Tiempo Real</span></div>
-                <p className={`text-sm leading-relaxed font-medium transition-colors ${isDark ? 'text-indigo-200/80' : 'text-indigo-900/80'}`}>Se detectó actividad ({analytics.espectadores.length} espectadores). Exploraron el ambiente de <b>{env.tab || 'la propuesta'}</b>. Evaluá la fricción en el precio y prepará opciones de financiación de ser necesario.</p>
-            </div>
+          <div className={`bg-indigo-950/40 border border-indigo-500/20 p-8 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col shrink-0 transition-colors ${!isDark && 'bg-indigo-50 border-indigo-200'}`}>
+             <div className={`absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
+             <div className="flex items-center gap-4 mb-6 relative z-10">
+                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${isDark ? 'bg-indigo-500 text-white shadow-indigo-500/20 ring-1 ring-indigo-400/50' : 'bg-indigo-600 text-white shadow-indigo-200'}`}><Cpu size={28} strokeWidth={2}/></div>
+                 <div><h3 className={`text-lg font-black uppercase tracking-widest leading-none mb-1 ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia</p></div>
+             </div>
+             <div className="relative z-10">
+                 <p className={`text-[14px] leading-relaxed font-medium ${isDark ? 'text-indigo-200' : 'text-indigo-900/80'}`}>El cliente revisó los renders. {analytics.rankingLikes?.length > 0 ? `El material ${analytics.rankingLikes[0].n} es el favorito.` : 'Aún explorando materiales.'} Registramos {analytics.wppClicks} intentos de contacto Wpp.</p>
+             </div>
           </div>
 
-          <div className={`rounded-[2.5rem] p-6 shadow-sm border flex-1 flex flex-col overflow-hidden transition-colors ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/5' : 'bg-zinc-900 border-zinc-900'}`}>
+          <div className={`${isDark ? 'bg-black border-zinc-800' : 'bg-zinc-900 border-zinc-900'} border p-6 rounded-[2.5rem] shadow-sm flex-1 flex flex-col overflow-hidden`}>
              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-zinc-800">
                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda (En Vivo)</h3>
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda</h3>
              </div>
              <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 font-mono text-[10px]">
                 {analytics.logs.length > 0 ? analytics.logs.map((log:any, i:number) => (
                   <div key={i} className="flex gap-3"><span className="text-zinc-600 shrink-0">[{log.time}]</span><span className={`${log.color} break-words`}>{log.txt}</span></div>
-                )) : <div className="text-zinc-600 italic">Esperando eventos de red...</div>}
+                )) : <div className="text-zinc-600 italic">Esperando eventos...</div>}
              </div>
           </div>
         </div>

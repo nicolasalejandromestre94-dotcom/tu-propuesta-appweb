@@ -4,7 +4,7 @@ import {
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
-  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, DownloadCloud, ThumbsUp
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, ThumbsUp
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -182,10 +182,8 @@ function AdminDashboard() {
               return (
                 <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-200 overflow-hidden hover:shadow-2xl hover:border-amber-300 transition-all duration-500 group flex flex-col">
                   <div onClick={() => window.open(`/ver/${p.id}`, '_blank')} className="h-56 bg-zinc-100 relative cursor-pointer overflow-hidden">
-                    {/* Efecto Blur para que no recorte */}
                     <img src={thumb} className="absolute inset-0 w-full h-full object-cover opacity-40 blur-lg scale-110" alt="blur-bg"/>
                     <img src={thumb} className="absolute inset-0 w-full h-full object-contain z-10 group-hover:scale-105 transition-transform duration-700" alt="Vista" />
-                    
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px] z-20">
                       <div className="bg-white text-zinc-900 px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                         <Play size={14} fill="currentColor"/> Ver Propuesta
@@ -442,7 +440,7 @@ function AdminEditor() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {fotos.map((url:string, i:number) => (
-              <div key={i} className="w-16 h-16 rounded-xl overflow-hidden relative group">
+              <div key={i} className="w-16 h-16 rounded-xl overflow-hidden relative group bg-zinc-900">
                 <img src={url} className="absolute inset-0 w-full h-full object-cover blur-md opacity-50 scale-110" />
                 <img src={url} className="absolute inset-0 w-full h-full object-contain z-10" alt="thumb"/>
                 <div onClick={() => updateEnv(field, fotos.filter((_:any, idx:number) => idx !== i))} className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-20"><Trash2 size={14} className="text-white"/></div>
@@ -470,8 +468,8 @@ function AdminEditor() {
             <button onClick={() => handleShareWpp(id)} className="px-5 py-2.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-[#25D366] hover:text-white transition">
               <MessageCircle size={14}/> Enviar por Wpp
             </button>
-            <button onClick={() => alert("La descarga de póster estará disponible en la próxima actualización de backend. Por ahora usa la tarjeta de enlace genérica que generará WhatsApp.")} className="px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-emerald-100 transition">
-              <DownloadCloud size={14}/> Generar Portada Wpp
+            <button onClick={() => navigate(`/admin/analytics/${id}`)} className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
+              <Activity size={14}/> Analíticas
             </button>
             <button onClick={() => window.open(`/ver/${id}`, '_blank')} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md shadow-amber-600/20 hover:bg-amber-700 transition">
               <Play size={14}/> Ver App
@@ -599,11 +597,10 @@ function AdminEditor() {
               {/* EDITOR Z3 REAL CON OBJECT-CONTAIN Y FONDO BLUR */}
               <div className="pt-10 mt-10 border-t border-zinc-100">
                 <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2"><Layers size={16} className="text-amber-500"/> Z3: Editor de Materiales</h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Sube una imagen base y haz clic para agregar puntos interactivos.</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Sube una imagen base y haz clic para agregar puntos interactivos con nombres editables.</p>
                 
                 <div className="bg-zinc-50 p-6 rounded-[2rem] border border-zinc-200 flex flex-col lg:flex-row gap-6">
                   
-                  {/* Panel Izquierdo: Variantes */}
                   <div className="w-full lg:w-1/3 flex flex-col gap-3">
                      {variantes.map((v:any, idx:number) => (
                        <div key={v.id} onClick={() => setActiveVarTab(idx)} className={`p-4 rounded-2xl border transition-colors cursor-pointer group flex flex-col relative ${activeVarTab === idx ? 'bg-white border-amber-400 shadow-sm' : 'bg-transparent border-zinc-200 hover:bg-white'}`}>
@@ -623,13 +620,11 @@ function AdminEditor() {
                           <p className={`text-[9px] font-bold uppercase tracking-widest mt-2 ml-2 ${activeVarTab === idx ? 'text-amber-600' : 'text-zinc-400'}`}>{(v.puntos || []).length} Puntos agregados</p>
                        </div>
                      ))}
-                     
                      <button onClick={handleAddVariante} className="mt-2 py-4 border-2 border-dashed border-zinc-300 rounded-2xl text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-amber-600 hover:border-amber-300 transition-all flex items-center justify-center gap-2">
                         <Plus size={14}/> Variante Nueva
                      </button>
                   </div>
 
-                  {/* Panel Derecho: Lienzo */}
                   <div className="w-full lg:w-2/3 relative aspect-[4/5] bg-zinc-900 rounded-[2rem] overflow-hidden border border-zinc-300 shadow-inner group flex items-center justify-center">
                      {!varActual ? (
                         <span className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Selecciona o crea una variante</span>
@@ -642,37 +637,39 @@ function AdminEditor() {
                      ) : (
                         <div className="w-full h-full relative cursor-crosshair" onClick={handleCanvasClick} ref={z3CanvasRef}>
                            {/* Blur de fondo para no tener franjas negras */}
-                           <img src={varActual.img} className="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-110" alt="blur" />
+                           <img src={varActual.img} className="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-110 pointer-events-none" alt="blur" />
                            {/* Imagen real en object-contain para no cortar */}
-                           <img src={varActual.img} className="absolute inset-0 w-full h-full object-contain z-10" alt="Z3 Canvas" />
+                           <img src={varActual.img} className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none" alt="Z3 Canvas" />
                            
                            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white flex items-center gap-2 shadow-xl pointer-events-none z-30">
                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> Haz clic para colocar un punto
                            </div>
                            
-                           {/* Renderizar Puntos Reales encima de z-10 */}
+                           {/* Renderizar Puntos Reales */}
                            {(varActual.puntos || []).map((pt:any) => (
                              <div key={pt.id} className="absolute z-20" style={{ top: `${pt.y}%`, left: `${pt.x}%`, transform: 'translate(-50%, -50%)' }}>
                                 <div 
                                   onClick={(e) => { e.stopPropagation(); setEditingPoint(editingPoint === pt.id ? null : pt.id); }} 
                                   className={`relative w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-110`}
                                 >
-                                   <span className={`absolute w-full h-full rounded-full animate-ping opacity-60 ${editingPoint === pt.id ? 'bg-red-400' : 'bg-amber-400'}`}></span>
+                                   <span className={`absolute w-full h-full rounded-full animate-ping opacity-40 ${editingPoint === pt.id ? 'bg-red-400' : 'bg-amber-400'}`}></span>
                                    <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm relative z-10"></div>
                                 </div>
 
                                 {editingPoint === pt.id && (
-                                  <div onClick={(e) => e.stopPropagation()} className="absolute top-8 left-1/2 -translate-x-1/2 w-56 bg-white p-4 rounded-2xl shadow-2xl border border-zinc-200 animate-in zoom-in-95 duration-200 z-50 cursor-default">
-                                    <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 block">Nombre del Material / Detalle</label>
-                                    <input 
-                                      className="w-full bg-zinc-100 px-3 py-2 rounded-xl text-xs font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-3" 
-                                      value={pt.material}
-                                      onChange={(e) => updatePuntoMaterial(pt.id, e.target.value)}
-                                      autoFocus 
-                                    />
-                                    <div className="flex justify-between items-center border-t border-zinc-100 pt-3">
-                                      <button onClick={() => removePunto(pt.id)} className="text-[9px] text-red-500 font-black uppercase tracking-widest hover:text-red-700 flex items-center gap-1"><Trash2 size={12}/> Borrar</button>
-                                      <button onClick={() => setEditingPoint(null)} className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-black">Guardar</button>
+                                  <div onClick={(e) => e.stopPropagation()} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-default">
+                                    <div className="bg-white p-5 rounded-3xl shadow-2xl border border-zinc-200 w-64 animate-in zoom-in-95 duration-200">
+                                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 block">Nombre del Material / Detalle</label>
+                                      <input 
+                                        className="w-full bg-zinc-100 px-3 py-3 rounded-xl text-sm font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-4" 
+                                        value={pt.material}
+                                        onChange={(e) => updatePuntoMaterial(pt.id, e.target.value)}
+                                        autoFocus 
+                                      />
+                                      <div className="flex justify-between items-center border-t border-zinc-100 pt-4">
+                                        <button onClick={() => removePunto(pt.id)} className="text-[10px] text-red-500 font-black uppercase tracking-widest hover:text-red-700 flex items-center gap-1"><Trash2 size={14}/> Borrar</button>
+                                        <button onClick={() => setEditingPoint(null)} className="bg-zinc-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-black">Guardar</button>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
@@ -706,7 +703,6 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
-    
     let plat = "Web";
     const ua = navigator.userAgent;
     if (/android/i.test(ua)) plat = "Android";
@@ -725,13 +721,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
       const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
       const geoData = await res.json();
       if (geoData.city) geoStr = `${geoData.city}, ${geoData.country_code}`;
-    } catch (e) {
-      try {
-        const res2 = await fetch('https://ipapi.co/json/');
-        const geoData2 = await res2.json();
-        if (geoData2.city) geoStr = `${geoData2.city}, ${geoData2.country}`;
-      } catch(e2) {}
-    }
+    } catch (e) { }
     
     contextoCache.current = { userAgent: ua, pantalla: `${window.innerWidth}x${window.innerHeight}`, idioma: navigator.language, plataforma: plat, bateria: bat, red: net, geo: geoStr };
     return contextoCache.current;
@@ -747,7 +737,6 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 
   useEffect(() => {
     logEvent('SESSION_START', { url: window.location.href });
-    
     const handleGlobalScroll = () => {
       const doc = document.documentElement; const max = doc.scrollHeight - doc.clientHeight;
       if (max > 0) { const pct = Math.round(((doc.scrollTop || document.body.scrollTop) / max) * 100); if (pct > maxScroll.current) maxScroll.current = pct; }
@@ -798,7 +787,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 }
 
 // =====================================================================
-// 📱 VISTA 3: CLIENTE FINAL (COMPACTA, Z3 LIMPIA, OBJECT-CONTAIN)
+// 📱 VISTA 3: CLIENTE FINAL (COMPACTA Y CORREGIDA)
 // =====================================================================
 function VistaCliente() {
   const { id } = useParams();
@@ -869,16 +858,9 @@ function VistaCliente() {
   const handleShareClient = async () => {
     logEvent('COMPARTIR_CLICK');
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Propuesta: ${env.titulo || 'STUDIO.MUD'}`,
-          text: `Mirá esta propuesta de diseño de STUDIO.MUD`,
-          url: window.location.href,
-        });
-      } catch (err) { console.log('Error sharing', err); }
+      try { await navigator.share({ title: `Propuesta: ${env.titulo || 'STUDIO.MUD'}`, text: `Mirá esta propuesta de diseño de STUDIO.MUD`, url: window.location.href }); } catch (err) { }
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Enlace copiado al portapapeles");
+      navigator.clipboard.writeText(window.location.href); alert("Enlace copiado al portapapeles");
     }
   };
 
@@ -900,12 +882,8 @@ function VistaCliente() {
              <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-bold mt-1 block">Diseño a Medida</span>
            </div>
            <div className="flex gap-3">
-             <button onClick={handleShareClient} className={`${colors.textMuted} hover:${colors.textMain} transition-colors`} title="Compartir Proyecto">
-               <Share2 size={18} />
-             </button>
-             <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="text-amber-500 hover:text-amber-400 transition-colors" title="Modo Claro">
-               {isDark ? <Sun size={18} /> : <Moon size={18} />}
-             </button>
+             <button onClick={handleShareClient} className={`${colors.textMuted} hover:${colors.textMain} transition-colors`} title="Compartir Proyecto"><Share2 size={18} /></button>
+             <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="text-amber-500 hover:text-amber-400 transition-colors" title="Modo Claro">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
            </div>
         </div>
 
@@ -933,7 +911,6 @@ function VistaCliente() {
         {!showIndex && (
           <div onScroll={trackScroll} className={`flex-1 overflow-y-auto ${colors.bgMain} pb-32 hide-scroll scroll-smooth relative transition-colors`}>
             
-            {/* TABS SI HAY VARIOS Y NAVEGACION TABS */}
             {isMultipleDisplay && c.navegacion === 'tabs' && (
               <div className={`flex overflow-x-auto gap-1.5 items-end hide-scroll px-4 pt-4 mb-2`}>
                 {p.ambientes.map((a:any, i:number) => (
@@ -945,14 +922,12 @@ function VistaCliente() {
               <div className="px-4 pt-4 mb-2"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            {/* Z1: RENDER */}
+            {/* Z1: RENDER CORREGIDO (CLIP-PATH PARA NO SOLAPAR) */}
             <div 
               onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
               onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative h-[60vh] min-h-[450px] w-full mb-6 cursor-default animate-in fade-in fill-mode-both"
             >
-              <div className={`w-full h-full overflow-hidden shadow-2xl relative ${isDark ? 'bg-zinc-950' : 'bg-zinc-200'} rounded-b-[2.5rem] border-b ${isDark ? 'border-white/5' : 'border-zinc-300'}`}>
-                 <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
-              </div>
+               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
             </div>
 
             <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
@@ -985,7 +960,7 @@ function VistaCliente() {
                 </div>
               </div>
 
-              {/* TOTAL GENERAL (SOLO SE MUESTRA SI HAY MÁS DE 1 AMBIENTE EN EL PROYECTO) */}
+              {/* TOTAL GENERAL */}
               {isMultipleDisplay && (
                 <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
                   <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
@@ -1016,7 +991,7 @@ function VistaCliente() {
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO (ADAPTABLE) ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO (SIN SUPERPOSICIÓN - CLIP PATH) ---
 function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any, activeTab: number, onSliderMove: () => void, isDark?: boolean }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
@@ -1042,15 +1017,12 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className={`relative w-full h-full cursor-default pointer-events-auto transition-colors bg-zinc-900 overflow-hidden`}>
+    <div className={`w-full h-full relative cursor-default pointer-events-auto transition-colors bg-zinc-900 rounded-b-[2.5rem] overflow-hidden`}>
       
-      {/* IMAGEN DERECHA (RENDER) */}
+      {/* IMAGEN DERECHA (Fondo Base) */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
-        {/* Blur Fondo */}
         <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-der" />
-        {/* Imagen sin recortes */}
         <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-contain z-10" alt="render" />
-        
         {arrDer.length > 1 && (
           <div className="absolute inset-0 pointer-events-none z-30">
             <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
@@ -1060,17 +1032,12 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
         )}
       </div>
 
-      {/* IMAGEN IZQUIERDA (OBRA) - El div corta el ancho */}
-      <div className={`absolute top-0 left-0 h-full overflow-hidden pointer-events-none ${anim}`} style={{ width: `${val}%` }}>
-        <div className="absolute top-0 left-0 w-[100vw] md:w-[400px] h-full bg-zinc-900">
-           {/* Blur Fondo */}
-           <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-izq" />
-           {/* Imagen sin recortes */}
-           <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-contain z-10" alt="obra" />
-        </div>
-        
+      {/* IMAGEN IZQUIERDA (Corte Perfecto con Clip-Path) */}
+      <div className={`absolute inset-0 w-full h-full pointer-events-none ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
+        <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-izq" />
+        <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-contain z-10" alt="obra" />
         {arrIzq.length > 1 && (
-          <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px] z-30">
+          <div className="absolute inset-0 pointer-events-none z-30">
             <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
             <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
             <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
@@ -1078,7 +1045,7 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
         )}
       </div>
 
-      {/* LÍNEA DIVISORIA */}
+      {/* LÍNEA DIVISORIA Y DRAGGER */}
       <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
           <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
@@ -1138,6 +1105,13 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
     }
   };
 
+  const getTooltipPos = (x: number, y: number) => {
+    let pos = "";
+    if (y > 50) pos += "bottom-8 origin-bottom "; else pos += "top-8 origin-top ";
+    if (x > 70) pos += "right-0 "; else if (x < 30) pos += "left-0 "; else pos += "left-1/2 -translate-x-1/2 ";
+    return pos;
+  };
+
   if(!varActual) return null;
 
   return (
@@ -1186,7 +1160,7 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
           </div>
         )}
 
-        {/* PUNTOS INTERACTIVOS (Z-20 para que estén arriba del blur de fondo) */}
+        {/* PUNTOS INTERACTIVOS MÁS SUTILES (Z-20 para que estén arriba del blur de fondo) */}
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
             <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-5 h-5 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95`}>
@@ -1194,7 +1168,7 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
               <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm relative z-10"></div>
             </button>
             {activeTooltip === punto.id && (
-              <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-[#111]/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-8 origin-bottom' : 'top-8 origin-top'}`}>
+              <div className={`absolute w-48 bg-[#111]/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${getTooltipPos(punto.x, punto.y)}`}>
                 <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
                 <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Detalle</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
               </div>
@@ -1224,7 +1198,7 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
 }
 
 // =====================================================================
-// 📊 VISTA 4: CENTRO ANALÍTICO (3 COLUMNAS, SCROLL ESPEJO Y 2 PODIOS)
+// 📊 VISTA 4: CENTRO ANALÍTICO (3 COLUMNAS Y 2 PODIOS)
 // =====================================================================
 function AdminAnalytics() {
   const { id } = useParams();
@@ -1293,7 +1267,7 @@ function AdminAnalytics() {
     const getDots = (zonaId: string, colorClass: string) => clicks.filter((e: any) => e.detalle?.zona?.includes(zonaId)).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
     const dotsZ1 = getDots('Z1_RENDER', 'dot-blue');
     const dotsZ2 = getDots('Z2_PRECIO', 'dot-red');
-    const dotsZ3 = getDots('Z3_DETALLES', 'dot-yellow'); // Atrapa Z3_DETALLES y Z3_DETALLES_PUNTO
+    const dotsZ3 = getDots('Z3_DETALLES', 'dot-yellow'); 
     
     const matsClics = clicks.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
     const rankingClicsMap = matsClics.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});

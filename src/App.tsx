@@ -982,16 +982,18 @@ function VistaCliente() {
                     </div>
                   ))}
                 </div>
-              </div>
 
-              {/* TOTAL GENERAL */}
-              {isMultipleDisplay && (
-                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
-                  <p className="text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total General (Todos los ambientes)</p>
-                  <span className={`${colors.textMain} font-black text-xl transition-colors`}>{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
-                </div>
-              )}
+                {/* TOTAL GENERAL INTEGRADO DENTRO DE LA TARJETA */}
+                {isMultipleDisplay && (
+                  <div className={`mt-6 pt-5 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}>
+                    <div className={`rounded-2xl p-4 relative overflow-hidden border transition-colors ${isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
+                      <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
+                      <p className={`text-[7px] font-black uppercase tracking-[0.2em] mb-1 ${isDark ? 'text-amber-500' : 'text-amber-600'}`}>Total General (Todos los ambientes)</p>
+                      <span className={`${colors.textMain} font-black text-xl relative z-10`}>{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Z3 ALTERNATIVAS CON DISEÑO MINIMALISTA */}
               {variantes.length > 0 && (
@@ -1244,23 +1246,28 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
         )}
 
         {/* PUNTOS INTERACTIVOS (Z-20 para que estén arriba del blur de fondo) */}
+        {{/* PUNTOS INTERACTIVOS CON LAZO Y ETIQUETA COMPACTA */}
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 group`}>
-              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-amber-400"></span>
-              <div className="absolute w-6 h-6 bg-amber-500/70 backdrop-blur-sm rounded-full border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
-              <div className="w-2.5 h-2.5 bg-white rounded-full shadow-sm relative z-10 group-hover:scale-125 transition-transform"></div>
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white/30 transition-all hover:scale-110 active:scale-95 bg-amber-500 shadow-amber-500/50 group`}>
+              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span>
+              <div className="w-2.5 h-2.5 bg-white rounded-full group-hover:scale-125 transition-transform"></div>
             </button>
             
-            {/* === NUEVA ETIQUETA HOTSPOT (DISEÑO ELEGANTE) === */}
             {activeTooltip === punto.id && (
-              <div className={`absolute ${getTooltipPos(punto.x, punto.y)} w-max min-w-[160px] max-w-[220px] ${isDark ? 'bg-[#111111]/95' : 'bg-white/95'} backdrop-blur-xl p-3.5 pr-8 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] z-50 border ${isDark ? 'border-white/10' : 'border-zinc-200/80'} animate-in fade-in zoom-in-95 duration-200`}>
-                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2.5 right-2.5 ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'} transition-colors`}><X size={14} /></button>
-                <div className="flex flex-col">
-                    <span className={`block text-[7px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-amber-500/80' : 'text-amber-600/80'} mb-1`}>Detalle</span>
-                    <span className={`block text-[13px] font-serif tracking-wide ${isDark ? 'text-zinc-100' : 'text-zinc-900'} leading-snug`}>{punto.material}</span>
+              <>
+                {/* Lazo/Línea conectora */}
+                <div className={`absolute ${punto.y > 50 ? 'bottom-6' : 'top-6'} left-1/2 -translate-x-1/2 w-[2px] h-6 bg-amber-500/60 z-40 animate-in fade-in duration-200`}></div>
+                
+                {/* Cartel Compacto */}
+                <div className={`absolute ${punto.y > 50 ? 'bottom-12' : 'top-12'} ${punto.x > 70 ? 'right-[-20px]' : punto.x < 30 ? 'left-[-20px]' : 'left-1/2 -translate-x-1/2'} w-max max-w-[200px] ${isDark ? 'bg-[#111111]/95 border-white/10' : 'bg-white/95 border-zinc-200/80'} backdrop-blur-xl p-2.5 px-3.5 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] z-50 border animate-in fade-in zoom-in-95 duration-200`}>
+                  <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2 right-2 ${isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'} transition-colors`}><X size={12} /></button>
+                  <div className="flex flex-col pr-4">
+                      <span className={`block text-[6px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-amber-500/80' : 'text-amber-600/80'} mb-0.5`}>Detalle</span>
+                      <span className={`block text-[12px] font-serif tracking-wide ${isDark ? 'text-zinc-100' : 'text-zinc-900'} leading-snug`}>{punto.material}</span>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         ))}

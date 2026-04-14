@@ -512,7 +512,7 @@ function AdminEditor() {
 }
 
 // =====================================================================
-// 🕵️ MOTOR ESPÍA V4
+// 🕵️ MOTOR ESPÍA V4 (CON DETECCIÓN MEJORADA)
 // =====================================================================
 function useAnalytics(proyectoId: string, ambienteTab: string) {
   const [sessionId] = useState(() => crypto.randomUUID());
@@ -525,6 +525,16 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
+    
+    // Mejor detección de plataforma
+    let plat = "Web";
+    const ua = navigator.userAgent;
+    if (/android/i.test(ua)) plat = "Android";
+    else if (/iPhone|iPad|iPod/i.test(ua)) plat = "iOS";
+    else if (/Mac/i.test(ua)) plat = "Mac";
+    else if (/Win/i.test(ua)) plat = "Windows";
+    else if (/Linux/i.test(ua)) plat = "Linux";
+
     let bat = "-"; let net = "Wi-Fi"; let geoStr = "Desconocido";
     try {
       if ('getBattery' in navigator) { const battery: any = await (navigator as any).getBattery(); bat = `${Math.round(battery.level * 100)}%`; }
@@ -543,7 +553,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
       } catch(e2) {}
     }
     
-    contextoCache.current = { userAgent: navigator.userAgent, pantalla: `${window.innerWidth}x${window.innerHeight}`, idioma: navigator.language, plataforma: navigator.platform, bateria: bat, red: net, geo: geoStr };
+    contextoCache.current = { userAgent: ua, pantalla: `${window.innerWidth}x${window.innerHeight}`, idioma: navigator.language, plataforma: plat, bateria: bat, red: net, geo: geoStr };
     return contextoCache.current;
   };
 
@@ -1064,9 +1074,7 @@ function AdminAnalytics() {
     
     return (
       <div key={i} className="absolute pointer-events-none -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-50" style={{ left: `${d.x}%`, top: `${d.y}%` }}>
-         {/* Anillo exterior */}
          <div className={`w-8 h-8 rounded-full border-[3px] ${ringColor} opacity-70 animate-pulse`}></div>
-         {/* Núcleo fuerte */}
          <div className={`absolute w-2 h-2 rounded-full ${dotColor} shadow-[0_0_8px_currentColor]`}></div>
       </div>
     );
@@ -1104,14 +1112,16 @@ function AdminAnalytics() {
       </div>
 
       <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* COL 1: CELULAR ANALÍTICO (SCROLLABLE MOCK) */}
         <div className="lg:col-span-4 flex flex-col h-[850px]">
           <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
+            
+            {/* Header del Teléfono Analítico */}
             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
             <div className={`pt-10 pb-0 px-5 relative z-50 ${isDark ? 'bg-[#111]' : 'bg-zinc-100'}`}>
               <h1 className={`font-black text-2xl leading-none tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'} px-1 truncate`}>{p.cliente}</h1>
-              <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2 mb-4 px-1">Análisis Visual ({env.tab || 'Global'})</p>
-              
-              {/* TABS EN ANALYTICS PARA FILTRAR POR AMBIENTE */}
+              <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2 mb-4 px-1">Análisis Visual</p>
               <div className="flex gap-1 overflow-x-auto hide-scroll pb-0">
                 {p.ambientes.map((a:any, i:number) => (
                   <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
@@ -1119,33 +1129,51 @@ function AdminAnalytics() {
               </div>
             </div>
 
-            <div className={`flex-1 relative overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
-              <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
-              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
+            {/* EL LIENZO DEL TELÉFONO (AHORA CON SCROLL) */}
+            <div className={`flex-1 overflow-y-auto hide-scroll relative ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+              
+              <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-[150%] object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none h-[150%]"></div>
 
-              {/* SIMULACIÓN DE ZONAS PROPORCIONALES */}
-              <div className="absolute top-0 left-0 w-full h-[45%] border-b border-dashed border-blue-400/30 overflow-hidden">
-                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                  <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
-                  <div className="text-white font-black text-xs">{analytics.z1.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z1.c} clics</span></div>
-                </div>
-                {renderDots(analytics.z1.dots)}
-              </div>
+              {/* Zonas simuladas respetando alturas reales */}
+              <div className="relative z-10 flex flex-col pb-20">
+                 
+                 {/* Z1 Dummy */}
+                 <div className="relative aspect-[4/5] w-full mt-4 px-2 mb-6">
+                    <div className="absolute inset-2 border border-dashed border-blue-500/30 rounded-[2.5rem]"></div>
+                    <div className="absolute top-5 left-5 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                      <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
+                      <div className="text-white font-black text-xs">{analytics.z1.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z1.c} clics</span></div>
+                    </div>
+                    {renderDots(analytics.z1.dots)}
+                 </div>
 
-              <div className="absolute top-[45%] left-0 w-full h-[25%] border-b border-dashed border-red-400/30 overflow-hidden">
-                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                  <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
-                  <div className="text-white font-black text-xs">{analytics.z2.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z2.c} clics</span></div>
-                </div>
-                {renderDots(analytics.z2.dots)}
-              </div>
+                 <div className="px-6 mb-6">
+                    <h2 className="text-3xl font-black text-white/20 leading-tight tracking-tighter italic blur-[2px]">Título Oculto</h2>
+                 </div>
 
-              <div className="absolute top-[70%] left-0 w-full h-[30%] overflow-hidden">
-                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
-                  <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
-                  <div className="text-white font-black text-xs">{analytics.z3.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z3.c} clics</span></div>
-                </div>
-                {renderDots(analytics.z3.dots)}
+                 {/* Z2 Dummy */}
+                 <div className="relative w-full px-5 mb-6">
+                    <div className="relative bg-white/5 border border-dashed border-red-500/30 rounded-[2rem] h-32">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                        <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
+                        <div className="text-white font-black text-xs">{analytics.z2.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z2.c} clics</span></div>
+                      </div>
+                      {renderDots(analytics.z2.dots)}
+                    </div>
+                 </div>
+
+                 {/* Z3 Dummy */}
+                 <div className="relative w-full px-5 mb-8">
+                    <div className="relative w-full aspect-[4/5] rounded-[2.5rem] border border-dashed border-amber-500/30 bg-white/5">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                        <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
+                        <div className="text-white font-black text-xs">{analytics.z3.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z3.c} clics</span></div>
+                      </div>
+                      {renderDots(analytics.z3.dots)}
+                    </div>
+                 </div>
+
               </div>
             </div>
           </div>
@@ -1169,10 +1197,14 @@ function AdminAnalytics() {
                 const isExpanded = expandedUser === idx;
                 return (
                   <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
+                    {/* ACORDEÓN COMPACTADO */}
                     <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
-                        <span className={`text-sm font-black ${colors.textMain} truncate max-w-[100px] md:max-w-none`}>{e.rol}</span>
+                        <div className="flex flex-col">
+                          <span className={`text-sm font-black ${colors.textMain} truncate max-w-[100px] md:max-w-none leading-tight`}>{e.rol}</span>
+                          {!isExpanded && <span className={`text-[9px] font-bold ${colors.textMuted} mt-0.5`}><Smartphone size={8} className="inline mr-0.5"/>{e.disp}</span>}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={`text-[9px] font-bold px-2 py-1 rounded-md border flex items-center gap-1 ${e.statusClass}`}>

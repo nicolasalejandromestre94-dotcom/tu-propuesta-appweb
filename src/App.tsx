@@ -17,9 +17,9 @@ const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // =====================================================================
-// 🚨 MICROSOFT CLARITY ID (Reemplazar por tu código)
+// 🚨 MICROSOFT CLARITY ID
 // =====================================================================
-const CLARITY_PROJECT_ID = "wb6kh8g7tb"; // <-- PEGÁ TU CÓDIGO DE CLARITY ACÁ
+const CLARITY_PROJECT_ID = "wb6kh8g7tb"; 
 
 // Función auxiliar para parsear y sumar precios (remueve puntos y "USD"/"ARS")
 const parsePrice = (str: string) => {
@@ -172,7 +172,7 @@ function AdminDashboard() {
               const primerEnv = p.ambientes?.[0] || {};
               const thumbObra = primerEnv.galeriaObra?.[0] || primerEnv.obra || "";
               const thumbRender = primerEnv.galeriaRender?.[0] || primerEnv.render || "";
-              const thumb = thumbRender || thumbObra || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"; // Fallback elegante
+              const thumb = thumbRender || thumbObra || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"; 
               
               return (
                 <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-200 overflow-hidden hover:shadow-2xl hover:border-amber-300 transition-all duration-500 group flex flex-col">
@@ -260,8 +260,8 @@ function AdminEditor() {
       id: crypto.randomUUID(), tab: `Ambiente ${p.ambientes.length + 1}`, titulo: "Nuevo Ambiente",
       galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
       items: [
-        { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
-        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
+        { id: crypto.randomUUID(), lbl: 'Materiales', val: '0', incluido: true },
+        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: '0', incluido: true }
       ]
     };
     const nuevosAmb = [...p.ambientes, nuevo];
@@ -301,13 +301,12 @@ function AdminEditor() {
     setSubiendo(prev => ({ ...prev, [tipo]: false }));
   };
 
-  // MIGRACIÓN/MANEJO DE ÍTEMS DINÁMICOS
   const handleAddItem = () => {
     const itemsActuales = env.items || [
       { id: crypto.randomUUID(), lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
       { id: crypto.randomUUID(), lbl: env.lbl2 || 'Diseño', val: env.val2 || '0', incluido: true }
     ];
-    updateEnv('items', [...itemsActuales, { id: crypto.randomUUID(), lbl: 'Nuevo Ítem', val: 'USD 0', incluido: false }]);
+    updateEnv('items', [...itemsActuales, { id: crypto.randomUUID(), lbl: 'Nuevo Ítem', val: '0', incluido: false }]);
   };
 
   const updateItem = (itemId: string, key: string, value: any) => {
@@ -334,7 +333,7 @@ function AdminEditor() {
     const isObra = tipo === 'obra';
     const field = isObra ? 'galeriaObra' : 'galeriaRender';
     let fotos = env[field] || [];
-    if(fotos.length === 0 && env[tipo]) fotos = [env[tipo]]; // Fallback legacy
+    if(fotos.length === 0 && env[tipo]) fotos = [env[tipo]]; 
 
     const isFrente = (!env.invertido && isObra) || (env.invertido && !isObra);
 
@@ -367,7 +366,7 @@ function AdminEditor() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 md:p-8 pb-32 font-sans flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen bg-zinc-50 p-4 md:p-8 pb-32 font-sans flex flex-col items-center animate-in fade-in duration-500">
       <div className="w-full max-w-[1200px] flex flex-col gap-6">
         
         <header className="flex flex-col md:flex-row md:justify-between md:items-center bg-white p-4 md:p-6 rounded-[2rem] shadow-sm border border-zinc-200">
@@ -389,7 +388,6 @@ function AdminEditor() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* COLUMNA IZQUIERDA: CONFIG */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white p-6 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[3rem] pointer-events-none"></div>
@@ -426,7 +424,6 @@ function AdminEditor() {
             </div>
           </div>
 
-          {/* COLUMNA DERECHA: EDITOR DE AMBIENTE */}
           <div className="lg:col-span-8 space-y-6">
             <div className="flex gap-2 overflow-x-auto hide-scroll">
               {p.ambientes.map((a:any, i:number) => (
@@ -472,7 +469,6 @@ function AdminEditor() {
                 </div>
               </div>
 
-              {/* INVERSIÓN CON ÍTEMS DINÁMICOS */}
               <div className="pt-6 border-t border-zinc-100">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
                 
@@ -516,7 +512,7 @@ function AdminEditor() {
 }
 
 // =====================================================================
-// 🕵️ MOTOR ESPÍA
+// 🕵️ MOTOR ESPÍA V4 (HEARTBEAT Y ANTI-ADBLOCK GEO)
 // =====================================================================
 function useAnalytics(proyectoId: string, ambienteTab: string) {
   const [sessionId] = useState(() => crypto.randomUUID());
@@ -529,13 +525,24 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
-    let bat = "-"; let net = "Wi-Fi"; let geoStr = "Local";
+    let bat = "-"; let net = "Wi-Fi"; let geoStr = "Desconocido";
     try {
       if ('getBattery' in navigator) { const battery: any = await (navigator as any).getBattery(); bat = `${Math.round(battery.level * 100)}%`; }
       if ('connection' in navigator) { const conn = (navigator as any).connection; net = conn.effectiveType ? conn.effectiveType.toUpperCase() : "Wi-Fi"; }
-      const res = await fetch('https://ipapi.co/json/'); const geoData = await res.json();
-      if (geoData.city) geoStr = `${geoData.city}, ${geoData.region_code}`;
     } catch (e) { }
+    
+    try {
+      const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+      const geoData = await res.json();
+      if (geoData.city) geoStr = `${geoData.city}, ${geoData.country_code}`;
+    } catch (e) {
+      try {
+        const res2 = await fetch('https://ipapi.co/json/');
+        const geoData2 = await res2.json();
+        if (geoData2.city) geoStr = `${geoData2.city}, ${geoData2.country}`;
+      } catch(e2) {}
+    }
+    
     contextoCache.current = { userAgent: navigator.userAgent, pantalla: `${window.innerWidth}x${window.innerHeight}`, idioma: navigator.language, plataforma: navigator.platform, bateria: bat, red: net, geo: geoStr };
     return contextoCache.current;
   };
@@ -550,29 +557,32 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 
   useEffect(() => {
     logEvent('SESSION_START', { url: window.location.href });
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const zona = entry.target.getAttribute('data-zona');
-        if (!zona) return;
-        if (entry.isIntersecting) { entryTimes.current[zona] = Date.now(); } 
-        else if (entryTimes.current[zona] > 0) { dwellTimes.current[zona] += Date.now() - entryTimes.current[zona]; entryTimes.current[zona] = 0; }
-      });
-    }, { threshold: 0.6 }); 
-
-    setTimeout(() => { ['Z1', 'Z2', 'Z3'].forEach(z => { const el = document.getElementById(`sensor-${z}`); if (el) observer.observe(el); }); }, 1000);
-
+    
     const handleGlobalScroll = () => {
       const doc = document.documentElement; const max = doc.scrollHeight - doc.clientHeight;
       if (max > 0) { const pct = Math.round(((doc.scrollTop || document.body.scrollTop) / max) * 100); if (pct > maxScroll.current) maxScroll.current = pct; }
     };
     window.addEventListener('scroll', handleGlobalScroll);
 
+    const heartbeat = setInterval(() => {
+      const currentDwell = { ...dwellTimes.current };
+      const now = Date.now();
+      ['Z1', 'Z2', 'Z3'].forEach(z => { if (entryTimes.current[z] > 0) currentDwell[z] += (now - entryTimes.current[z]); });
+      logEvent('SESSION_UPDATE', { tiempos: currentDwell, scroll_max: maxScroll.current, slider_total: sliderMovs.current });
+    }, 5000);
+
     const handleUnload = () => {
       ['Z1', 'Z2', 'Z3'].forEach(z => { if (entryTimes.current[z] > 0) dwellTimes.current[z] += Date.now() - entryTimes.current[z]; });
       logEvent('SESSION_END', { scroll_max: maxScroll.current, slider_total: sliderMovs.current, tiempos: dwellTimes.current });
     };
     window.addEventListener('beforeunload', handleUnload);
-    return () => { window.removeEventListener('beforeunload', handleUnload); window.removeEventListener('scroll', handleGlobalScroll); observer.disconnect(); handleUnload(); }
+    
+    return () => { 
+      window.removeEventListener('beforeunload', handleUnload); 
+      window.removeEventListener('scroll', handleGlobalScroll); 
+      clearInterval(heartbeat);
+      handleUnload(); 
+    }
   }, [proyectoId, ambienteTab]);
 
   const trackClick = (zona: string, e: React.MouseEvent, materialNombre?: string) => {
@@ -586,31 +596,39 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
   const trackScroll = (e: any) => { const el = e.target; const max = el.scrollHeight - el.clientHeight; if (max > 0) { const pct = Math.round((el.scrollTop / max) * 100); if (pct > maxScroll.current) maxScroll.current = pct; } };
   const trackSliderMove = () => { sliderMovs.current++; };
 
-  return { trackClick, trackScroll, trackSliderMove, logEvent };
+  // Control manual de zonas visible
+  const handleZoneEnter = (zona: string) => { entryTimes.current[zona] = Date.now(); };
+  const handleZoneLeave = (zona: string) => { 
+    if(entryTimes.current[zona] > 0) {
+      dwellTimes.current[zona] += Date.now() - entryTimes.current[zona];
+      entryTimes.current[zona] = 0;
+    }
+  };
+
+  return { trackClick, trackScroll, trackSliderMove, logEvent, handleZoneEnter, handleZoneLeave };
 }
 
 // =====================================================================
-// 📱 VISTA 3: CLIENTE (SIMULADOR CELULAR FLOTANTE / PANTALLA COMPLETA)
+// 📱 VISTA 3: CLIENTE FINAL (MODO OSCURO PREMIUM RESPONSIVE)
 // =====================================================================
 function VistaCliente() {
   const { id } = useParams();
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
-  const [isSimulatingLoad, setIsSimulatingLoad] = useState(true); // Splash screen
+  const [isSimulatingLoad, setIsSimulatingLoad] = useState(true);
 
-  // INYECCIÓN CONDICIONAL DE CLARITY SOLO PARA EL CLIENTE
   useEffect(() => {
-    if (CLARITY_PROJECT_ID && !window.clarity) {
+    if (CLARITY_PROJECT_ID && !(window as any).clarity) {
       (function(c:any,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
           t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          y=l.getElementsByTagName(r)[0];if(y && y.parentNode) y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", CLARITY_PROJECT_ID);
     }
   }, []);
 
-  const { trackClick, trackScroll, trackSliderMove, logEvent } = useAnalytics(id || '', p?.ambientes?.[activeTab]?.tab || 'Global');
+  const { trackClick, trackScroll, trackSliderMove, logEvent, handleZoneEnter, handleZoneLeave } = useAnalytics(id || '', p?.ambientes?.[activeTab]?.tab || 'Global');
 
   useEffect(() => {
     if (!id) return;
@@ -620,17 +638,10 @@ function VistaCliente() {
         setP(data);
         if (data.configuracion?.cantAmbientes > 1 && data.configuracion?.navegacion === 'index') setShowIndex(true);
       }
-      setTimeout(() => setIsSimulatingLoad(false), 2000); // Finge carga 2s
+      setTimeout(() => setIsSimulatingLoad(false), 1500); 
     };
     fetchProyecto();
   }, [id]);
-
-  useEffect(() => {
-    if(!p || showIndex) return;
-    const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('opacity-100', 'translate-y-0'); }); }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal-elem').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, [p, showIndex, activeTab]);
 
   if (!p || isSimulatingLoad) return (
     <div className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -645,13 +656,9 @@ function VistaCliente() {
   const c = p.configuracion;
   const env = p.ambientes[activeTab] || {};
   const isMultiple = c.cantAmbientes > 1;
-
   let totalSuma = 0;
   if (isMultiple) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
 
-  const selectEnvFromIndex = (i: number) => { setActiveTab(i); setShowIndex(false); };
-
-  // Ítems de presupuesto
   const currentItems = env.items || [
     { id: 1, lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
     { id: 2, lbl: env.lbl2 || 'Diseño y Montaje', val: env.val2 || '0', incluido: true }
@@ -660,15 +667,14 @@ function VistaCliente() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 animate-in fade-in duration-500">
       
-      {/* Background premium PC */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
-        <img src={env.obra || env.galeriaObra?.[0] || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className="w-full h-full object-cover opacity-20 blur-3xl scale-110" alt="bg"/>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-zinc-950/90"></div>
+        <img src={env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className="w-full h-full object-cover opacity-10 blur-3xl scale-110" alt="bg"/>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-[#0A0A0A]/90"></div>
       </div>
 
-      <div className="w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] bg-zinc-950 md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] border-zinc-800 relative z-10 flex flex-col overflow-hidden md:ring-1 ring-white/10">
+      <div className="w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] bg-[#0A0A0A] md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] border-zinc-800 relative z-10 flex flex-col overflow-hidden md:ring-1 ring-white/10">
         
-        <div className={`bg-[#111111] pt-6 md:pt-10 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'}`}>
+        <div className={`bg-[#111111] pt-6 md:pt-10 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'} border-b border-white/5`}>
           <header className="flex justify-between items-center mb-4 px-2">
             <h1 className="font-black text-[26px] tracking-tighter italic text-white leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
             <span className="text-[7px] bg-zinc-800 border border-zinc-700 text-zinc-300 px-2 py-1 rounded-full uppercase tracking-widest font-bold">
@@ -678,24 +684,24 @@ function VistaCliente() {
           {isMultiple && !showIndex && c.navegacion === 'tabs' && (
             <div className="flex overflow-x-auto gap-1.5 items-end hide-scroll">
               {p.ambientes.map((a:any, i:number) => (
-                <button key={i} onClick={() => setActiveTab(i)} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-white text-zinc-900 shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>{a.tab}</button>
+                <button key={i} onClick={() => {setActiveTab(i); setShowIndex(false);}} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-[#0A0A0A] text-white shadow-sm' : 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300'}`}>{a.tab}</button>
               ))}
             </div>
           )}
         </div>
 
         {showIndex && (
-          <div className="flex-1 bg-zinc-50 overflow-y-auto p-6 pt-10">
-            <h2 className="text-3xl font-black text-zinc-900 tracking-tight leading-tight mb-2">Proyecto<br/>{p.cliente}</h2>
-            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
+          <div className="flex-1 bg-[#0A0A0A] overflow-y-auto p-6 pt-10">
+            <h2 className="text-3xl font-black text-white tracking-tight leading-tight mb-2">Proyecto<br/><span className="text-zinc-400">{p.cliente}</span></h2>
+            <p className="text-xs text-amber-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
             <div className="space-y-4">
               {p.ambientes.map((a:any, i:number) => {
                 const imgThumb = (a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]))[0] || "";
                 return (
-                  <div key={i} onClick={() => selectEnvFromIndex(i)} className="bg-white rounded-3xl p-3 border border-zinc-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-amber-300 transition-colors group">
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-100 overflow-hidden shrink-0 ring-1 ring-black/5">{imgThumb && <img src={imgThumb} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />}</div>
-                    <div className="flex-1"><h3 className="font-black text-lg text-zinc-900">{a.tab}</h3><p className="text-amber-600 font-bold text-xs mt-1">{c.moneda === 'ARS' ? '$' : 'USD'} {a.total}</p></div>
-                    <ChevronRight size={20} className="text-zinc-300 group-hover:text-amber-500 mr-2 transition-colors" />
+                  <div key={i} onClick={() => {setActiveTab(i); setShowIndex(false);}} className="bg-[#111] rounded-3xl p-3 border border-zinc-800 shadow-sm flex items-center gap-4 cursor-pointer hover:border-amber-500/50 transition-colors group">
+                    <div className="w-20 h-20 rounded-2xl bg-zinc-900 overflow-hidden shrink-0 ring-1 ring-white/5">{imgThumb && <img src={imgThumb} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />}</div>
+                    <div className="flex-1"><h3 className="font-black text-lg text-white">{a.tab}</h3><p className="text-amber-500 font-bold text-xs mt-1">{c.moneda === 'ARS' ? '$' : 'USD'} {a.total}</p></div>
+                    <ChevronRight size={20} className="text-zinc-600 group-hover:text-amber-500 mr-2 transition-colors" />
                   </div>
                 );
               })}
@@ -704,23 +710,29 @@ function VistaCliente() {
         )}
 
         {!showIndex && (
-          <div onScroll={trackScroll} className="flex-1 overflow-y-auto bg-white pb-32 hide-scroll scroll-smooth relative">
+          <div onScroll={trackScroll} className="flex-1 overflow-y-auto bg-[#0A0A0A] pb-32 hide-scroll scroll-smooth relative">
             {isMultiple && c.navegacion === 'index' && (
-              <div className="px-4 pt-4 pb-2"><button onClick={() => setShowIndex(true)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-50 hover:bg-zinc-100 px-4 py-2 rounded-full border border-zinc-200 transition"><ArrowLeft size={14}/> Volver al Menú</button></div>
+              <div className="px-4 pt-4 pb-2"><button onClick={() => setShowIndex(true)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-full border border-zinc-800 transition"><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            <div onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default">
+            <div 
+              onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
+              onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default animate-in fade-in slide-in-from-bottom-4 duration-700"
+            >
               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} />
             </div>
 
-            <div className="px-6 mb-6 reveal-elem opacity-0 translate-y-4 transition-all duration-500">
-              <h2 className="text-3xl font-black text-zinc-900 leading-tight tracking-tighter italic">{env.titulo}</h2>
+            <div className="px-6 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+              <h2 className="text-3xl font-black text-white leading-tight tracking-tighter italic">{env.titulo}</h2>
               <p className="text-zinc-500 font-medium text-xs mt-1">{p.cliente}</p>
             </div>
 
-            <div className="px-6 space-y-3">
-              {/* TARJETA INVERSIÓN (Z2) CON ÍTEMS DINÁMICOS */}
-              <div onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className="bg-[#1a1a1a] rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100">
+            <div className="px-5 space-y-4">
+              {/* Z2: PRECIO */}
+              <div 
+                onMouseEnter={() => handleZoneEnter('Z2')} onMouseLeave={() => handleZoneLeave('Z2')} onTouchStart={() => handleZoneEnter('Z2')} onTouchEnd={() => handleZoneLeave('Z2')}
+                onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className="bg-[#111111] rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden border border-white/5 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
+              >
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] mb-1 flex items-center gap-1.5"><Info size={12}/> Inversión del Ambiente</p>
                 <div className="flex items-baseline gap-2 mb-4">
@@ -743,22 +755,23 @@ function VistaCliente() {
                 </div>
               </div>
 
-              {/* TOTAL GENERAL SI HAY MÁS DE UN AMBIENTE */}
               {isMultiple && (
-                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-50 border border-amber-200 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-200">
-                  <div className="absolute right-0 top-0 w-16 h-16 bg-amber-400/20 blur-xl"></div>
-                  <p className="text-amber-700 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total Proyecto (Todos los ambientes)</p>
-                  <span className="text-zinc-900 font-black text-xl">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
+                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
+                  <p className="text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total Proyecto (Todos los ambientes)</p>
+                  <span className="text-white font-black text-xl">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
                 </div>
               )}
 
-              {/* ZONA 3 ALTERNATIVAS */}
-              <Z3Alternativas trackClick={trackClick} />
+              {/* Z3 ALTERNATIVAS */}
+              <div onMouseEnter={() => handleZoneEnter('Z3')} onMouseLeave={() => handleZoneLeave('Z3')} onTouchStart={() => handleZoneEnter('Z3')} onTouchEnd={() => handleZoneLeave('Z3')} className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700">
+                 <Z3Alternativas trackClick={trackClick} />
+              </div>
             </div>
           </div>
         )}
 
-        <div className="absolute bottom-0 w-full p-4 bg-white/95 backdrop-blur-md border-t border-zinc-100 z-30">
+        <div className="absolute bottom-0 left-0 w-full p-4 bg-[#0A0A0A]/90 backdrop-blur-md border-t border-zinc-900 z-30">
           <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
@@ -769,7 +782,7 @@ function VistaCliente() {
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO OSCURO ---
 function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, activeTab: number, onSliderMove: () => void }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
@@ -795,14 +808,14 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-md border-4 border-white ring-1 ring-black/5 cursor-default pointer-events-auto">
+    <div className="relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-xl border-4 border-zinc-900 ring-1 ring-white/10 cursor-default pointer-events-auto">
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         <img src={arrDer[idxDer]} className="w-full h-full object-cover object-center" />
         {arrDer.length > 1 && (
           <div className="absolute inset-0 pointer-events-none z-30">
-            <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
-            <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronRight size={18}/></button>
-            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest">{idxDer+1}/{arrDer.length}</div>
+            <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
+            <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
+            <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-zinc-300 font-bold tracking-widest border border-white/10">{idxDer+1}/{arrDer.length}</div>
           </div>
         )}
       </div>
@@ -810,21 +823,21 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
         <img src={arrIzq[idxIzq]} className="absolute top-0 left-0 w-[100vw] h-full object-cover object-center max-w-none md:w-[400px]" />
         {arrIzq.length > 1 && (
           <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px] z-30">
-            <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
-            <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronRight size={18}/></button>
-            <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest">{idxIzq+1}/{arrIzq.length}</div>
+            <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
+            <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
+            <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-zinc-300 font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
           </div>
         )}
       </div>
-      <div className={`absolute top-0 bottom-0 w-[3px] bg-white z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(0,0,0,0.5)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-10 bg-white rounded-md shadow-md flex items-center justify-center gap-1">
-          <div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div><div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div>
+      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.5)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
+          <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
         </div>
       </div>
       <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex bg-white/95 backdrop-blur-md p-1 rounded-full shadow-xl border border-zinc-200 z-30 pointer-events-auto">
-        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblIzq || 'Antes'}</button>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblDer || 'Render'}</button>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex bg-black/80 backdrop-blur-md p-1 rounded-full shadow-2xl border border-white/10 z-30 pointer-events-auto">
+        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-white text-zinc-900 shadow-md' : 'text-zinc-400 hover:text-white'}`}>{env.lblIzq || 'Antes'}</button>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-white text-zinc-900 shadow-md' : 'text-zinc-400 hover:text-white'}`}>{env.lblDer || 'Render'}</button>
       </div>
     </div>
   );
@@ -836,14 +849,8 @@ function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.Mo
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
   const variantes = [
-    {
-      id: "v1", nombre: "Madera Natural", img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800",
-      puntos: [{ id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" }]
-    },
-    {
-      id: "v2", nombre: "Laca Oscura", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800",
-      puntos: [{ id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" }]
-    }
+    { id: "v1", nombre: "Madera Natural", img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800", puntos: [{ id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" }] },
+    { id: "v2", nombre: "Laca Oscura", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800", puntos: [{ id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" }] }
   ];
 
   const nextSlide = () => { setActiveSlide((i) => (i + 1) % variantes.length); setActiveTooltip(null); };
@@ -851,34 +858,34 @@ function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.Mo
   const varianteActual = variantes[activeSlide];
 
   return (
-    <div id="sensor-Z3" data-zona="Z3" className="mt-6 mb-6 reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-300">
+    <div id="sensor-Z3" data-zona="Z3" className="mt-6 mb-6">
       <div className="px-2 mb-4">
-        <h3 className="text-2xl font-black text-zinc-900 italic tracking-tight leading-none">Variantes y Materiales</h3>
-        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Toca los puntos para ver opciones</p>
+        <h3 className="text-2xl font-black text-white italic tracking-tight leading-none">Variantes y Materiales</h3>
+        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Toca los puntos para ver opciones</p>
       </div>
-      <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white ring-1 ring-black/5 bg-zinc-100">
-        <img key={varianteActual.id} src={varianteActual.img} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Variante" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
+      <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-zinc-900 ring-1 ring-white/10 bg-zinc-950">
+        <img key={varianteActual.id} src={varianteActual.img} className="w-full h-full object-cover animate-in fade-in duration-500 opacity-80" alt="Variante" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none"></div>
         {varianteActual.puntos.map((punto) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white/20 transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
               <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span><div className="w-2.5 h-2.5 bg-white rounded-full"></div>
             </button>
             {activeTooltip === punto.id && (
-              <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-zinc-900/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-zinc-700/50 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-12 origin-bottom' : 'top-12 origin-top'}`}>
+              <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-[#111]/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-12 origin-bottom' : 'top-12 origin-top'}`}>
                 <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
-                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Material</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
+                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Material</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
               </div>
             )}
           </div>
         ))}
         <div className="absolute bottom-6 left-0 w-full px-4 flex justify-between items-end pointer-events-none z-10">
-          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all"><ChevronLeft size={20}/></button>
-          <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto flex flex-col items-center border border-white/10">
+          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-black hover:text-white transition-all"><ChevronLeft size={20}/></button>
+          <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto flex flex-col items-center border border-white/5">
             <span className="text-[9px] text-white font-black uppercase tracking-widest">{varianteActual.nombre}</span>
-            <div className="flex gap-1.5 mt-1.5">{variantes.map((_, idx) => (<div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/30'}`}></div>))}</div>
+            <div className="flex gap-1.5 mt-1.5">{variantes.map((_, idx) => (<div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/20'}`}></div>))}</div>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all"><ChevronRight size={20}/></button>
+          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-black hover:text-white transition-all"><ChevronRight size={20}/></button>
         </div>
       </div>
       {activeTooltip && <div className="fixed inset-0 z-10" onClick={() => setActiveTooltip(null)}></div>}
@@ -887,7 +894,7 @@ function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.Mo
 }
 
 // =====================================================================
-// 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS v3.0 - REALTIME)
+// 📊 VISTA 4: CENTRO DE COMANDO ANALÍTICO (REALTIME V4)
 // =====================================================================
 function AdminAnalytics() {
   const { id } = useParams();
@@ -897,7 +904,7 @@ function AdminAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [expandedUser, setExpandedUser] = useState<number | null>(0); 
   const [theme, setTheme] = useState('dark');
-  const [timeFilter, setTimeFilter] = useState('24h'); // '24h', '7d', 'all'
+  const [timeFilter, setTimeFilter] = useState('24h');
 
   const isDark = theme === 'dark';
   const colors = {
@@ -938,9 +945,17 @@ function AdminAnalytics() {
     const evsAmbiente = eventos.filter((e: any) => e.detalle?.ambiente === ambienteActual || e.tipo === 'WPP_CLICK');
     const sesiones = [...new Set(evsAmbiente.map((e: any) => e.sesion_id))];
 
-    const ends = evsAmbiente.filter((e: any) => e.tipo === 'SESSION_END');
-    const maxScroll = ends.length ? Math.max(...ends.map((e: any) => e.detalle?.scroll_max || 0)) : 0;
-    const totalSliders = ends.reduce((acc: number, curr: any) => acc + (curr.detalle?.slider_total || 0), 0);
+    const endsAndUpdates = evsAmbiente.filter((e: any) => e.tipo === 'SESSION_END' || e.tipo === 'SESSION_UPDATE');
+    const latestUpdatesMap: any = {};
+    endsAndUpdates.forEach(e => {
+        if (!latestUpdatesMap[e.sesion_id] || new Date(e.created_at) > new Date(latestUpdatesMap[e.sesion_id].created_at)) {
+            latestUpdatesMap[e.sesion_id] = e;
+        }
+    });
+    const latestUpdates = Object.values(latestUpdatesMap);
+
+    const maxScroll = latestUpdates.length ? Math.max(...latestUpdates.map((e: any) => e.detalle?.scroll_max || 0)) : 0;
+    const totalSliders = latestUpdates.reduce((acc: number, curr: any) => acc + (curr.detalle?.slider_total || 0), 0);
     const friccionEvents = evsAmbiente.filter((e: any) => e.tipo === 'FRICCION').length;
     const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     
@@ -955,7 +970,7 @@ function AdminAnalytics() {
     const rankingArray = Object.entries(rankingMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => (b.c as number) - (a.c as number));
 
     const dataCruda = evsAmbiente.slice(-30).map((e: any) => {
-      const time = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const time = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       let txt = e.tipo; let color = "text-zinc-500";
       if (e.tipo === 'SESSION_START') { txt = `NEW_IP: ${e.contexto?.geo || 'Local'}`; color = "text-blue-400"; }
       if (e.tipo === 'CLICK_ZONA') { txt = `CLICK (${e.detalle?.zona?.replace('Z1_','')?.replace('Z2_','')?.replace('Z3_','')})`; color = "text-amber-400"; }
@@ -963,8 +978,6 @@ function AdminAnalytics() {
       if (e.tipo === 'FRICCION') { txt = "RAGE CLICK"; color = "text-red-400"; }
       return { time, txt, color };
     });
-
-    const wppClicks = eventos.filter((e: any) => e.tipo === 'WPP_CLICK').length;
 
     const formatTime = (ms: number) => {
       if (!ms) return "00:00m";
@@ -974,7 +987,7 @@ function AdminAnalytics() {
       return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}m`;
     };
 
-    const totalTimes = ends.reduce((acc: any, curr: any) => {
+    const totalTimes = latestUpdates.reduce((acc: any, curr: any) => {
       const t = curr.detalle?.tiempos || {};
       return { Z1: (acc.Z1 || 0) + (t.Z1 || 0), Z2: (acc.Z2 || 0) + (t.Z2 || 0), Z3: (acc.Z3 || 0) + (t.Z3 || 0) };
     }, { Z1: 0, Z2: 0, Z3: 0 });
@@ -1052,8 +1065,6 @@ function AdminAnalytics() {
       </div>
 
       <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* COL 1: CELULAR CON ZONAS DIVIDIDAS */}
         <div className="lg:col-span-4 flex flex-col h-[850px]">
           <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
@@ -1071,7 +1082,6 @@ function AdminAnalytics() {
               <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
               <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
 
-              {/* Z1 */}
               <div className="absolute top-0 left-0 w-full h-[45%] border-b border-dashed border-blue-400/30 overflow-hidden">
                 <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
                   <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
@@ -1080,7 +1090,6 @@ function AdminAnalytics() {
                 {renderDots(analytics.z1.dots, 'bg-amber-500/80 w-16 h-16 blur-xl')}
               </div>
 
-              {/* Z2 */}
               <div className="absolute top-[45%] left-0 w-full h-[25%] border-b border-dashed border-red-400/30 overflow-hidden">
                 <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
                   <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
@@ -1089,7 +1098,6 @@ function AdminAnalytics() {
                 {renderDots(analytics.z2.dots, 'bg-red-600/90 w-20 h-20 blur-xl')}
               </div>
 
-              {/* Z3 */}
               <div className="absolute top-[70%] left-0 w-full h-[30%] overflow-hidden">
                 <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
                   <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
@@ -1101,7 +1109,6 @@ function AdminAnalytics() {
           </div>
         </div>
 
-        {/* COL 2: KPIS Y ESPECTADORES */}
         <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
           <div className="grid grid-cols-4 gap-3 shrink-0">
             <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
@@ -1115,7 +1122,6 @@ function AdminAnalytics() {
               <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores Activos</h2>
               <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'} transition-colors`}>{analytics.espectadores.length} IPs</div>
             </div>
-            
             <div className="space-y-3">
               {analytics.espectadores.map((e:any, idx:number) => {
                 const isExpanded = expandedUser === idx;
@@ -1160,7 +1166,6 @@ function AdminAnalytics() {
           </div>
         </div>
 
-        {/* COL 3: IA Y DATA CRUDA */}
         <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px]">
           <div className={`rounded-[2.5rem] p-8 shadow-xl border relative overflow-hidden flex flex-col shrink-0 transition-colors ${isDark ? 'bg-indigo-950/40 border-indigo-500/20' : 'bg-indigo-50 border-indigo-200'}`}>
             <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
@@ -1169,12 +1174,8 @@ function AdminAnalytics() {
                 <div><h3 className={`text-base font-black uppercase tracking-widest leading-none mb-1 transition-colors ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[9px] uppercase tracking-widest font-bold transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia de Ventas</p></div>
             </div>
             <div className="space-y-5 relative z-10">
-                <div><span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg inline-block border transition-colors ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-indigo-200 border-indigo-300 text-indigo-800'}`}>Fricción en Precio</span></div>
-                <p className={`text-sm leading-relaxed font-medium transition-colors ${isDark ? 'text-indigo-200/80' : 'text-indigo-900/80'}`}>Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con los renders. La Acción Final indica intención de compra trabada por costo.</p>
-                <div className={`p-5 rounded-2xl mt-2 border transition-colors ${isDark ? 'bg-emerald-950/50 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
-                  <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 mb-2 transition-colors ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}><Zap size={12}/> Acción Sugerida</span>
-                  <p className={`text-xs font-medium leading-relaxed transition-colors ${isDark ? 'text-emerald-200/70' : 'text-emerald-900/80'}`}>Toma la iniciativa. Tienen poder adquisitivo alto, pero buscan sentir que ganan negociando. Ofreceles un plan de financiación para destrabar el cierre.</p>
-                </div>
+                <div><span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg inline-block border transition-colors ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-indigo-200 border-indigo-300 text-indigo-800'}`}>Analítico en Tiempo Real</span></div>
+                <p className={`text-sm leading-relaxed font-medium transition-colors ${isDark ? 'text-indigo-200/80' : 'text-indigo-900/80'}`}>Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con los renders.</p>
             </div>
           </div>
 
@@ -1190,7 +1191,6 @@ function AdminAnalytics() {
              </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import {
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
-  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -21,20 +21,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // =====================================================================
 const CLARITY_PROJECT_ID = "wb6kh8g7tb"; 
 
-// Función auxiliar para parsear y sumar precios
+// Función auxiliar para parsear y sumar precios (remueve puntos y "USD"/"ARS")
 const parsePrice = (str: string) => {
   if (!str) return 0;
   const cleaned = str.toString().replace(/[^0-9]/g, '');
   const parsed = parseInt(cleaned, 10);
   return isNaN(parsed) ? 0 : parsed;
-};
-
-// Función global para compartir por Wpp
-const handleShareWpp = (id: string, e?: React.MouseEvent) => {
-  if (e) e.stopPropagation();
-  const url = `${window.location.origin}/ver/${id}`;
-  const text = `¡Hola! Aquí tienes tu propuesta de diseño de STUDIO.MUD: ${url}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
 
 export default function App() {
@@ -111,7 +103,7 @@ function Login() {
   );
 }
 
-// --- VISTA 1: DASHBOARD ADMINISTRADOR ---
+// --- VISTA 1: DASHBOARD ADMINISTRADOR (SMART CARDS) ---
 function AdminDashboard() {
   const [proyectos, setProyectos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -131,8 +123,8 @@ function AdminDashboard() {
       id: crypto.randomUUID(), tab: "Ambiente 1", titulo: "Cocina Principal",
       galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
       items: [
-        { id: crypto.randomUUID(), lbl: 'Materiales', val: '0', incluido: true },
-        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: '0', incluido: true }
+        { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
+        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
       ]
     };
     const { data, error } = await supabase.from('proyectos').insert([{
@@ -203,8 +195,8 @@ function AdminDashboard() {
                       <button onClick={() => navigate(`/admin/editar/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-colors">
                         <Edit3 size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Editar</span>
                       </button>
-                      <button onClick={(e) => handleShareWpp(p.id, e)} className="flex flex-col items-center justify-center gap-1 py-2 text-[#25D366] hover:text-white hover:bg-[#25D366] bg-[#25D366]/10 rounded-xl transition-colors border border-[#25D366]/20">
-                        <MessageCircle size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Enviar</span>
+                      <button onClick={() => navigate(`/admin/analytics/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 bg-amber-50/50 rounded-xl transition-colors border border-amber-100">
+                        <Activity size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Métricas</span>
                       </button>
                       <button onClick={(e) => handleCopy(p.id, e)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors relative">
                         {copiedStates[p.id] ? <Check size={16} className="text-green-500"/> : <Link2 size={16}/>}
@@ -310,10 +302,9 @@ function AdminEditor() {
   };
 
   const handleAddItem = () => {
-    const envAt = p.ambientes[activeTab];
-    const itemsActuales = envAt.items || [
-      { id: crypto.randomUUID(), lbl: envAt.lbl1 || 'Materiales', val: envAt.val1 || '0', incluido: true },
-      { id: crypto.randomUUID(), lbl: envAt.lbl2 || 'Diseño', val: envAt.val2 || '0', incluido: true }
+    const itemsActuales = env.items || [
+      { id: crypto.randomUUID(), lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
+      { id: crypto.randomUUID(), lbl: env.lbl2 || 'Diseño', val: env.val2 || '0', incluido: true }
     ];
     updateEnv('items', [...itemsActuales, { id: crypto.randomUUID(), lbl: 'Nuevo Ítem', val: '0', incluido: false }]);
   };
@@ -387,9 +378,6 @@ function AdminEditor() {
               {copiedStates['editorLink'] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>} 
               {copiedStates['editorLink'] ? '¡Link Copiado!' : 'Copiar Link'}
             </button>
-            <button onClick={() => handleShareWpp(id)} className="px-5 py-2.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-[#25D366] hover:text-white transition">
-              <MessageCircle size={14}/> Enviar por Wpp
-            </button>
             <button onClick={() => navigate(`/admin/analytics/${id}`)} className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
               <Activity size={14}/> Analíticas
             </button>
@@ -399,35 +387,35 @@ function AdminEditor() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
+            <div className="bg-white p-6 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[3rem] pointer-events-none"></div>
               <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><Settings size={14}/> Configuración Global</h2>
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Nombre Cliente</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Nombre Cliente</label>
                   <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.cliente} onChange={e=>updateGlobal({cliente: e.target.value})} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">WhatsApp (Botón Final)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">WhatsApp (Botón Final)</label>
                   <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.whatsapp} onChange={e=>updateGlobal({whatsapp: e.target.value})} />
                 </div>
                 <div className="pt-4 border-t border-zinc-100">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-3 block">Estructura</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-50 p-1.5 rounded-xl border border-zinc-200 flex flex-col relative">
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white px-2 text-[7px] font-black text-zinc-400 uppercase tracking-widest">Ambientes</span>
-                      <div className="flex mt-2">
-                        <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-2 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===1?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>1 Solo</button>
-                        <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-2 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===2?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>Varios</button>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Estructura</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
+                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Ambientes</span>
+                      <div className="flex">
+                        <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===1?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>1 Solo</button>
+                        <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===2?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>Varios</button>
                       </div>
                     </div>
-                    <div className="bg-zinc-50 p-1.5 rounded-xl border border-zinc-200 flex flex-col relative">
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white px-2 text-[7px] font-black text-zinc-400 uppercase tracking-widest">Moneda</span>
-                      <div className="flex mt-2">
-                        <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-2 text-[9px] font-black rounded-lg transition ${c.moneda==='USD'?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>USD</button>
-                        <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-2 text-[9px] font-black rounded-lg transition ${c.moneda==='ARS'?'bg-white shadow-sm border border-zinc-200 text-zinc-900':'text-zinc-500'}`}>ARS</button>
+                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
+                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Moneda</span>
+                      <div className="flex">
+                        <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='USD'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>USD</button>
+                        <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='ARS'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>ARS</button>
                       </div>
                     </div>
                   </div>
@@ -444,26 +432,26 @@ function AdminEditor() {
               {c.cantAmbientes === 2 && <button onClick={addAmbiente} className="shrink-0 px-4 py-3 rounded-2xl text-zinc-400 hover:text-amber-600 bg-white border border-zinc-200 border-dashed hover:border-amber-300 transition-colors flex items-center justify-center"><Plus size={16}/></button>}
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-200 shadow-sm relative">
+            <div className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-zinc-200 shadow-sm relative">
               {c.cantAmbientes === 2 && p.ambientes.length > 1 && (
                 <button onClick={() => removeAmbiente(activeTab)} className="absolute top-6 right-6 text-zinc-300 hover:text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={16}/></button>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {c.cantAmbientes === 2 && (
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-amber-600 ml-1 mb-2 block">Nombre en Índice</label>
-                    <input className="w-full bg-amber-50/50 px-4 py-3.5 rounded-xl font-bold text-amber-900 outline-none border border-amber-200 focus:border-amber-500 focus:bg-white transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
+                    <label className="text-[9px] font-black uppercase tracking-widest text-amber-600 ml-1 mb-1 block">Nombre en Índice</label>
+                    <input className="w-full bg-amber-50 px-4 py-3 rounded-xl font-bold text-amber-900 outline-none border border-amber-200 focus:border-amber-500 focus:bg-white transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
                   </div>
                 )}
                 <div className={c.cantAmbientes === 1 ? 'col-span-2' : ''}>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Título del Banner</label>
-                  <input className="w-full bg-zinc-50 px-4 py-3.5 rounded-xl font-black text-lg text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Título del Banner</label>
+                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-black text-lg text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
                 </div>
               </div>
 
               <div className="mb-8">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><ImageIcon size={14}/> Render y Obra (Slider)</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><ImageIcon size={14}/> Render y Obra (Slider)</h3>
                 <div className="flex gap-4 mb-4 bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
                    <div className="flex-1">
                      <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 ml-1 block mb-1">Texto Izquierda</label>
@@ -481,56 +469,40 @@ function AdminEditor() {
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-zinc-100">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
+              <div className="pt-6 border-t border-zinc-100">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
                 
-                <div className="bg-[#111] rounded-[2rem] p-8 relative overflow-hidden shadow-xl mb-8">
+                <div className="bg-[#111] rounded-3xl p-6 relative overflow-hidden shadow-xl mb-6">
                    <div className="absolute -right-6 -top-6 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
-                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-3">Monto Total Base</label>
-                   <div className="flex items-center gap-4 relative z-10">
-                     <span className="text-amber-500 font-black text-3xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
-                     <input className="bg-transparent text-white font-black text-6xl outline-none w-full tracking-tighter" value={env.total} onChange={e=>updateEnv('total', e.target.value)} placeholder="0" />
+                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-2">Monto Total Base</label>
+                   <div className="flex items-center gap-3 relative z-10">
+                     <span className="text-amber-500 font-black text-2xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
+                     <input className="bg-transparent text-white font-black text-5xl outline-none w-full tracking-tighter" value={env.total} onChange={e=>updateEnv('total', e.target.value)} placeholder="0" />
                    </div>
                 </div>
 
-                <div className="space-y-4 bg-zinc-50 p-6 rounded-[2rem] border border-zinc-100">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 block mb-2">Desglose de Ítems (Opcional)</label>
+                <div className="space-y-3 mb-4 bg-zinc-50 p-4 rounded-3xl border border-zinc-100">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 block">Desglose de Ítems (Opcional)</label>
                   {currentItems.map((item:any) => (
-                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl border transition-colors ${item.incluido ? 'bg-white border-zinc-200 shadow-sm' : 'bg-amber-50/50 border-amber-200 border-dashed'}`}>
-                      <input className={`flex-1 bg-transparent px-2 py-2 rounded-lg text-sm font-bold outline-none ${item.incluido ? 'text-zinc-800' : 'text-zinc-600'}`} value={item.lbl} onChange={e=>updateItem(item.id, 'lbl', e.target.value)} placeholder="Ej: Materiales" />
-                      <div className="flex items-center justify-end gap-5 shrink-0">
-                        <input className={`w-28 bg-transparent text-right text-sm font-black outline-none ${item.incluido ? 'text-zinc-900' : 'text-amber-600'}`} value={item.val} onChange={e=>updateItem(item.id, 'val', e.target.value)} placeholder="Valor" />
-                        <div onClick={() => updateItem(item.id, 'incluido', !item.incluido)} className="flex items-center gap-2 cursor-pointer" title="¿Suma al total o es extra?">
-                          <div className={`w-10 h-6 rounded-full p-1 transition-colors relative ${item.incluido ? 'bg-emerald-500' : 'bg-zinc-300'}`}>
-                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${item.incluido ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center gap-3 p-3 rounded-2xl border transition-colors ${item.incluido ? 'bg-white border-zinc-200 shadow-sm' : 'bg-amber-50 border-amber-200'}`}>
+                      <input className="flex-1 bg-transparent px-2 py-2 rounded-xl text-xs font-bold outline-none focus:bg-zinc-50" value={item.lbl} onChange={e=>updateItem(item.id, 'lbl', e.target.value)} placeholder="Ej: Materiales" />
+                      <div className="flex items-center gap-3">
+                        <input className={`w-32 bg-transparent px-2 py-2 rounded-xl text-sm font-black outline-none focus:bg-zinc-50 ${item.incluido ? 'text-zinc-900' : 'text-amber-600'}`} value={item.val} onChange={e=>updateItem(item.id, 'val', e.target.value)} placeholder="Valor" />
+                        <div onClick={() => updateItem(item.id, 'incluido', !item.incluido)} className="flex items-center gap-2 cursor-pointer bg-white border border-zinc-200 p-1.5 rounded-xl w-[110px] shrink-0" title="¿Suma al total o es extra?">
+                          <div className={`w-8 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out ${item.incluido ? 'bg-emerald-500' : 'bg-zinc-300'}`}>
+                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${item.incluido ? 'translate-x-3' : 'translate-x-0'}`}></div>
                           </div>
-                          <span className={`text-[8px] font-black uppercase tracking-widest w-8 ${item.incluido ? 'text-emerald-600' : 'text-zinc-400'}`}>{item.incluido ? 'Suma' : 'Extra'}</span>
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${item.incluido ? 'text-emerald-600' : 'text-zinc-400'}`}>{item.incluido ? 'Suma' : 'Extra'}</span>
                         </div>
-                        <button onClick={() => deleteItem(item.id)} className="text-zinc-300 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>
+                        <button onClick={() => deleteItem(item.id)} className="text-zinc-300 hover:text-red-500 p-2"><Trash2 size={16}/></button>
                       </div>
                     </div>
                   ))}
-                  <button onClick={handleAddItem} className="w-full py-4 border-2 border-dashed border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50/50 transition-all flex items-center justify-center gap-2">
+                  <button onClick={handleAddItem} className="w-full py-4 border-2 border-dashed border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50/50 transition-all flex items-center justify-center gap-2 mt-2">
                     <Plus size={14}/> Agregar Ítem
                   </button>
                 </div>
               </div>
-
-              {/* FACHADA VISUAL MÓDULO Z3 (Próxima actualización) */}
-              <div className="pt-10 mt-10 border-t border-zinc-100 opacity-60 pointer-events-none">
-                <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2"><Layers size={16} className="text-amber-500"/> Z3: Editor de Materiales</h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Módulo en construcción. Pronto podrás subir imágenes y asignar puntos aquí.</p>
-                <div className="bg-zinc-50 p-6 rounded-[2rem] border border-zinc-200 flex flex-col lg:flex-row gap-6">
-                  <div className="w-full lg:w-1/3 flex flex-col gap-3">
-                     <div className="bg-white p-4 rounded-2xl border border-amber-400 shadow-sm relative group cursor-pointer"><div className="absolute top-0 bottom-0 left-0 w-1.5 bg-amber-400 rounded-l-2xl"></div><h4 className="font-black text-sm text-zinc-900 ml-2">Variante Ejemplo</h4></div>
-                     <button className="mt-2 py-4 border-2 border-dashed border-zinc-300 rounded-2xl text-[9px] font-black uppercase tracking-widest text-zinc-500"><Plus size={14} className="inline mr-1"/> Variante Nueva</button>
-                  </div>
-                  <div className="w-full lg:w-2/3 relative aspect-[4/5] bg-zinc-200 rounded-[2rem] border border-zinc-300 flex items-center justify-center">
-                     <span className="text-zinc-400 font-bold text-xs">Área de render interactivo...</span>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
@@ -554,6 +526,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
     
+    // Mejor detección de plataforma
     let plat = "Web";
     const ua = navigator.userAgent;
     if (/android/i.test(ua)) plat = "Android";
@@ -645,7 +618,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 }
 
 // =====================================================================
-// 📱 VISTA 3: CLIENTE FINAL (MODO CLARO/OSCURO)
+// 📱 VISTA 3: CLIENTE FINAL (CON MODO CLARO/OSCURO)
 // =====================================================================
 function VistaCliente() {
   const { id } = useParams();
@@ -654,6 +627,7 @@ function VistaCliente() {
   const [showIndex, setShowIndex] = useState(false);
   const [isSimulatingLoad, setIsSimulatingLoad] = useState(true);
   
+  // MODO CLARO/OSCURO DEL CLIENTE
   const [clientTheme, setClientTheme] = useState('dark');
   const isDark = clientTheme === 'dark';
   
@@ -703,13 +677,9 @@ function VistaCliente() {
 
   const c = p.configuracion;
   const env = p.ambientes[activeTab] || {};
-  
-  // CONDICIÓN PARA MOSTRAR LA TARJETA DE TOTAL: SOLO SI HAY MÁS DE 1 AMBIENTE EN EL PROYECTO
-  const hasMultipleEnvs = p.ambientes && p.ambientes.length > 1;
-  const isMultipleDisplay = c.cantAmbientes > 1 && hasMultipleEnvs;
-  
+  const isMultiple = c.cantAmbientes > 1;
   let totalSuma = 0;
-  if (isMultipleDisplay) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
+  if (isMultiple) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
 
   const currentItems = env.items || [
     { id: 1, lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
@@ -719,6 +689,7 @@ function VistaCliente() {
   return (
     <div className={`min-h-screen ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
       
+      {/* Background PC Blur */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         <img src={env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className={`w-full h-full object-cover blur-3xl scale-110 transition-opacity duration-500 ${isDark ? 'opacity-10' : 'opacity-20'}`} alt="bg"/>
         <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/50 to-[#0A0A0A]/90' : 'from-white/50 to-zinc-50/90'}`}></div>
@@ -726,34 +697,39 @@ function VistaCliente() {
 
       <div className={`w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] ${colors.bgMain} md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] ${colors.borderMain} relative z-10 flex flex-col overflow-hidden ring-1 ${isDark ? 'ring-white/10' : 'ring-black/5'} transition-colors duration-500`}>
         
-        {/* HEADER SUPERPUESTO (No interrumpe el Scroll) */}
-        {!showIndex && (
-          <div className="absolute top-0 left-0 w-full pt-8 pb-16 px-5 z-50 bg-gradient-to-b from-black/90 via-black/50 to-transparent pointer-events-none flex justify-between items-start">
-             <div className="pointer-events-auto">
-               <h1 className="font-black text-[24px] tracking-tighter italic text-white leading-none drop-shadow-lg">STUDIO<span className="text-amber-500">.MUD</span></h1>
-               <span className="text-[7px] bg-zinc-800/80 backdrop-blur-md border border-white/10 text-zinc-300 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold mt-1.5 inline-block shadow-sm">
-                 {isMultipleDisplay ? 'Proyecto Integral' : 'Diseño a Medida'}
-               </span>
-             </div>
-             
-             <div className="flex gap-2 pointer-events-auto">
-               <button onClick={() => { logEvent('COMPARTIR_CLICK'); handleShareWpp(id); }} className="p-2.5 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-white/20 border border-white/10 shadow-lg transition-colors" title="Compartir Proyecto"><Share2 size={16}/></button>
-               <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="p-2.5 rounded-full bg-black/40 backdrop-blur-md text-amber-400 hover:bg-white/20 border border-white/10 shadow-lg transition-colors" title="Cambiar Tema"><Sun size={16}/></button>
-             </div>
-          </div>
-        )}
+        {/* HEADER CLIENTE */}
+        <div className={`${colors.bgCard} pt-6 md:pt-10 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'} border-b ${colors.borderSub}`}>
+          <header className="flex justify-between items-center mb-4 px-2">
+            <div>
+              <h1 className={`font-black text-[26px] tracking-tighter italic ${colors.textMain} leading-none`}>STUDIO<span className="text-amber-500">.MUD</span></h1>
+              <span className={`text-[7px] ${isDark ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-zinc-100 text-zinc-600 border-zinc-200'} px-2 py-0.5 rounded-full uppercase tracking-widest font-bold mt-1 inline-block border`}>
+                {isMultiple ? 'Proyecto Integral' : 'Diseño a Medida'}
+              </span>
+            </div>
+            {/* BOTÓN TEMA CLIENTE */}
+            <button 
+              onClick={() => setClientTheme(isDark ? 'light' : 'dark')}
+              className={`p-2 rounded-full transition-colors ${isDark ? 'bg-zinc-800 text-amber-400 hover:bg-zinc-700' : 'bg-zinc-100 text-indigo-500 hover:bg-zinc-200'}`}
+              title="Cambiar Modo de Lectura"
+            >
+              {isDark ? <Sun size={16}/> : <Moon size={16}/>}
+            </button>
+          </header>
+          
+          {isMultiple && !showIndex && c.navegacion === 'tabs' && (
+            <div className="flex overflow-x-auto gap-1.5 items-end hide-scroll">
+              {p.ambientes.map((a:any, i:number) => (
+                <button key={i} onClick={() => {setActiveTab(i); setShowIndex(false);}} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? `${colors.bgMain} ${colors.textMain} shadow-sm` : `${isDark ? 'bg-zinc-900/50 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300' : 'bg-zinc-200/50 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700'}`}`}>{a.tab}</button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        {/* SI ESTAMOS EN EL INDEX DE AMBIENTES */}
+        {/* INDEX MÚLTIPLES AMBIENTES */}
         {showIndex && (
           <div className={`flex-1 ${colors.bgMain} overflow-y-auto p-6 pt-10 transition-colors`}>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className={`text-3xl font-black ${colors.textMain} tracking-tight leading-tight mb-2`}>Proyecto<br/><span className={colors.textMuted}>{p.cliente}</span></h2>
-                <p className="text-xs text-amber-500 font-bold uppercase tracking-widest">Selecciona un ambiente</p>
-              </div>
-              <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className={`p-2.5 rounded-full ${isDark ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-200 text-amber-600'}`}><Sun size={16}/></button>
-            </div>
-            
+            <h2 className={`text-3xl font-black ${colors.textMain} tracking-tight leading-tight mb-2`}>Proyecto<br/><span className={colors.textMuted}>{p.cliente}</span></h2>
+            <p className="text-xs text-amber-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
             <div className="space-y-4">
               {p.ambientes.map((a:any, i:number) => {
                 const imgThumb = (a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]))[0] || "";
@@ -772,25 +748,21 @@ function VistaCliente() {
         {/* VISTA DE AMBIENTE INDIVIDUAL */}
         {!showIndex && (
           <div onScroll={trackScroll} className={`flex-1 overflow-y-auto ${colors.bgMain} pb-32 hide-scroll scroll-smooth relative transition-colors`}>
-            
-            {/* Z1: RENDER A PANTALLA COMPLETA SUPERIOR */}
-            <div 
-              onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
-              onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative h-[65vh] min-h-[500px] w-full mb-8 cursor-default animate-in fade-in fill-mode-both"
-            >
-              <div className={`w-full h-full overflow-hidden shadow-2xl relative ${isDark ? 'bg-zinc-950' : 'bg-zinc-200'} rounded-b-[3rem] border-b ${isDark ? 'border-white/10' : 'border-zinc-300'}`}>
-                 <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
-              </div>
-            </div>
-
-            {/* VOLVER AL INDEX (Si hay varios) */}
-            {isMultipleDisplay && c.navegacion === 'index' && (
-              <div className="px-6 mb-6 flex"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition shadow-sm`}><ArrowLeft size={14}/> Cambiar Ambiente</button></div>
+            {isMultiple && c.navegacion === 'index' && (
+              <div className="px-4 pt-4 pb-2"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-              <h2 className={`text-4xl font-black ${colors.textMain} leading-tight tracking-tighter italic`}>{env.titulo}</h2>
-              <p className={`${colors.textMuted} font-medium text-sm mt-1`}>{p.cliente}</p>
+            {/* Z1: RENDER */}
+            <div 
+              onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
+              onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both"
+            >
+              <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
+            </div>
+
+            <div className="px-6 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+              <h2 className={`text-3xl font-black ${colors.textMain} leading-tight tracking-tighter italic`}>{env.titulo}</h2>
+              <p className={`${colors.textMuted} font-medium text-xs mt-1`}>{p.cliente}</p>
             </div>
 
             <div className="px-5 space-y-4">
@@ -821,8 +793,7 @@ function VistaCliente() {
                 </div>
               </div>
 
-              {/* TOTAL (SOLO SE MUESTRA SI HAY MÁS DE 1 AMBIENTE EN EL PROYECTO) */}
-              {isMultipleDisplay && (
+              {isMultiple && (
                 <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
                   <div className="absolute right-0 top-0 w-16 h-16 bg-amber-500/20 blur-xl"></div>
                   <p className="text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total Proyecto (Todos los ambientes)</p>
@@ -839,19 +810,18 @@ function VistaCliente() {
         )}
 
         {/* BOTÓN FLOTANTE WPP */}
-        <div className={`absolute bottom-0 left-0 w-full p-5 ${isDark ? 'bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent' : 'bg-gradient-to-t from-white via-white/90 to-transparent'} z-30 pt-10 pointer-events-none transition-colors`}>
-          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="pointer-events-auto w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-green-500/20 hover:scale-[1.02] transition-transform">
+        <div className={`absolute bottom-0 left-0 w-full p-4 ${isDark ? 'bg-[#0A0A0A]/90 border-zinc-900' : 'bg-white/90 border-zinc-100'} backdrop-blur-md border-t z-30 transition-colors`}>
+          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
         </div>
-
       </div>
       <style dangerouslySetInnerHTML={{__html:`.hide-scroll::-webkit-scrollbar { display: none; } .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}}/>
     </div>
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO (ADAPTABLE) ---
 function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any, activeTab: number, onSliderMove: () => void, isDark?: boolean }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
@@ -877,7 +847,7 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className="relative w-full h-full cursor-default pointer-events-auto">
+    <div className={`relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-xl border-4 ${isDark ? 'border-zinc-900 ring-white/10' : 'border-white ring-black/5'} ring-1 cursor-default pointer-events-auto transition-colors`}>
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         <img src={arrDer[idxDer]} className="w-full h-full object-cover object-center" />
         {arrDer.length > 1 && (
@@ -898,21 +868,21 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
           </div>
         )}
       </div>
-      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.5)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
           <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
         </div>
       </div>
       <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
-      <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1.5 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
+      <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
+        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
       </div>
     </div>
   );
 }
 
-// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS ---
+// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS (ADAPTABLE) ---
 function Z3Alternativas({ trackClick, isDark = true, colors }: { trackClick: (zona: string, e: React.MouseEvent, material?: string) => void, isDark?: boolean, colors?: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
@@ -963,7 +933,7 @@ function Z3Alternativas({ trackClick, isDark = true, colors }: { trackClick: (zo
 }
 
 // =====================================================================
-// 📊 VISTA 4: CENTRO DE COMANDO ANALÍTICO (3 COLUMNAS + SCROLL)
+// 📊 VISTA 4: CENTRO DE COMANDO ANALÍTICO (REALTIME V4 - HEATMAP LASER)
 // =====================================================================
 function AdminAnalytics() {
   const { id } = useParams();
@@ -997,7 +967,7 @@ function AdminAnalytics() {
   }, [id, activeTab, timeFilter]);
 
   const purgarDatos = async () => {
-    if (!window.confirm('⚠️ ATENCIÓN: ¿Estás seguro de resetear este tablero? Se borrará TODO el historial. Irreversible.')) return;
+    if (!window.confirm('⚠️ ATENCIÓN: ¿Estás seguro de resetear este tablero? Se borrará TODO el historial de la pestaña actual. Irreversible.')) return;
     await supabase.from('eventos_analitica').delete().eq('proyecto_id', id);
     window.location.reload();
   };
@@ -1117,7 +1087,7 @@ function AdminAnalytics() {
           <button onClick={() => navigate(`/admin/editar/${id}`)} className={`${colors.textMuted} hover:${colors.textMain} font-black text-[10px] uppercase tracking-widest mb-2 transition-colors`}><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
           <h1 className="text-3xl font-black tracking-tighter italic leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
           <p className={`text-[10px] font-bold ${colors.textMuted} uppercase tracking-widest mt-1 flex items-center gap-2`}>
-            Centro Analítico <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+            Centro de Comando Analítico <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
           </p>
         </div>
         
@@ -1141,122 +1111,124 @@ function AdminAnalytics() {
         </div>
       </div>
 
-      <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* COL 1: EL TELÉFONO ESPEJO (CON SCROLL REAL) */}
-        <div className="flex flex-col h-[850px]">
+        {/* COL 1: CELULAR ANALÍTICO (SCROLLABLE MOCK) */}
+        <div className="lg:col-span-4 flex flex-col h-[850px]">
           <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
-            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
             
-            <div className={`pt-10 pb-0 px-5 relative z-40 ${isDark ? 'bg-[#111] border-white/5' : 'bg-zinc-100'} border-b`}>
+            {/* Header del Teléfono Analítico */}
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
+            <div className={`pt-10 pb-0 px-5 relative z-50 ${isDark ? 'bg-[#111]' : 'bg-zinc-100'}`}>
               <h1 className={`font-black text-2xl leading-none tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'} px-1 truncate`}>{p.cliente}</h1>
-              <div className="flex gap-1 overflow-x-auto hide-scroll mt-4 pb-0">
+              <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2 mb-4 px-1">Análisis Visual</p>
+              <div className="flex gap-1 overflow-x-auto hide-scroll pb-0">
                 {p.ambientes.map((a:any, i:number) => (
-                  <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm border border-b-0') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
+                  <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
                 ))}
               </div>
             </div>
 
-            <div className={`flex-1 overflow-y-auto hide-scroll relative ${isDark ? 'bg-[#0A0A0A]' : 'bg-white'} scroll-smooth`}>
-               <div className="relative z-10 flex flex-col pb-32">
+            {/* EL LIENZO DEL TELÉFONO (AHORA CON SCROLL) */}
+            <div className={`flex-1 overflow-y-auto hide-scroll relative ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+              
+              <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-[150%] object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none h-[150%]"></div>
+
+              {/* Zonas simuladas respetando alturas reales */}
+              <div className="relative z-10 flex flex-col pb-20">
                  
-                 {/* Z1: RENDER */}
-                 <div className="relative h-[65vh] min-h-[500px] w-full mb-8 rounded-b-[3rem] overflow-hidden">
-                    <img src={imgBg} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
-                    <div className="absolute inset-0 border-b-2 border-dashed border-blue-500/50 bg-blue-500/10"></div>
-                    <div className="absolute top-6 left-4 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
-                      <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest">Z1: Render</span>
+                 {/* Z1 Dummy */}
+                 <div className="relative aspect-[4/5] w-full mt-4 px-2 mb-6">
+                    <div className="absolute inset-2 border border-dashed border-blue-500/30 rounded-[2.5rem]"></div>
+                    <div className="absolute top-5 left-5 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                      <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
                       <div className="text-white font-black text-xs">{analytics.z1.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z1.c} clics</span></div>
                     </div>
                     {renderDots(analytics.z1.dots)}
                  </div>
 
-                 <div className="px-6 mb-8 text-transparent blur-sm selection:bg-transparent">
-                   <h2 className="text-4xl font-black italic">{env.titulo}</h2>
+                 <div className="px-6 mb-6">
+                    <h2 className="text-3xl font-black text-white/20 leading-tight tracking-tighter italic blur-[2px]">Título Oculto</h2>
                  </div>
 
-                 {/* Z2: PRECIO */}
-                 <div className="relative w-full px-5 mb-10">
-                    <div className="relative bg-red-500/10 border-2 border-dashed border-red-500/50 rounded-[2rem] h-40 overflow-hidden">
-                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
-                        <span className="text-[8px] font-black uppercase text-red-400 tracking-widest">Z2: Precio</span>
+                 {/* Z2 Dummy */}
+                 <div className="relative w-full px-5 mb-6">
+                    <div className="relative bg-white/5 border border-dashed border-red-500/30 rounded-[2rem] h-32">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                        <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
                         <div className="text-white font-black text-xs">{analytics.z2.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z2.c} clics</span></div>
                       </div>
                       {renderDots(analytics.z2.dots)}
                     </div>
                  </div>
 
-                 {/* Z3: DETALLES */}
-                 <div className="relative w-full px-5 mb-24">
-                    <div className="relative w-full aspect-[4/5] rounded-[2.5rem] border-2 border-dashed border-amber-500/50 bg-amber-500/10 overflow-hidden">
-                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/80 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center z-40 shadow-xl">
-                        <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest">Z3: Detalles</span>
+                 {/* Z3 Dummy */}
+                 <div className="relative w-full px-5 mb-8">
+                    <div className="relative w-full aspect-[4/5] rounded-[2.5rem] border border-dashed border-amber-500/30 bg-white/5">
+                      <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg z-40">
+                        <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
                         <div className="text-white font-black text-xs">{analytics.z3.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z3.c} clics</span></div>
                       </div>
                       {renderDots(analytics.z3.dots)}
                     </div>
                  </div>
 
-               </div>
-               <div className="absolute top-2 right-1 w-1.5 h-24 bg-white/20 rounded-full pointer-events-none"></div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* COL 2: KPI Y ESPECTADORES */}
-        <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
-          
-          <div className="grid grid-cols-2 gap-4 shrink-0">
-            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-2xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
-            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Scroll</p><span className="text-2xl font-black text-emerald-500">{analytics.scroll}</span></div>
-            <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Slider</p><span className="text-2xl font-black text-blue-500">{analytics.slider}<span className="text-xs text-blue-500/50 ml-1">mv</span></span></div>
-            <div className={`${isDark ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-100'} p-5 rounded-3xl shadow-sm transition-colors`}><p className="text-[9px] font-black uppercase tracking-widest text-red-500 mb-1">Rage Clicks</p><span className="text-2xl font-black text-red-500">{analytics.friccion}</span></div>
+        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
+          <div className="grid grid-cols-4 gap-3 shrink-0">
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Scroll</p><span className="text-xl font-black text-emerald-500">{analytics.scroll}</span></div>
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Slider</p><span className="text-xl font-black text-blue-500">{analytics.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
+            <div className={`${isDark ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-100'} p-4 rounded-2xl border shadow-sm transition-colors`}><p className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-1">Rage</p><span className="text-xl font-black text-red-500">{analytics.friccion}</span></div>
           </div>
 
-          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm flex flex-col flex-1 transition-colors`}>
-             <div className="flex justify-between items-center mb-6">
-               <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores</h2>
-               <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{analytics.espectadores.length} IPs</span>
-             </div>
-             
-             <div className="space-y-3 overflow-y-auto pr-2 hide-scroll">
-               {analytics.espectadores.map((e:any, idx:number) => {
-                 const isExpanded = expandedUser === idx;
-                 return (
-                   <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
-                     <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-3.5 flex justify-between items-center cursor-pointer">
-                       <div className="flex items-center gap-3">
-                         <div className={`w-7 h-7 rounded-xl text-[10px] font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
-                         <div className="flex flex-col">
-                            <span className={`text-sm font-black ${colors.textMain} leading-none`}>{e.rol}</span>
-                            {!isExpanded && <span className={`text-[9px] font-bold ${colors.textMuted} mt-1`}><Smartphone size={10} className="inline mr-1 -mt-0.5"/>{e.disp}</span>}
-                         </div>
-                       </div>
-                       <div className="flex items-center gap-3">
-                         <span className={`text-[9px] font-black px-2.5 py-1.5 rounded-lg border ${e.statusClass}`}>{e.statusRel}</span>
-                         <ChevronRight size={16} className={`${colors.textMuted} transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                       </div>
-                     </div>
-                     {isExpanded && (
-                       <div className={`px-4 pb-4 pt-1 grid grid-cols-2 gap-y-4 gap-x-2 border-t ${isDark ? 'border-zinc-700/50' : 'border-zinc-200/60'} mt-1`}>
-                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><Smartphone size={10}/> Disp.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.disp}</span></div>
-                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><MapPin size={10}/> Ubi.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.geo}</span></div>
-                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><Wifi size={10}/> Red</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.isp}</span></div>
-                         <div><span className={`text-[8px] font-black ${colors.textMuted} uppercase tracking-widest flex items-center gap-1 mb-1`}><BatteryMedium size={10}/> Bat.</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.bat}</span></div>
-                       </div>
-                     )}
-                   </div>
-                 );
-               })}
-             </div>
+          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores Activos</h2>
+              <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'} transition-colors`}>{analytics.espectadores.length} IPs</div>
+            </div>
+            <div className="space-y-3">
+              {analytics.espectadores.map((e:any, idx:number) => {
+                const isExpanded = expandedUser === idx;
+                return (
+                  <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
+                    {/* ACORDEÓN COMPACTADO */}
+                    <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
+                        <div className="flex flex-col">
+                          <span className={`text-sm font-black ${colors.textMain} truncate max-w-[100px] md:max-w-none leading-tight`}>{e.rol}</span>
+                          {!isExpanded && <span className={`text-[9px] font-bold ${colors.textMuted} mt-0.5`}><Smartphone size={8} className="inline mr-0.5"/>{e.disp}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md border flex items-center gap-1 ${e.statusClass}`}>
+                          {e.statusRel} <span className="opacity-60 font-black tracking-widest">({e.statusAbs})</span>
+                        </span>
+                        <ChevronRight size={16} className={`${colors.textMuted} transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className={`p-4 pt-0 grid grid-cols-2 gap-4 mt-2 border-t ${isDark ? 'border-zinc-700/50' : 'border-zinc-200/60'}`}>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Smartphone size={10}/> Dispositivo</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.disp}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><MapPin size={10}/> Ubicación</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.geo}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Wifi size={10}/> Red & ISP</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.isp}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><BatteryMedium size={10}/> Batería</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.bat}</span></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-
-        {/* COL 3: EL PODIO Z3, ASISTENTE IA Y DATA CRUDA */}
-        <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
           
           <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
-            <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-4 flex items-center gap-2`}><Trophy size={14}/> Favoritos Z3</h2>
+            <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-6`}>Ranking Materiales Z3</h2>
             <div className="space-y-2">
                 {analytics.ranking.length > 0 ? analytics.ranking.map((r:any, i:number) => (
                   <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${i === 0 ? (isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') : (isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-50 border-zinc-200')}`}>
@@ -1266,30 +1238,32 @@ function AdminAnalytics() {
                 )) : <div className={`text-center p-4 text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Sin clics en Z3</div>}
             </div>
           </div>
+        </div>
 
-          <div className={`bg-indigo-950/40 border border-indigo-500/20 p-8 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col shrink-0 transition-colors ${!isDark && 'bg-indigo-50 border-indigo-200'}`}>
-             <div className={`absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
-             <div className="flex items-center gap-4 mb-6 relative z-10">
-                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${isDark ? 'bg-indigo-500 text-white ring-1 ring-indigo-400/50' : 'bg-indigo-600 text-white shadow-indigo-200'}`}><Cpu size={28} strokeWidth={2}/></div>
-                 <div><h3 className={`text-lg font-black uppercase tracking-widest leading-none mb-1 ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[10px] uppercase tracking-widest font-bold ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia</p></div>
-             </div>
-             <div className="relative z-10">
-                 <p className={`text-[14px] leading-relaxed font-medium ${isDark ? 'text-indigo-200' : 'text-indigo-900/80'}`}>El cliente revisó los renders. Hay probabilidad de cierre. <b>{analytics.ranking.length > 0 ? analytics.ranking[0].n : 'Un material'}</b> es el favorito por clics.</p>
-             </div>
+        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px]">
+          <div className={`rounded-[2.5rem] p-8 shadow-xl border relative overflow-hidden flex flex-col shrink-0 transition-colors ${isDark ? 'bg-indigo-950/40 border-indigo-500/20' : 'bg-indigo-50 border-indigo-200'}`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-colors ${isDark ? 'bg-indigo-500 text-white shadow-indigo-500/20 ring-1 ring-indigo-400/50' : 'bg-indigo-600 text-white shadow-indigo-200'}`}><Cpu size={24} strokeWidth={2}/></div>
+                <div><h3 className={`text-base font-black uppercase tracking-widest leading-none mb-1 transition-colors ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[9px] uppercase tracking-widest font-bold transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia de Ventas</p></div>
+            </div>
+            <div className="space-y-5 relative z-10">
+                <div><span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg inline-block border transition-colors ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-indigo-200 border-indigo-300 text-indigo-800'}`}>Analítico en Tiempo Real</span></div>
+                <p className={`text-sm leading-relaxed font-medium transition-colors ${isDark ? 'text-indigo-200/80' : 'text-indigo-900/80'}`}>Se detectó actividad ({analytics.espectadores.length} espectadores). Exploraron el ambiente de <b>{env.tab || 'la propuesta'}</b>. Evaluá la fricción en el precio y prepará opciones de financiación de ser necesario.</p>
+            </div>
           </div>
 
-          <div className={`${isDark ? 'bg-black border-zinc-800' : 'bg-zinc-900 border-zinc-900'} border p-6 rounded-[2.5rem] shadow-sm flex-1 flex flex-col overflow-hidden`}>
+          <div className={`rounded-[2.5rem] p-6 shadow-sm border flex-1 flex flex-col overflow-hidden transition-colors ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/5' : 'bg-zinc-900 border-zinc-900'}`}>
              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-zinc-800">
                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda</h3>
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda (En Vivo)</h3>
              </div>
              <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 font-mono text-[10px]">
                 {analytics.logs.length > 0 ? analytics.logs.map((log:any, i:number) => (
                   <div key={i} className="flex gap-3"><span className="text-zinc-600 shrink-0">[{log.time}]</span><span className={`${log.color} break-words`}>{log.txt}</span></div>
-                )) : <div className="text-zinc-600 italic">Esperando eventos...</div>}
+                )) : <div className="text-zinc-600 italic">Esperando eventos de red...</div>}
              </div>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, MessageCircle, Edit3, Eye, EyeOff, Image as ImageIcon, 
-  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X
+  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
+  LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
+  Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -11,13 +14,17 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // =====================================================================
 const supabaseUrl = 'https://pdyqdbmvhmqnzgoxtjfw.supabase.co';
 const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Función auxiliar para parsear y sumar precios
+// =====================================================================
+// 🚨 MICROSOFT CLARITY ID (Reemplazar por tu código)
+// =====================================================================
+const CLARITY_PROJECT_ID = "wb6kh8g7tb"; // <-- PEGÁ TU CÓDIGO DE CLARITY ACÁ
+
+// Función auxiliar para parsear y sumar precios (remueve puntos y "USD"/"ARS")
 const parsePrice = (str: string) => {
   if (!str) return 0;
-  const cleaned = str.toString().replace(/\./g, '').replace(/,/g, '');
+  const cleaned = str.toString().replace(/[^0-9]/g, '');
   const parsed = parseInt(cleaned, 10);
   return isNaN(parsed) ? 0 : parsed;
 };
@@ -31,11 +38,7 @@ export default function App() {
       setSession(session);
       setLoading(false);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
@@ -78,21 +81,17 @@ function Login() {
           <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic">STUDIO<span className="text-amber-600">.MUD</span></h1>
           <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mt-2">Acceso Privado</p>
         </div>
- 
         <form onSubmit={handleLogin} className="space-y-6">
           {error && <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold text-center">{error}</div>}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Email</label>
             <input type="email" required className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
-     
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Contraseña</label>
             <div className="relative">
               <input type={verPass ? "text" : "password"} required className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500 pr-12" value={password} onChange={e => setPassword(e.target.value)} />
-              <button type="button" onClick={() => setVerPass(!verPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
-                {verPass ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+              <button type="button" onClick={() => setVerPass(!verPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">{verPass ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
           </div>
           <button type="submit" disabled={loading} className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 flex justify-center shadow-xl">
@@ -104,10 +103,11 @@ function Login() {
   );
 }
 
-// --- VISTA 1: PANEL DE DASHBOARD ---
+// --- VISTA 1: DASHBOARD ADMINISTRADOR (SMART CARDS) ---
 function AdminDashboard() {
   const [proyectos, setProyectos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [copiedStates, setCopiedStates] = useState<any>({});
   const navigate = useNavigate();
 
   const fetchProyectos = async () => {
@@ -120,65 +120,91 @@ function AdminDashboard() {
 
   const nuevoProyecto = async () => {
     const ambienteInicial = {
-      id: crypto.randomUUID(),
-      tab: "Ambiente 1", titulo: "Cocina Principal",
-      galeriaObra: [], galeriaRender: [],
-      lbl1: "Costo Materiales", val1: "0", lbl2: "Diseño y Montaje", val2: "0",
-      lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0"
+      id: crypto.randomUUID(), tab: "Ambiente 1", titulo: "Cocina Principal",
+      galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
+      items: [
+        { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
+        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
+      ]
     };
-
     const { data, error } = await supabase.from('proyectos').insert([{
       cliente: "Nuevo Cliente", whatsapp: "549",
-      configuracion: { moneda: "ARS", navegacion: "tabs", cantAmbientes: 1 },
+      configuracion: { moneda: "USD", navegacion: "tabs", cantAmbientes: 1 },
       ambientes: [ambienteInicial]
     }]).select();
-    
     if (data && data[0]) navigate(`/admin/editar/${data[0].id}`);
     if (error) alert("Error: " + error.message);
+  };
+
+  const handleCopy = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/ver/${id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedStates({ ...copiedStates, [id]: true });
+    setTimeout(() => setCopiedStates({ ...copiedStates, [id]: false }), 2000);
   };
 
   if (cargando) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-6 md:p-12 font-sans">
-      <div className="max-w-5xl mx-auto">
-        <header className="flex justify-between items-center mb-10">
+    <div className="min-h-screen bg-zinc-50 p-6 md:p-12 font-sans text-zinc-900 animate-in fade-in duration-500">
+      <div className="max-w-[1200px] mx-auto">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-12">
           <div>
-            <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic">STUDIO<span className="text-amber-600">.MUD</span></h1>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Gestor Integral</p>
+            <h1 className="text-3xl font-black tracking-tighter italic leading-none">STUDIO<span className="text-amber-600">.MUD</span></h1>
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-1">Gestor de Proyectos</p>
           </div>
-          <div className="flex gap-4">
-            <button onClick={nuevoProyecto} className="bg-amber-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-amber-700 shadow-xl shadow-amber-200">
-              <Plus size={16} /> Nueva Carpeta
+          <div className="flex gap-3">
+            <button onClick={nuevoProyecto} className="bg-zinc-900 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-zinc-800 shadow-xl shadow-zinc-900/20 transition-all active:scale-95">
+              <Plus size={16} /> Nuevo Proyecto
             </button>
-            <button onClick={() => supabase.auth.signOut()} className="bg-zinc-200 text-zinc-600 px-4 py-3 rounded-2xl hover:bg-red-100 hover:text-red-600"><LogOut size={16} /></button>
+            <button onClick={() => supabase.auth.signOut()} className="bg-white border border-zinc-200 text-zinc-600 px-4 py-3 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all">
+              <LogOut size={16} />
+            </button>
           </div>
         </header>
 
         {proyectos.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-200">
-            <p className="text-zinc-400 font-bold">Aún no hay proyectos. ¡Creá tu primera carpeta!</p>
-          </div>
+          <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-zinc-200 shadow-sm"><p className="text-zinc-400 font-bold">Aún no hay proyectos. ¡Creá tu primera carpeta!</p></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {proyectos.map(p => {
               const primerEnv = p.ambientes?.[0] || {};
               const thumbObra = primerEnv.galeriaObra?.[0] || primerEnv.obra || "";
               const thumbRender = primerEnv.galeriaRender?.[0] || primerEnv.render || "";
-              const thumb = thumbRender || thumbObra;
+              const thumb = thumbRender || thumbObra || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"; // Fallback elegante
               
               return (
-                <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 overflow-hidden hover:shadow-2xl transition-all duration-500 group">
-                  <div className="h-48 bg-zinc-100 relative">
-                    {thumb ? <img src={thumb} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" alt="Vista" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300 italic text-xs">Sin imagen</div>}
-                    <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-900 shadow-sm">{p.cliente}</div>
+                <div key={p.id} className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-200 overflow-hidden hover:shadow-2xl hover:border-amber-300 transition-all duration-500 group flex flex-col">
+                  <div onClick={() => window.open(`/ver/${p.id}`, '_blank')} className="h-56 bg-zinc-100 relative cursor-pointer overflow-hidden">
+                    <img src={thumb} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Vista" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                      <div className="bg-white text-zinc-900 px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                        <Play size={14} fill="currentColor"/> Ver Propuesta
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-8">
-                    <h3 className="font-black text-xl leading-tight mb-2 tracking-tight text-zinc-900">{primerEnv.titulo || "Carpeta sin título"}</h3>
-                    <p className="text-xs text-zinc-400 font-bold mb-6">{p.ambientes?.length} {p.ambientes?.length === 1 ? 'Ambiente' : 'Ambientes'}</p>
-                    <div className="flex justify-between items-center pt-6 border-t border-zinc-50">
-                      <Link to={`/admin/editar/${p.id}`} className="text-amber-600 font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 hover:opacity-70"><Edit3 size={14}/> Editar</Link>
-                      <button onClick={() => { if(window.confirm('¿Borrar carpeta?')) supabase.from('proyectos').delete().eq('id', p.id).then(fetchProyectos); }} className="text-zinc-200 hover:text-red-500"><Trash2 size={20}/></button>
+                  
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-black text-2xl leading-tight tracking-tight text-zinc-900 truncate">{p.cliente}</h3>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1 mb-4 truncate">{primerEnv.titulo || "Sin título"}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 pt-4 border-t border-zinc-100">
+                      <button onClick={() => navigate(`/admin/editar/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-colors">
+                        <Edit3 size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Editar</span>
+                      </button>
+                      <button onClick={() => navigate(`/admin/analytics/${p.id}`)} className="flex flex-col items-center justify-center gap-1 py-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 bg-amber-50/50 rounded-xl transition-colors border border-amber-100">
+                        <Activity size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Métricas</span>
+                      </button>
+                      <button onClick={(e) => handleCopy(p.id, e)} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors relative">
+                        {copiedStates[p.id] ? <Check size={16} className="text-green-500"/> : <Link2 size={16}/>}
+                        <span className={`text-[7px] font-black uppercase tracking-widest ${copiedStates[p.id] ? 'text-green-500' : ''}`}>{copiedStates[p.id] ? 'Copiado' : 'Link'}</span>
+                      </button>
+                      <button onClick={() => { if(window.confirm('¿Borrar carpeta?')) supabase.from('proyectos').delete().eq('id', p.id).then(fetchProyectos); }} className="flex flex-col items-center justify-center gap-1 py-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+                        <Trash2 size={16}/> <span className="text-[7px] font-black uppercase tracking-widest">Borrar</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -191,14 +217,14 @@ function AdminDashboard() {
   );
 }
 
-// --- VISTA 2: EDITOR MULTI-AMBIENTE ---
+// --- VISTA 2: EDITOR MULTI-AMBIENTE (REDISEÑADO) ---
 function AdminEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [subiendo, setSubiendo] = useState({ obra: false, render: false });
-  const [copiado, setCopiado] = useState(false);
+  const [copiedStates, setCopiedStates] = useState<any>({});
 
   useEffect(() => {
     const fetchProyecto = async () => {
@@ -222,12 +248,21 @@ function AdminEditor() {
     updateGlobal({ ambientes: nuevosAmb });
   };
 
+  const handleCopy = () => {
+    const url = `${window.location.origin}/ver/${id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedStates({ editorLink: true });
+    setTimeout(() => setCopiedStates({ editorLink: false }), 2000);
+  };
+
   const addAmbiente = () => {
     const nuevo = {
       id: crypto.randomUUID(), tab: `Ambiente ${p.ambientes.length + 1}`, titulo: "Nuevo Ambiente",
-      galeriaObra: [], galeriaRender: [],
-      lbl1: "Costo Materiales", val1: "0", lbl2: "Diseño y Montaje", val2: "0",
-      lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0"
+      galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
+      items: [
+        { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
+        { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
+      ]
     };
     const nuevosAmb = [...p.ambientes, nuevo];
     updateGlobal({ ambientes: nuevosAmb, configuracion: { ...p.configuracion, cantAmbientes: nuevosAmb.length > 1 ? 2 : 1 } });
@@ -245,251 +280,234 @@ function AdminEditor() {
   const handleFileUpload = async (e: any, tipo: 'obra' | 'render') => {
     const files = Array.from(e.target.files as FileList);
     if (!files.length) return;
-    
     setSubiendo(prev => ({ ...prev, [tipo]: true }));
     const nuevasUrls: string[] = [];
-
     for (let file of files) {
       const ext = file.name.split('.').pop();
       const fileName = `${id}_${activeTab}_${tipo}_${Math.random()}.${ext}`;
-
       try {
         const { error } = await supabase.storage.from('proyectos').upload(fileName, file);
         if (!error) {
           const { data } = supabase.storage.from('proyectos').getPublicUrl(fileName);
           nuevasUrls.push(data.publicUrl);
         }
-      } catch (err) {
-        console.error("Error subiendo foto", err);
-      }
+      } catch (err) { console.error("Error", err); }
     }
-
     if (nuevasUrls.length > 0) {
       const arrName = tipo === 'obra' ? 'galeriaObra' : 'galeriaRender';
-      const fallbackOldStr = tipo === 'obra' ? p.ambientes[activeTab].obra : p.ambientes[activeTab].render;
-      
-      let currentArr = p.ambientes[activeTab][arrName];
-      if (!currentArr && fallbackOldStr) currentArr = [fallbackOldStr];
-      if (!currentArr) currentArr = [];
-
+      let currentArr = p.ambientes[activeTab][arrName] || [];
       updateEnv(arrName, [...currentArr, ...nuevasUrls]);
     }
-    
     setSubiendo(prev => ({ ...prev, [tipo]: false }));
+  };
+
+  // MIGRACIÓN/MANEJO DE ÍTEMS DINÁMICOS
+  const handleAddItem = () => {
+    const itemsActuales = env.items || [
+      { id: crypto.randomUUID(), lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
+      { id: crypto.randomUUID(), lbl: env.lbl2 || 'Diseño', val: env.val2 || '0', incluido: true }
+    ];
+    updateEnv('items', [...itemsActuales, { id: crypto.randomUUID(), lbl: 'Nuevo Ítem', val: 'USD 0', incluido: false }]);
+  };
+
+  const updateItem = (itemId: string, key: string, value: any) => {
+    const itemsActuales = env.items || [];
+    const nuevos = itemsActuales.map((it:any) => it.id === itemId ? { ...it, [key]: value } : it);
+    updateEnv('items', nuevos);
+  };
+
+  const deleteItem = (itemId: string) => {
+    const itemsActuales = env.items || [];
+    updateEnv('items', itemsActuales.filter((it:any) => it.id !== itemId));
   };
 
   if (!p) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
 
   const env = p.ambientes[activeTab] || {};
   const c = p.configuracion;
+  const currentItems = env.items || [
+    { id: crypto.randomUUID(), lbl: env.lbl1 || 'Concepto 1', val: env.val1 || '0', incluido: true },
+    { id: crypto.randomUUID(), lbl: env.lbl2 || 'Concepto 2', val: env.val2 || '0', incluido: true }
+  ];
 
-  const renderGaleriaAdmin = (tipo: 'obra' | 'render') => {
+  const renderDropzone = (tipo: 'obra' | 'render') => {
     const isObra = tipo === 'obra';
-    const arrField = isObra ? 'galeriaObra' : 'galeriaRender';
-    
-    let fotos = env[arrField];
-    if (!fotos && env[tipo]) fotos = [env[tipo]];
-    if (!fotos) fotos = [];
+    const field = isObra ? 'galeriaObra' : 'galeriaRender';
+    let fotos = env[field] || [];
+    if(fotos.length === 0 && env[tipo]) fotos = [env[tipo]]; // Fallback legacy
 
-    const invertido = env.invertido;
-    const isFrente = (!invertido && isObra) || (invertido && !isObra);
+    const isFrente = (!env.invertido && isObra) || (env.invertido && !isObra);
 
     return (
-      <div className={`space-y-4 p-5 rounded-3xl border ${isFrente ? 'bg-zinc-50 border-zinc-200/60' : 'bg-amber-50/30 border-amber-200/50'}`}>
-        <div className="flex justify-between items-center">
-          <span className={`text-[10px] font-black uppercase tracking-widest ${isFrente ? 'text-zinc-500' : 'text-amber-600'}`}>
-            Galería {isObra ? 'Antes (Obra)' : 'Render 3D'} {isFrente ? '(Frente/Izq)' : '(Fondo/Der)'}
-          </span>
-          <label className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest cursor-pointer transition shadow-sm ${isFrente ? 'border-zinc-300 text-zinc-500 hover:bg-zinc-200 bg-white' : 'border-amber-300 text-amber-600 hover:bg-amber-100 bg-white'}`}>
-            {subiendo[tipo] ? <Loader2 size={12} className="animate-spin inline mr-1"/> : <Plus size={12} className="inline mr-1"/>}
-            Añadir Fotos
+      <div className="bg-white border-2 border-zinc-200 rounded-3xl p-4 flex flex-col min-h-[160px] shadow-sm">
+        <div className="flex justify-between items-center mb-3 border-b border-zinc-100 pb-2">
+          <span className={`text-[9px] font-black uppercase tracking-widest ${isFrente ? 'text-zinc-500' : 'text-amber-600'}`}>{isObra ? 'Fotos Obra' : 'Render 3D'} {isFrente ? '(Izq)' : '(Der)'}</span>
+          <label className="bg-zinc-100 text-zinc-600 hover:bg-zinc-200 px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition cursor-pointer flex items-center">
+            {subiendo[tipo] ? <Loader2 size={10} className="animate-spin mr-1"/> : '+ Añadir'}
             <input type="file" multiple className="hidden" accept="image/*" onChange={e => handleFileUpload(e, tipo)} />
           </label>
         </div>
-        
-        <div className="flex flex-wrap gap-3">
-          {fotos.map((url: string, i: number) => (
-            <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group shadow-sm ring-1 ring-black/5">
-              <img src={url} className="w-full h-full object-cover object-center" />
-              <button onClick={() => {
-                const nuevas = fotos.filter((_:any, idx:number) => idx !== i);
-                updateEnv(arrField, nuevas);
-              }} className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-sm">
-                <Trash2 size={18}/>
-              </button>
-            </div>
-          ))}
-          {fotos.length === 0 && (
-             <div className="w-full h-20 border-2 border-dashed rounded-xl flex items-center justify-center text-xs font-bold text-black/20 italic">No hay fotos</div>
-          )}
-        </div>
+        {fotos.length === 0 ? (
+          <label className="flex-1 flex flex-col items-center justify-center opacity-40 hover:opacity-100 cursor-pointer transition border-2 border-dashed rounded-xl border-zinc-200">
+             <UploadCloud size={20} className="mb-1"/><span className="text-[9px] font-bold">Subir imágenes</span>
+             <input type="file" multiple className="hidden" accept="image/*" onChange={e => handleFileUpload(e, tipo)} />
+          </label>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {fotos.map((url:string, i:number) => (
+              <div key={i} className="w-16 h-16 rounded-xl overflow-hidden relative group">
+                <img src={url} className="w-full h-full object-cover" alt="thumb"/>
+                <div onClick={() => updateEnv(field, fotos.filter((_:any, idx:number) => idx !== i))} className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"><Trash2 size={14} className="text-white"/></div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 md:p-8 pb-32 font-sans flex flex-col md:flex-row gap-8">
-      
-      <div className="flex-1 max-w-3xl space-y-8 mx-auto">
-        <header className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-zinc-100">
-          <button onClick={() => navigate('/admin')} className="text-zinc-400 hover:text-zinc-900 font-black text-[10px] uppercase tracking-widest"><ArrowLeft size={16} className="inline mr-1"/> Panel</button>
-          <div className="flex gap-2">
-            <button onClick={() => {
-                const url = `${window.location.origin}/ver/${id}`;
-                const el = document.createElement('textarea'); el.value = url; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-                setCopiado(true); setTimeout(() => setCopiado(false), 2000);
-              }} 
-              className="px-4 py-2 bg-zinc-100 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-200 transition"
-            >{copiado ? '¡Copiado!' : 'Copiar Link'}</button>
-            <Link to={`/admin/analytics/${id}`} className="px-4 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
-           <Eye size={14}/> Analíticas
-         </Link>
-            <Link to={`/ver/${id}`} target="_blank" className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md hover:bg-amber-700 transition"><Eye size={14}/> Ver App</Link>
+    <div className="min-h-screen bg-zinc-50 p-4 md:p-8 pb-32 font-sans flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="w-full max-w-[1200px] flex flex-col gap-6">
+        
+        <header className="flex flex-col md:flex-row md:justify-between md:items-center bg-white p-4 md:p-6 rounded-[2rem] shadow-sm border border-zinc-200">
+          <button onClick={() => navigate('/admin')} className="text-zinc-500 hover:text-zinc-900 font-black text-[10px] uppercase tracking-widest flex items-center mb-4 md:mb-0 transition-colors">
+            <ArrowLeft size={16} className="mr-2"/> Volver al Panel
+          </button>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={handleCopy} className="px-5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-[10px] uppercase tracking-widest font-black text-zinc-600 hover:bg-zinc-100 transition flex items-center gap-2">
+              {copiedStates['editorLink'] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>} 
+              {copiedStates['editorLink'] ? '¡Link Copiado!' : 'Copiar Link'}
+            </button>
+            <button onClick={() => navigate(`/admin/analytics/${id}`)} className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md hover:bg-zinc-800 transition">
+              <Activity size={14}/> Analíticas
+            </button>
+            <button onClick={() => window.open(`/ver/${id}`, '_blank')} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md shadow-amber-600/20 hover:bg-amber-700 transition">
+              <Play size={14}/> Ver App
+            </button>
           </div>
         </header>
 
-        <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none"></div>
-          <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Configuración de Carpeta</h2>
-          
-          <div className="grid grid-cols-2 gap-6 border-b border-zinc-100 pb-6 mb-6">
-            <div>
-              <label className="text-[10px] font-black uppercase text-zinc-500 ml-1">Nombre Cliente</label>
-              <input className="w-full mt-1 bg-zinc-100 px-4 py-3 rounded-xl font-bold outline-none focus:bg-white border-2 border-transparent focus:border-amber-500 transition" value={p.cliente} onChange={e=>updateGlobal({cliente: e.target.value})} />
-            </div>
-            <div>
-              <label className="text-[10px] font-black uppercase text-zinc-500 ml-1">WhatsApp</label>
-              <input className="w-full mt-1 bg-zinc-100 px-4 py-3 rounded-xl font-bold text-zinc-600 outline-none focus:bg-white border-2 border-transparent focus:border-amber-500 transition" value={p.whatsapp} onChange={e=>updateGlobal({whatsapp: e.target.value})} placeholder="549..." />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* COLUMNA IZQUIERDA: CONFIG */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white p-6 rounded-[2rem] border border-zinc-200 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[3rem] pointer-events-none"></div>
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2"><Settings size={14}/> Configuración Global</h2>
+              <div className="space-y-5">
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Nombre Cliente</label>
+                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.cliente} onChange={e=>updateGlobal({cliente: e.target.value})} />
+                </div>
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">WhatsApp (Botón Final)</label>
+                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-bold text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={p.whatsapp} onChange={e=>updateGlobal({whatsapp: e.target.value})} />
+                </div>
+                <div className="pt-4 border-t border-zinc-100">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-2 block">Estructura</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
+                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Ambientes</span>
+                      <div className="flex">
+                        <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===1?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>1 Solo</button>
+                        <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.cantAmbientes===2?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>Varios</button>
+                      </div>
+                    </div>
+                    <div className="bg-zinc-100 p-1 rounded-xl flex flex-col">
+                      <span className="text-[8px] font-bold text-zinc-400 text-center mb-1 mt-1">Moneda</span>
+                      <div className="flex">
+                        <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='USD'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>USD</button>
+                        <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition ${c.moneda==='ARS'?'bg-white shadow-sm text-zinc-900':'text-zinc-500'}`}>ARS</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-[9px] font-black uppercase text-zinc-500 block mb-2 ml-1">Cantidad Ambientes</label>
-              <div className="flex bg-zinc-100 p-1.5 rounded-xl">
-                <button onClick={() => updateConfig('cantAmbientes', 1)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.cantAmbientes===1?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>1 Solo</button>
-                <button onClick={() => updateConfig('cantAmbientes', 2)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.cantAmbientes===2?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>Varios</button>
-              </div>
-            </div>
-            <div>
-              <label className="text-[9px] font-black uppercase text-zinc-500 block mb-2 ml-1">Moneda</label>
-              <div className="flex bg-zinc-100 p-1.5 rounded-xl">
-                <button onClick={() => updateConfig('moneda', 'USD')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.moneda==='USD'?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>USD</button>
-                <button onClick={() => updateConfig('moneda', 'ARS')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.moneda==='ARS'?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>ARS</button>
-              </div>
-            </div>
-            <div>
-              <label className="text-[9px] font-black uppercase text-zinc-500 block mb-2 ml-1">Diseño (Si hay varios)</label>
-              <div className="flex bg-zinc-100 p-1.5 rounded-xl">
-                <button onClick={() => updateConfig('navegacion', 'tabs')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.navegacion==='tabs'?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>Pestañas</button>
-                <button onClick={() => updateConfig('navegacion', 'index')} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition ${c.navegacion==='index'?'bg-white shadow-md text-zinc-900':'text-zinc-500 hover:text-zinc-700'}`}>Índice</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between items-end mb-4">
-            <h2 className="text-xl font-black text-zinc-900">Editor de Ambientes</h2>
-            {c.cantAmbientes === 2 && <button onClick={addAmbiente} className="text-amber-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-full hover:bg-amber-100 transition"><Plus size={14}/> Agregar Ambiente</button>}
-          </div>
-
-          {c.cantAmbientes === 2 && (
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 hide-scroll">
+          {/* COLUMNA DERECHA: EDITOR DE AMBIENTE */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="flex gap-2 overflow-x-auto hide-scroll">
               {p.ambientes.map((a:any, i:number) => (
-                <button key={a.id} onClick={() => setActiveTab(i)} className={`shrink-0 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition ${activeTab===i ? 'bg-zinc-900 text-white shadow-lg' : 'bg-white text-zinc-500 border border-zinc-200 hover:bg-zinc-50'}`}>
-                  {a.tab || `Ambiente ${i+1}`}
-                </button>
+                <button key={a.id} onClick={() => setActiveTab(i)} className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab===i ? 'bg-zinc-900 text-white shadow-md' : 'bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}>{a.tab || `Ambiente ${i+1}`}</button>
               ))}
+              {c.cantAmbientes === 2 && <button onClick={addAmbiente} className="shrink-0 px-4 py-3 rounded-2xl text-zinc-400 hover:text-amber-600 bg-white border border-zinc-200 border-dashed hover:border-amber-300 transition-colors flex items-center justify-center"><Plus size={16}/></button>}
             </div>
-          )}
 
-          <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm space-y-8 relative">
-            {c.cantAmbientes === 2 && p.ambientes.length > 1 && (
-              <button onClick={() => removeAmbiente(activeTab)} className="absolute top-6 right-6 text-zinc-300 hover:text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={16}/></button>
-            )}
-
-            <div className="grid grid-cols-2 gap-6">
-              {c.cantAmbientes === 2 && (
-                <div>
-                  <label className="text-[10px] font-black uppercase text-zinc-500 ml-1">Nombre Pestaña / Índice</label>
-                  <input className="w-full mt-1 bg-amber-50 px-4 py-3 rounded-xl font-bold text-amber-700 outline-none focus:bg-white border-2 border-transparent focus:border-amber-500 transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
-                </div>
+            <div className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-zinc-200 shadow-sm relative">
+              {c.cantAmbientes === 2 && p.ambientes.length > 1 && (
+                <button onClick={() => removeAmbiente(activeTab)} className="absolute top-6 right-6 text-zinc-300 hover:text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={16}/></button>
               )}
-              <div className={c.cantAmbientes === 1 ? 'col-span-2' : ''}>
-                <label className="text-[10px] font-black uppercase text-zinc-500 ml-1">Título del Banner (App)</label>
-                <input className="w-full mt-1 bg-zinc-100 px-4 py-3 rounded-xl font-black text-xl text-zinc-900 outline-none focus:bg-white border-2 border-transparent focus:border-amber-500 transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
-              </div>
-            </div>
-
-            <div className="pt-6 border-t border-zinc-100">
-              <h3 className="text-[10px] font-black uppercase text-zinc-400 mb-4">Fotos & Slider interactivo</h3>
               
-              <div className="grid grid-cols-2 gap-6 mb-8 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-                <div>
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Texto Botón Izquierdo</label>
-                  <input className="w-full mt-1 bg-white border border-zinc-200 px-3 py-2 rounded-lg text-xs font-bold outline-none focus:border-amber-500 text-zinc-800 transition" value={env.lblIzq} onChange={e=>updateEnv('lblIzq', e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Texto Botón Derecho</label>
-                  <input className="w-full mt-1 bg-white border border-zinc-200 px-3 py-2 rounded-lg text-xs font-bold outline-none focus:border-amber-500 text-zinc-800 transition" value={env.lblDer} onChange={e=>updateEnv('lblDer', e.target.value)} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {c.cantAmbientes === 2 && (
+                  <div>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-amber-600 ml-1 mb-1 block">Nombre en Índice</label>
+                    <input className="w-full bg-amber-50 px-4 py-3 rounded-xl font-bold text-amber-900 outline-none border border-amber-200 focus:border-amber-500 focus:bg-white transition" value={env.tab} onChange={e=>updateEnv('tab', e.target.value)} placeholder="Ej: Cocina" />
+                  </div>
+                )}
+                <div className={c.cantAmbientes === 1 ? 'col-span-2' : ''}>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Título del Banner</label>
+                  <input className="w-full bg-zinc-50 px-4 py-3 rounded-xl font-black text-lg text-zinc-900 outline-none border border-zinc-200 focus:border-amber-500 focus:bg-white transition" value={env.titulo} onChange={e=>updateEnv('titulo', e.target.value)} placeholder="Ej: Cocina Principal" />
                 </div>
               </div>
 
-              <div className="relative">
-                <button onClick={() => {
-                  const nuevosAmb = [...p.ambientes];
-                  const ambiente = nuevosAmb[activeTab];
-                  ambiente.invertido = !ambiente.invertido;
-                  const tempLbl = ambiente.lblIzq;
-                  ambiente.lblIzq = ambiente.lblDer;
-                  ambiente.lblDer = tempLbl;
-                  updateGlobal({ ambientes: nuevosAmb });
-                }} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-zinc-200 shadow-xl rounded-full p-3 text-zinc-400 hover:text-amber-600 hover:border-amber-400 z-10 hover:scale-110 active:scale-95 transition-all flex flex-col items-center" title="Invertir Posición Izq/Der">
-                  <ArrowLeftRight size={20}/>
-                </button>
+              <div className="mb-8">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><ImageIcon size={14}/> Render y Obra (Slider)</h3>
+                <div className="flex gap-4 mb-4 bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                   <div className="flex-1">
+                     <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 ml-1 block mb-1">Texto Izquierda</label>
+                     <input className="w-full bg-white px-3 py-2 rounded-lg text-xs font-bold outline-none border border-zinc-200 focus:border-amber-500" value={env.lblIzq} onChange={e=>updateEnv('lblIzq', e.target.value)} />
+                   </div>
+                   <div className="flex-1">
+                     <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 ml-1 block mb-1">Texto Derecha</label>
+                     <input className="w-full bg-white px-3 py-2 rounded-lg text-xs font-bold outline-none border border-zinc-200 focus:border-amber-500" value={env.lblDer} onChange={e=>updateEnv('lblDer', e.target.value)} />
+                   </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative bg-zinc-50 p-4 rounded-[2rem] border border-zinc-100">
+                  <button onClick={() => updateEnv('invertido', !env.invertido)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-zinc-200 shadow-xl rounded-full p-3 text-zinc-400 hover:text-amber-600 z-10 hover:scale-110 transition-all"><ArrowLeftRight size={18}/></button>
+                  {renderDropzone(!env.invertido ? 'obra' : 'render')}
+                  {renderDropzone(env.invertido ? 'obra' : 'render')}
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {renderGaleriaAdmin(!env.invertido ? 'obra' : 'render')}
-                  {renderGaleriaAdmin(env.invertido ? 'obra' : 'render')}
+              {/* INVERSIÓN CON ÍTEMS DINÁMICOS */}
+              <div className="pt-6 border-t border-zinc-100">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><DollarSign size={14}/> Inversión & Opcionales</h3>
+                
+                <div className="bg-[#111] rounded-3xl p-6 relative overflow-hidden shadow-xl mb-6">
+                   <div className="absolute -right-6 -top-6 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-2">Monto Total Base</label>
+                   <div className="flex items-center gap-3 relative z-10">
+                     <span className="text-amber-500 font-black text-2xl">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
+                     <input className="bg-transparent text-white font-black text-5xl outline-none w-full tracking-tighter" value={env.total} onChange={e=>updateEnv('total', e.target.value)} placeholder="0" />
+                   </div>
+                </div>
+
+                <div className="space-y-3 mb-4 bg-zinc-50 p-4 rounded-3xl border border-zinc-100">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-1 block">Desglose de Ítems (Opcional)</label>
+                  {currentItems.map((item:any) => (
+                    <div key={item.id} className={`flex flex-col md:flex-row md:items-center gap-3 p-3 rounded-2xl border transition-colors ${item.incluido ? 'bg-white border-zinc-200 shadow-sm' : 'bg-amber-50 border-amber-200'}`}>
+                      <input className="flex-1 bg-transparent px-2 py-2 rounded-xl text-xs font-bold outline-none focus:bg-zinc-50" value={item.lbl} onChange={e=>updateItem(item.id, 'lbl', e.target.value)} placeholder="Ej: Materiales" />
+                      <div className="flex items-center gap-3">
+                        <input className={`w-32 bg-transparent px-2 py-2 rounded-xl text-sm font-black outline-none focus:bg-zinc-50 ${item.incluido ? 'text-zinc-900' : 'text-amber-600'}`} value={item.val} onChange={e=>updateItem(item.id, 'val', e.target.value)} placeholder="Valor" />
+                        <div onClick={() => updateItem(item.id, 'incluido', !item.incluido)} className="flex items-center gap-2 cursor-pointer bg-white border border-zinc-200 p-1.5 rounded-xl w-[110px] shrink-0" title="¿Suma al total o es extra?">
+                          <div className={`w-8 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out ${item.incluido ? 'bg-emerald-500' : 'bg-zinc-300'}`}>
+                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${item.incluido ? 'translate-x-3' : 'translate-x-0'}`}></div>
+                          </div>
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${item.incluido ? 'text-emerald-600' : 'text-zinc-400'}`}>{item.incluido ? 'Suma' : 'Extra'}</span>
+                        </div>
+                        <button onClick={() => deleteItem(item.id)} className="text-zinc-300 hover:text-red-500 p-2"><Trash2 size={16}/></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={handleAddItem} className="w-full py-4 border-2 border-dashed border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50/50 transition-all flex items-center justify-center gap-2 mt-2">
+                    <Plus size={14}/> Agregar Ítem
+                  </button>
                 </div>
               </div>
             </div>
-
-            <div className="pt-6 border-t border-zinc-100">
-              <h3 className="text-[10px] font-black uppercase text-zinc-400 mb-4">Presupuesto en {c.moneda}</h3>
-              <div className="mb-6">
-                <label className="text-[10px] font-black uppercase text-zinc-500 ml-1">Monto Total del Ambiente</label>
-                <div className="relative mt-1">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-zinc-400">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
-                  <input className="w-full bg-zinc-100 pl-12 pr-4 py-4 rounded-xl font-black text-2xl outline-none focus:bg-white border-2 border-transparent focus:border-amber-500 transition text-zinc-900" value={env.total} onChange={e=>updateEnv('total', e.target.value)} />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-zinc-50 p-6 rounded-3xl border border-zinc-100">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Concepto 1 (Etiqueta)</label>
-                    <input className="w-full mt-1 bg-white border border-zinc-200 px-4 py-2 rounded-xl text-xs font-bold outline-none focus:border-amber-500 transition" value={env.lbl1} onChange={e=>updateEnv('lbl1', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-bold text-amber-600 uppercase ml-1">Valor 1</label>
-                    <input className="w-full mt-1 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-xs font-black text-amber-600 outline-none focus:border-amber-500 transition" value={env.val1} onChange={e=>updateEnv('val1', e.target.value)} />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Concepto 2 (Etiqueta)</label>
-                    <input className="w-full mt-1 bg-white border border-zinc-200 px-4 py-2 rounded-xl text-xs font-bold outline-none focus:border-amber-500 transition" value={env.lbl2} onChange={e=>updateEnv('lbl2', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-bold text-zinc-500 uppercase ml-1">Valor 2</label>
-                    <input className="w-full mt-1 bg-white border border-zinc-200 px-4 py-2 rounded-xl text-xs font-black text-zinc-600 outline-none focus:border-amber-500 transition" value={env.val2} onChange={e=>updateEnv('val2', e.target.value)} />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
           </div>
         </div>
       </div>
@@ -498,7 +516,7 @@ function AdminEditor() {
 }
 
 // =====================================================================
-// 🕵️ MOTOR ESPÍA v3.0 (TIEMPO DE PERMANENCIA Y REAL-TIME)
+// 🕵️ MOTOR ESPÍA
 // =====================================================================
 function useAnalytics(proyectoId: string, ambienteTab: string) {
   const [sessionId] = useState(() => crypto.randomUUID());
@@ -506,8 +524,6 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
   const sliderMovs = useRef(0);
   const clickTimes = useRef<number[]>([]);
   const contextoCache = useRef<any>(null);
-
-  // Cronómetros para cada zona
   const dwellTimes = useRef<{ [key: string]: number }>({ Z1: 0, Z2: 0, Z3: 0 });
   const entryTimes = useRef<{ [key: string]: number }>({ Z1: 0, Z2: 0, Z3: 0 });
 
@@ -515,28 +531,12 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
     if (contextoCache.current) return contextoCache.current;
     let bat = "-"; let net = "Wi-Fi"; let geoStr = "Local";
     try {
-      if ('getBattery' in navigator) {
-        const battery: any = await (navigator as any).getBattery();
-        bat = `${Math.round(battery.level * 100)}%`;
-      }
-      if ('connection' in navigator) {
-        const conn = (navigator as any).connection;
-        net = conn.effectiveType ? conn.effectiveType.toUpperCase() : "Wi-Fi";
-      }
-      const res = await fetch('https://ipapi.co/json/');
-      const geoData = await res.json();
+      if ('getBattery' in navigator) { const battery: any = await (navigator as any).getBattery(); bat = `${Math.round(battery.level * 100)}%`; }
+      if ('connection' in navigator) { const conn = (navigator as any).connection; net = conn.effectiveType ? conn.effectiveType.toUpperCase() : "Wi-Fi"; }
+      const res = await fetch('https://ipapi.co/json/'); const geoData = await res.json();
       if (geoData.city) geoStr = `${geoData.city}, ${geoData.region_code}`;
-    } catch (e) { console.warn("Sensores avanzados bloqueados."); }
-
-    contextoCache.current = {
-      userAgent: navigator.userAgent,
-      pantalla: `${window.innerWidth}x${window.innerHeight}`,
-      idioma: navigator.language,
-      plataforma: navigator.platform,
-      bateria: bat,
-      red: net,
-      geo: geoStr
-    };
+    } catch (e) { }
+    contextoCache.current = { userAgent: navigator.userAgent, pantalla: `${window.innerWidth}x${window.innerHeight}`, idioma: navigator.language, plataforma: navigator.platform, bateria: bat, red: net, geo: geoStr };
     return contextoCache.current;
   };
 
@@ -544,105 +544,73 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
     if (!proyectoId) return;
     try {
       const ctx = await buildContext();
-      await supabase.from('eventos_analitica').insert([{
-        proyecto_id: proyectoId,
-        sesion_id: sessionId,
-        tipo: tipo,
-        detalle: { ...detalle, ambiente: ambienteTab },
-        contexto: ctx
-      }]);
-    } catch(e) { console.error('Error silencioso', e); }
+      await supabase.from('eventos_analitica').insert([{ proyecto_id: proyectoId, sesion_id: sessionId, tipo: tipo, detalle: { ...detalle, ambiente: ambienteTab }, contexto: ctx }]);
+    } catch(e) { }
   };
 
   useEffect(() => {
     logEvent('SESSION_START', { url: window.location.href });
-    
-    // SENSOR DE PERMANENCIA
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         const zona = entry.target.getAttribute('data-zona');
         if (!zona) return;
-        if (entry.isIntersecting) {
-          entryTimes.current[zona] = Date.now();
-        } else if (entryTimes.current[zona] > 0) {
-          dwellTimes.current[zona] += Date.now() - entryTimes.current[zona];
-          entryTimes.current[zona] = 0;
-        }
+        if (entry.isIntersecting) { entryTimes.current[zona] = Date.now(); } 
+        else if (entryTimes.current[zona] > 0) { dwellTimes.current[zona] += Date.now() - entryTimes.current[zona]; entryTimes.current[zona] = 0; }
       });
     }, { threshold: 0.6 }); 
 
-    setTimeout(() => {
-      ['Z1', 'Z2', 'Z3'].forEach(z => {
-        const el = document.getElementById(`sensor-${z}`);
-        if (el) observer.observe(el);
-      });
-    }, 1000);
+    setTimeout(() => { ['Z1', 'Z2', 'Z3'].forEach(z => { const el = document.getElementById(`sensor-${z}`); if (el) observer.observe(el); }); }, 1000);
 
     const handleGlobalScroll = () => {
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - doc.clientHeight;
-      if (max > 0) {
-        const pct = Math.round(((doc.scrollTop || document.body.scrollTop) / max) * 100);
-        if (pct > maxScroll.current) maxScroll.current = pct;
-      }
+      const doc = document.documentElement; const max = doc.scrollHeight - doc.clientHeight;
+      if (max > 0) { const pct = Math.round(((doc.scrollTop || document.body.scrollTop) / max) * 100); if (pct > maxScroll.current) maxScroll.current = pct; }
     };
     window.addEventListener('scroll', handleGlobalScroll);
 
     const handleUnload = () => {
-      ['Z1', 'Z2', 'Z3'].forEach(z => {
-        if (entryTimes.current[z] > 0) dwellTimes.current[z] += Date.now() - entryTimes.current[z];
-      });
+      ['Z1', 'Z2', 'Z3'].forEach(z => { if (entryTimes.current[z] > 0) dwellTimes.current[z] += Date.now() - entryTimes.current[z]; });
       logEvent('SESSION_END', { scroll_max: maxScroll.current, slider_total: sliderMovs.current, tiempos: dwellTimes.current });
     };
-    
     window.addEventListener('beforeunload', handleUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleUnload);
-      window.removeEventListener('scroll', handleGlobalScroll);
-      observer.disconnect();
-      handleUnload();
-    }
+    return () => { window.removeEventListener('beforeunload', handleUnload); window.removeEventListener('scroll', handleGlobalScroll); observer.disconnect(); handleUnload(); }
   }, [proyectoId, ambienteTab]);
 
   const trackClick = (zona: string, e: React.MouseEvent, materialNombre?: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100); const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
     logEvent('CLICK_ZONA', { zona, x, y, material: materialNombre });
-    const now = Date.now();
-    clickTimes.current.push(now);
+    const now = Date.now(); clickTimes.current.push(now);
     if (clickTimes.current.length > 3) clickTimes.current.shift();
-    if (clickTimes.current.length === 3 && (now - clickTimes.current[0] < 1500)) {
-       logEvent('FRICCION', { zona, mensaje: "Rage click detectado" });
-       clickTimes.current = [];
-    }
+    if (clickTimes.current.length === 3 && (now - clickTimes.current[0] < 1500)) { logEvent('FRICCION', { zona, mensaje: "Rage click detectado" }); clickTimes.current = []; }
   };
-
-  const trackScroll = (e: any) => {
-    const el = e.target;
-    const max = el.scrollHeight - el.clientHeight;
-    if (max > 0) {
-      const pct = Math.round((el.scrollTop / max) * 100);
-      if (pct > maxScroll.current) maxScroll.current = pct;
-    }
-  };
-
+  const trackScroll = (e: any) => { const el = e.target; const max = el.scrollHeight - el.clientHeight; if (max > 0) { const pct = Math.round((el.scrollTop / max) * 100); if (pct > maxScroll.current) maxScroll.current = pct; } };
   const trackSliderMove = () => { sliderMovs.current++; };
 
   return { trackClick, trackScroll, trackSliderMove, logEvent };
 }
 
-// --- VISTA 3: CLIENTE (SIMULADOR CELULAR REAL CON GALERÍAS Y ESPÍA) ---
+// =====================================================================
+// 📱 VISTA 3: CLIENTE (SIMULADOR CELULAR FLOTANTE / PANTALLA COMPLETA)
+// =====================================================================
 function VistaCliente() {
   const { id } = useParams();
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
+  const [isSimulatingLoad, setIsSimulatingLoad] = useState(true); // Splash screen
 
-  const { trackClick, trackScroll, trackSliderMove, logEvent } = useAnalytics(
-    id || '', 
-    p?.ambientes?.[activeTab]?.tab || 'Global'
-  );
+  // INYECCIÓN CONDICIONAL DE CLARITY SOLO PARA EL CLIENTE
+  useEffect(() => {
+    if (CLARITY_PROJECT_ID && !window.clarity) {
+      (function(c:any,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", CLARITY_PROJECT_ID);
+    }
+  }, []);
+
+  const { trackClick, trackScroll, trackSliderMove, logEvent } = useAnalytics(id || '', p?.ambientes?.[activeTab]?.tab || 'Global');
 
   useEffect(() => {
     if (!id) return;
@@ -650,57 +618,67 @@ function VistaCliente() {
       const { data } = await supabase.from('proyectos').select('*').eq('id', id).single();
       if (data) {
         setP(data);
-        if (data.configuracion?.cantAmbientes > 1 && data.configuracion?.navegacion === 'index') {
-          setShowIndex(true);
-        }
+        if (data.configuracion?.cantAmbientes > 1 && data.configuracion?.navegacion === 'index') setShowIndex(true);
       }
+      setTimeout(() => setIsSimulatingLoad(false), 2000); // Finge carga 2s
     };
     fetchProyecto();
   }, [id]);
 
   useEffect(() => {
     if(!p || showIndex) return;
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('opacity-100', 'translate-y-0'); });
-    }, { threshold: 0.1 });
+    const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('opacity-100', 'translate-y-0'); }); }, { threshold: 0.1 });
     document.querySelectorAll('.reveal-elem').forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, [p, showIndex, activeTab]);
 
-  if (!p) return <div className="min-h-screen flex items-center justify-center bg-zinc-900"><Loader2 className="animate-spin text-white w-10 h-10" /></div>;
+  if (!p || isSimulatingLoad) return (
+    <div className="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center animate-in fade-in duration-300">
+      <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(245,158,11,0.1)] ring-1 ring-white/5">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+      <h1 className="text-4xl font-black text-white tracking-tighter italic">STUDIO<span className="text-amber-500">.MUD</span></h1>
+      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-4 animate-pulse">Preparando propuesta...</p>
+    </div>
+  );
 
   const c = p.configuracion;
   const env = p.ambientes[activeTab] || {};
   const isMultiple = c.cantAmbientes > 1;
 
   let totalSuma = 0;
-  if (isMultiple) {
-    totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0);
-  }
+  if (isMultiple) { totalSuma = p.ambientes.reduce((acc: number, curr: any) => acc + parsePrice(curr.total), 0); }
 
-  const selectEnvFromIndex = (i: number) => {
-    setActiveTab(i);
-    setShowIndex(false);
-  };
+  const selectEnvFromIndex = (i: number) => { setActiveTab(i); setShowIndex(false); };
+
+  // Ítems de presupuesto
+  const currentItems = env.items || [
+    { id: 1, lbl: env.lbl1 || 'Materiales', val: env.val1 || '0', incluido: true },
+    { id: 2, lbl: env.lbl2 || 'Diseño y Montaje', val: env.val2 || '0', incluido: true }
+  ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex justify-center items-start md:py-10 font-sans">
-      <div className="w-full max-w-md bg-white min-h-screen md:min-h-[90vh] md:rounded-[3rem] overflow-hidden flex flex-col shadow-[0_50px_100px_rgba(0,0,0,0.9)] relative">
+    <div className="min-h-screen bg-[#0A0A0A] font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 animate-in fade-in duration-500">
+      
+      {/* Background premium PC */}
+      <div className="absolute inset-0 pointer-events-none hidden md:block">
+        <img src={env.obra || env.galeriaObra?.[0] || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className="w-full h-full object-cover opacity-20 blur-3xl scale-110" alt="bg"/>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-zinc-950/90"></div>
+      </div>
+
+      <div className="w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] bg-zinc-950 md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] border-zinc-800 relative z-10 flex flex-col overflow-hidden md:ring-1 ring-white/10">
         
-        <div className={`bg-[#111111] pt-6 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'}`}>
+        <div className={`bg-[#111111] pt-6 md:pt-10 px-4 rounded-b-2xl z-20 flex flex-col shadow-lg transition-all ${(!isMultiple || showIndex) ? 'pb-4' : 'pb-0'}`}>
           <header className="flex justify-between items-center mb-4 px-2">
             <h1 className="font-black text-[26px] tracking-tighter italic text-white leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
             <span className="text-[7px] bg-zinc-800 border border-zinc-700 text-zinc-300 px-2 py-1 rounded-full uppercase tracking-widest font-bold">
               {isMultiple ? 'Proyecto Integral' : 'Diseño a Medida'}
             </span>
           </header>
-          
           {isMultiple && !showIndex && c.navegacion === 'tabs' && (
             <div className="flex overflow-x-auto gap-1.5 items-end hide-scroll">
               {p.ambientes.map((a:any, i:number) => (
-                <button key={i} onClick={() => setActiveTab(i)} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-white text-zinc-900 shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
-                  {a.tab}
-                </button>
+                <button key={i} onClick={() => setActiveTab(i)} className={`shrink-0 px-4 py-2 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-white text-zinc-900 shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>{a.tab}</button>
               ))}
             </div>
           )}
@@ -712,18 +690,11 @@ function VistaCliente() {
             <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
             <div className="space-y-4">
               {p.ambientes.map((a:any, i:number) => {
-                const fotosParaThumb = a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]);
-                const imgThumb = fotosParaThumb[0] || "";
-                
+                const imgThumb = (a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]))[0] || "";
                 return (
                   <div key={i} onClick={() => selectEnvFromIndex(i)} className="bg-white rounded-3xl p-3 border border-zinc-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-amber-300 transition-colors group">
-                    <div className="w-20 h-20 rounded-2xl bg-zinc-100 overflow-hidden shrink-0 ring-1 ring-black/5">
-                      {imgThumb && <img src={imgThumb} className="w-full h-full object-cover object-center group-hover:scale-110 transition duration-500" />}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-black text-lg text-zinc-900">{a.tab}</h3>
-                      <p className="text-amber-600 font-bold text-xs mt-1">{c.moneda === 'ARS' ? '$' : 'USD'} {a.total}</p>
-                    </div>
+                    <div className="w-20 h-20 rounded-2xl bg-zinc-100 overflow-hidden shrink-0 ring-1 ring-black/5">{imgThumb && <img src={imgThumb} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />}</div>
+                    <div className="flex-1"><h3 className="font-black text-lg text-zinc-900">{a.tab}</h3><p className="text-amber-600 font-bold text-xs mt-1">{c.moneda === 'ARS' ? '$' : 'USD'} {a.total}</p></div>
                     <ChevronRight size={20} className="text-zinc-300 group-hover:text-amber-500 mr-2 transition-colors" />
                   </div>
                 );
@@ -734,16 +705,10 @@ function VistaCliente() {
 
         {!showIndex && (
           <div onScroll={trackScroll} className="flex-1 overflow-y-auto bg-white pb-32 hide-scroll scroll-smooth relative">
-            
             {isMultiple && c.navegacion === 'index' && (
-              <div className="px-4 pt-4 pb-2">
-                <button onClick={() => setShowIndex(true)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-50 hover:bg-zinc-100 px-4 py-2 rounded-full border border-zinc-200 transition">
-                  <ArrowLeft size={14} strokeWidth={2.5}/> Volver al Menú
-                </button>
-              </div>
+              <div className="px-4 pt-4 pb-2"><button onClick={() => setShowIndex(true)} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-50 hover:bg-zinc-100 px-4 py-2 rounded-full border border-zinc-200 transition"><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            {/* ZONA 1: RENDER Y SLIDER */}
             <div onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default">
               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} />
             </div>
@@ -754,60 +719,57 @@ function VistaCliente() {
             </div>
 
             <div className="px-6 space-y-3">
-              {/* ZONA 2: PRECIO E INVERSIÓN */}
-              <div onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className="bg-[#1a1a1a] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100 cursor-default active:scale-[0.98]">
+              {/* TARJETA INVERSIÓN (Z2) CON ÍTEMS DINÁMICOS */}
+              <div onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className="bg-[#1a1a1a] rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100">
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
-                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] mb-1">Costo de este Ambiente</p>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-amber-500 font-black text-sm">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
+                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] mb-1 flex items-center gap-1.5"><Info size={12}/> Inversión del Ambiente</p>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-amber-500 font-black text-lg">{c.moneda === 'ARS' ? '$' : 'USD'}</span>
                   <p className="text-4xl font-black tracking-tighter text-white pointer-events-none">{env.total}</p>
                 </div>
-                <div className="space-y-2 border-t border-zinc-800 pt-4 pointer-events-none">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-400 font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>{env.lbl1}</span>
-                    <span className="font-black text-amber-500">{env.val1}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-500 font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>{env.lbl2}</span>
-                    <span className="font-black text-zinc-400">{env.val2}</span>
-                  </div>
+                <div className="space-y-3 border-t border-zinc-800 pt-4 pointer-events-none">
+                  {currentItems.map((item:any) => (
+                    <div key={item.id} className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full ${item.incluido ? 'bg-amber-500' : 'border border-zinc-500'}`}></div>
+                        <span className={`${item.incluido ? 'text-zinc-300' : 'text-zinc-500'} font-bold`}>{item.lbl}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!item.incluido && <span className="bg-zinc-800 text-zinc-400 text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border border-zinc-700">Opcional</span>}
+                        <span className={`font-black ${item.incluido ? 'text-amber-500' : 'text-zinc-400'}`}>{item.val}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
+              {/* TOTAL GENERAL SI HAY MÁS DE UN AMBIENTE */}
               {isMultiple && (
-                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-[#FAF8F5] border border-[#E8E2D9] rounded-2xl p-5 flex justify-between items-center shadow-sm reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-200">
-                  <span className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.2em]">Total Proyecto</span>
-                  <span className="text-zinc-900 font-black text-lg">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
+                <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-amber-50 border border-amber-200 rounded-[1.5rem] p-5 shadow-sm relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-200">
+                  <div className="absolute right-0 top-0 w-16 h-16 bg-amber-400/20 blur-xl"></div>
+                  <p className="text-amber-700 text-[8px] font-black uppercase tracking-[0.2em] mb-1">Total Proyecto (Todos los ambientes)</p>
+                  <span className="text-zinc-900 font-black text-xl">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
                 </div>
               )}
 
-              {/* INYECTAMOS LA NUEVA ZONA 3 (Alternativas) */}
+              {/* ZONA 3 ALTERNATIVAS */}
               <Z3Alternativas trackClick={trackClick} />
             </div>
           </div>
         )}
 
         <div className="absolute bottom-0 w-full p-4 bg-white/95 backdrop-blur-md border-t border-zinc-100 z-30">
-          <a 
-            href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta del proyecto y quiero avanzar.`} 
-            target="_blank" 
-            rel="noreferrer" 
-            onClick={() => logEvent('WPP_CLICK', { action: 'Intento de Contacto' })}
-            className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform"
-          >
+          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{__html:`
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-      `}}/>
+      <style dangerouslySetInnerHTML={{__html:`.hide-scroll::-webkit-scrollbar { display: none; } .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }`}}/>
     </div>
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO CON SENSOR ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO ---
 function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, activeTab: number, onSliderMove: () => void }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
@@ -815,36 +777,17 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
   const [idxDer, setIdxDer] = useState(0);
 
   useEffect(() => {
-    setIdxIzq(0); setIdxDer(0);
-    setAnim('transition-all duration-[450ms] cubic-bezier(0.25, 1, 0.5, 1)');
-    setTimeout(() => setVal(70), 200);
-    setTimeout(() => setVal(30), 650);
-    setTimeout(() => setVal(50), 1100);
-    setTimeout(() => setAnim(''), 1550);
+    setIdxIzq(0); setIdxDer(0); setAnim('transition-all duration-[450ms] cubic-bezier(0.25, 1, 0.5, 1)');
+    setTimeout(() => setVal(70), 200); setTimeout(() => setVal(30), 650); setTimeout(() => setVal(50), 1100); setTimeout(() => setAnim(''), 1550);
   }, [activeTab]);
 
-  const handleDrag = (e: any) => { 
-    setAnim(''); 
-    setVal(e.target.value); 
-    onSliderMove();
-  };
-  const snap = (v: number) => { 
-    setAnim('transition-all duration-300 ease-out');
-    setVal(v); 
-    onSliderMove();
-    setTimeout(() => setAnim(''), 300); 
-  };
+  const handleDrag = (e: any) => { setAnim(''); setVal(e.target.value); onSliderMove(); };
+  const snap = (v: number) => { setAnim('transition-all duration-300 ease-out'); setVal(v); onSliderMove(); setTimeout(() => setAnim(''), 300); };
 
-  let baseArrObra = env.galeriaObra || [];
-  if (baseArrObra.length === 0 && env.obra) baseArrObra = [env.obra];
-  let baseArrRender = env.galeriaRender || [];
-  if (baseArrRender.length === 0 && env.render) baseArrRender = [env.render];
-
-  const arrIzq = !env.invertido ? baseArrObra : baseArrRender;
-  const arrDer = env.invertido ? baseArrObra : baseArrRender;
-
-  const imgIzq = arrIzq[idxIzq] || "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800";
-  const imgDer = arrDer[idxDer] || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800";
+  let arrIzq = !env.invertido ? (env.galeriaObra || [env.obra]) : (env.galeriaRender || [env.render]);
+  let arrDer = env.invertido ? (env.galeriaObra || [env.obra]) : (env.galeriaRender || [env.render]);
+  if(!arrIzq[0]) arrIzq = ["https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800"];
+  if(!arrDer[0]) arrDer = ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"];
 
   const nextIzq = (e:any) => { e.stopPropagation(); setIdxIzq((i) => (i + 1) % arrIzq.length); };
   const prevIzq = (e:any) => { e.stopPropagation(); setIdxIzq((i) => (i - 1 + arrIzq.length) % arrIzq.length); };
@@ -853,10 +796,8 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
 
   return (
     <div className="relative w-full h-full overflow-hidden rounded-[2.5rem] shadow-md border-4 border-white ring-1 ring-black/5 cursor-default pointer-events-auto">
-      
-      {/* FONDO (Derecha) */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <img src={imgDer} className="w-full h-full object-cover object-center" />
+        <img src={arrDer[idxDer]} className="w-full h-full object-cover object-center" />
         {arrDer.length > 1 && (
           <div className="absolute inset-0 pointer-events-none z-30">
             <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
@@ -865,10 +806,8 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
           </div>
         )}
       </div>
-      
-      {/* FRENTE (Izquierda, Recortado) */}
       <div className={`absolute top-0 left-0 h-full overflow-hidden pointer-events-none ${anim}`} style={{ width: `${val}%` }}>
-        <img src={imgIzq} className="absolute top-0 left-0 w-[100vw] h-full object-cover object-center max-w-none md:w-[400px]" />
+        <img src={arrIzq[idxIzq]} className="absolute top-0 left-0 w-[100vw] h-full object-cover object-center max-w-none md:w-[400px]" />
         {arrIzq.length > 1 && (
           <div className="absolute top-0 left-0 w-[100vw] h-full pointer-events-none md:w-[400px] z-30">
             <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition"><ChevronLeft size={18}/></button>
@@ -877,18 +816,12 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
           </div>
         )}
       </div>
-      
-      {/* MANIJA DEL SLIDER */}
       <div className={`absolute top-0 bottom-0 w-[3px] bg-white z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(0,0,0,0.5)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-10 bg-white rounded-md shadow-md flex items-center justify-center gap-1">
-          <div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div>
-          <div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div>
+          <div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div><div className="w-0.5 h-4 bg-zinc-300 rounded-full"></div>
         </div>
       </div>
-      
       <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
-
-      {/* PÍLDORA DE BOTONES */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex bg-white/95 backdrop-blur-md p-1 rounded-full shadow-xl border border-zinc-200 z-30 pointer-events-auto">
         <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblIzq || 'Antes'}</button>
         <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-900'}`}>{env.lblDer || 'Render'}</button>
@@ -897,27 +830,19 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
   );
 }
 
-// --- SUB-COMPONENTE: ZONA 3 (ALTERNATIVAS Y MATERIALES INTERACTIVOS) ---
+// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS ---
 function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.MouseEvent, material?: string) => void }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
   const variantes = [
     {
-      id: "v1", nombre: "Madera Natural",
-      img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800",
-      puntos: [
-        { id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" },
-        { id: 2, x: 70, y: 65, material: "Mesada Silestone", codigo: "BLANCO-N", color: "bg-zinc-200", shadow: "shadow-white/50" }
-      ]
+      id: "v1", nombre: "Madera Natural", img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800",
+      puntos: [{ id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" }]
     },
     {
-      id: "v2", nombre: "Laca Oscura",
-      img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800",
-      puntos: [
-        { id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" },
-        { id: 4, x: 80, y: 40, material: "Herrajes Cobre", codigo: "CU-100", color: "bg-orange-400", shadow: "shadow-orange-500/50" }
-      ]
+      id: "v2", nombre: "Laca Oscura", img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800",
+      puntos: [{ id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" }]
     }
   ];
 
@@ -931,44 +856,29 @@ function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.Mo
         <h3 className="text-2xl font-black text-zinc-900 italic tracking-tight leading-none">Variantes y Materiales</h3>
         <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Toca los puntos para ver opciones</p>
       </div>
-
       <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white ring-1 ring-black/5 bg-zinc-100">
         <img key={varianteActual.id} src={varianteActual.img} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Variante" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
-
         {varianteActual.puntos.map((punto) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation();
-              setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material);
-            }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
-              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span>
-              <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
+              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span><div className="w-2.5 h-2.5 bg-white rounded-full"></div>
             </button>
-
             {activeTooltip === punto.id && (
               <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-zinc-900/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-zinc-700/50 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-12 origin-bottom' : 'top-12 origin-top'}`}>
                 <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
-                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Material</span>
-                <span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
-                <span className="inline-block mt-2 text-[9px] bg-amber-500/10 text-amber-500 px-2 py-1 rounded-md font-mono border border-amber-500/20">{punto.codigo}</span>
+                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Material</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
               </div>
             )}
           </div>
         ))}
-
         <div className="absolute bottom-6 left-0 w-full px-4 flex justify-between items-end pointer-events-none z-10">
-          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all active:scale-95"><ChevronLeft size={20}/></button>
-          
+          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all"><ChevronLeft size={20}/></button>
           <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto flex flex-col items-center border border-white/10">
             <span className="text-[9px] text-white font-black uppercase tracking-widest">{varianteActual.nombre}</span>
-            <div className="flex gap-1.5 mt-1.5">
-              {variantes.map((_, idx) => (
-                <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/30'}`}></div>
-              ))}
-            </div>
+            <div className="flex gap-1.5 mt-1.5">{variantes.map((_, idx) => (<div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/30'}`}></div>))}</div>
           </div>
-
-          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all active:scale-95"><ChevronRight size={20}/></button>
+          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all"><ChevronRight size={20}/></button>
         </div>
       </div>
       {activeTooltip && <div className="fixed inset-0 z-10" onClick={() => setActiveTooltip(null)}></div>}
@@ -977,7 +887,7 @@ function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.Mo
 }
 
 // =====================================================================
-// 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS v2.0 - NUEVA INTERFAZ)
+// 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS v3.0 - REALTIME)
 // =====================================================================
 function AdminAnalytics() {
   const { id } = useParams();
@@ -986,36 +896,45 @@ function AdminAnalytics() {
   const [activeTab, setActiveTab] = useState(0);
   const [analytics, setAnalytics] = useState<any>(null);
   const [expandedUser, setExpandedUser] = useState<number | null>(0); 
+  const [theme, setTheme] = useState('dark');
+  const [timeFilter, setTimeFilter] = useState('24h'); // '24h', '7d', 'all'
+
+  const isDark = theme === 'dark';
+  const colors = {
+    bgMain: isDark ? 'bg-zinc-950' : 'bg-zinc-50', textMain: isDark ? 'text-zinc-100' : 'text-zinc-900',
+    textMuted: isDark ? 'text-zinc-400' : 'text-zinc-500', bgCard: isDark ? 'bg-zinc-900' : 'bg-white',
+    borderCard: isDark ? 'border-zinc-800' : 'border-zinc-200', bgHover: isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100',
+    headerAcc: isDark ? 'bg-zinc-800/50' : 'bg-zinc-50',
+  };
 
   useEffect(() => {
     if (!id) return;
-
     const fetchData = async () => {
       const { data: proyecto } = await supabase.from('proyectos').select('*').eq('id', id).single();
       if (proyecto) setP(proyecto);
-
-      const { data: eventos } = await supabase.from('eventos_analitica')
-        .select('*')
-        .eq('proyecto_id', id)
-        .order('created_at', { ascending: true });
-
-      if (eventos && proyecto) {
-        procesarEventos(eventos, proyecto.ambientes[activeTab]?.tab || 'Global');
-      }
+      const { data: eventos } = await supabase.from('eventos_analitica').select('*').eq('proyecto_id', id).order('created_at', { ascending: true });
+      if (eventos && proyecto) procesarEventos(eventos, proyecto.ambientes[activeTab]?.tab || 'Global');
     };
-
     fetchData();
-
-    const channel = supabase
-      .channel('cambios-analitica')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'eventos_analitica', filter: `proyecto_id=eq.${id}` }, 
-      () => { fetchData(); })
-      .subscribe();
-
+    const channel = supabase.channel('cambios-analitica').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'eventos_analitica', filter: `proyecto_id=eq.${id}` }, () => { fetchData(); }).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [id, activeTab]);
+  }, [id, activeTab, timeFilter]);
 
-  const procesarEventos = (eventos: any[], ambienteActual: string) => {
+  const purgarDatos = async () => {
+    if (!window.confirm('⚠️ ATENCIÓN: ¿Estás seguro de resetear este tablero? Se borrará TODO el historial. Irreversible.')) return;
+    await supabase.from('eventos_analitica').delete().eq('proyecto_id', id);
+    window.location.reload();
+  };
+
+  const procesarEventos = (todosLosEventos: any[], ambienteActual: string) => {
+    const now = new Date().getTime();
+    const eventos = todosLosEventos.filter(e => {
+      const eDate = new Date(e.created_at).getTime();
+      if (timeFilter === '24h') return (now - eDate) < 24 * 60 * 60 * 1000;
+      if (timeFilter === '7d') return (now - eDate) < 7 * 24 * 60 * 60 * 1000;
+      return true;
+    });
+
     const evsAmbiente = eventos.filter((e: any) => e.detalle?.ambiente === ambienteActual || e.tipo === 'WPP_CLICK');
     const sesiones = [...new Set(evsAmbiente.map((e: any) => e.sesion_id))];
 
@@ -1025,8 +944,7 @@ function AdminAnalytics() {
     const friccionEvents = evsAmbiente.filter((e: any) => e.tipo === 'FRICCION').length;
     const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     
-    const getDots = (zonaId: string, colorClass: string) => 
-      clicks.filter((e: any) => e.detalle?.zona === zonaId).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
+    const getDots = (zonaId: string, colorClass: string) => clicks.filter((e: any) => e.detalle?.zona === zonaId).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
 
     const dotsZ1 = getDots('Z1_RENDER', 'dot-orange');
     const dotsZ2 = getDots('Z2_PRECIO', 'dot-red');
@@ -1034,7 +952,7 @@ function AdminAnalytics() {
     
     const materiales = clicks.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
     const rankingMap = materiales.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});
-    const rankingArray = Object.entries(rankingMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => b.c - a.c);
+    const rankingArray = Object.entries(rankingMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => (b.c as number) - (a.c as number));
 
     const dataCruda = evsAmbiente.slice(-30).map((e: any) => {
       const time = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1064,32 +982,27 @@ function AdminAnalytics() {
     const granTotalMs = totalTimes.Z1 + totalTimes.Z2 + totalTimes.Z3;
 
     setAnalytics({
-      scroll: `${maxScroll}%`,
-      slider: totalSliders.toString(),
-      friccion: friccionEvents.toString(),
-      tiempoTotal: formatTime(granTotalMs),
+      scroll: `${maxScroll}%`, slider: totalSliders.toString(), friccion: friccionEvents.toString(), tiempoTotal: formatTime(granTotalMs),
       espectadores: sesiones.map((s, i) => {
         const evsDeSesion = evsAmbiente.filter((e: any) => e.sesion_id === s);
         const startEv = evsDeSesion.find((e: any) => e.tipo === 'SESSION_START');
         const ultimoEvento = evsDeSesion[evsDeSesion.length - 1];
         
-        const horaUltimaActividad = ultimoEvento ? new Date(ultimoEvento.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const fechaUltimo = ultimoEvento ? new Date(ultimoEvento.created_at) : new Date();
+        const diffMinutos = Math.floor((now - fechaUltimo.getTime()) / 60000);
+        let statusRel = 'Hace ' + diffMinutos + 'm';
+        if (diffMinutos < 2) statusRel = 'Online';
+        if (diffMinutos > 1440) statusRel = 'Ayer+';
+
+        const statusAbs = fechaUltimo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
         const ctx = startEv?.contexto || {};
         
         return {
-          id: s,
-          rol: i === 0 ? "Titular" : `Visita #${i+1}`,
-          disp: ctx.plataforma || "Web",
-          geo: ctx.geo || "Desconocido",
-          isp: ctx.red || "-", bat: ctx.bateria || "-",
-          status: i === 0 ? "Online" : `Visto ${horaUltimaActividad}`,
-          statusClass: i === 0 ? "text-green-600 bg-green-100" : "text-zinc-500 bg-zinc-100"
+          id: s, rol: i === 0 ? "Titular" : `Visita #${i+1}`, disp: ctx.plataforma || "Web", geo: ctx.geo || "Desconocido", isp: ctx.red || "-", bat: ctx.bateria || "-",
+          statusRel, statusAbs, statusClass: diffMinutos < 2 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : (isDark ? "text-zinc-400 bg-zinc-800 border-zinc-700" : "text-zinc-600 bg-zinc-200 border-zinc-300")
         };
       }),
-      ranking: rankingArray,
-      logs: dataCruda,
-      wppEstado: wppClicks > 0 ? "Dudó en Comprar" : "Observación",
-      wppDesc: wppClicks > 0 ? `Tocó 'Aprobar' ${wppClicks} veces pero cerró sin confirmar.` : "Aún no interactuó.",
+      ranking: rankingArray, logs: dataCruda,
       z1: { t: formatTime(totalTimes.Z1), c: dotsZ1.length, dots: dotsZ1 },
       z2: { t: formatTime(totalTimes.Z2), c: dotsZ2.length, dots: dotsZ2 },
       z3: { t: formatTime(totalTimes.Z3), c: dotsZ3.length, dots: dotsZ3 }
@@ -1099,116 +1012,133 @@ function AdminAnalytics() {
   if (!p || !analytics) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
 
   const env = p.ambientes[activeTab] || {};
+  const imgBg = env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800";
   
-  const renderDots = (dots: any[]) => dots.map((d, i) => (
-    <div key={i} className={`absolute rounded-full pointer-events-none mix-blend-screen -translate-x-1/2 -translate-y-1/2 ${d.c === 'dot-red' ? 'bg-[radial-gradient(circle,rgba(255,50,50,1)_0%,rgba(255,50,50,0)_70%)] w-14 h-14' : d.c === 'dot-orange' ? 'bg-[radial-gradient(circle,rgba(255,120,0,0.9)_0%,rgba(255,120,0,0)_70%)] w-11 h-11' : 'bg-[radial-gradient(circle,rgba(255,200,0,0.8)_0%,rgba(255,200,0,0)_70%)] w-10 h-10'}`} style={{ left: `${d.x}%`, top: `${d.y}%` }} />
+  const renderDots = (dots: any[], glowColor: string) => dots.map((d, i) => (
+    <div key={i} className={`absolute rounded-full pointer-events-none mix-blend-screen -translate-x-1/2 -translate-y-1/2 ${glowColor}`} style={{ left: `${d.x}%`, top: `${d.y}%` }}>
+       <div className="absolute inset-0 m-auto w-3 h-3 bg-white rounded-full blur-[2px] opacity-80"></div>
+    </div>
   ));
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start p-4 md:p-8 bg-zinc-50 font-sans">
-      <div className="w-full max-w-[1400px] mb-8 flex justify-between items-end border-b border-zinc-200 pb-4">
+    <div className={`min-h-screen w-full flex flex-col items-center justify-start p-4 md:p-8 transition-colors duration-300 font-sans ${colors.bgMain} ${colors.textMain}`}>
+      <div className={`w-full max-w-[1400px] mb-8 flex flex-col md:flex-row md:justify-between items-start md:items-end gap-4 border-b pb-4 ${colors.borderCard}`}>
         <div>
-          <button onClick={() => navigate(`/admin/editar/${id}`)} className="text-zinc-400 hover:text-zinc-900 font-black text-[10px] uppercase tracking-widest mb-2"><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
-          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic leading-none">STUDIO<span className="text-amber-600">.MUD</span></h1>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Centro de Comando Analítico</p>
+          <button onClick={() => navigate(`/admin/editar/${id}`)} className={`${colors.textMuted} hover:${colors.textMain} font-black text-[10px] uppercase tracking-widest mb-2 transition-colors`}><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
+          <h1 className="text-3xl font-black tracking-tighter italic leading-none">STUDIO<span className="text-amber-500">.MUD</span></h1>
+          <p className={`text-[10px] font-bold ${colors.textMuted} uppercase tracking-widest mt-1 flex items-center gap-2`}>
+            Centro de Comando Analítico <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <select value={timeFilter} onChange={e=>setTimeFilter(e.target.value)} className={`appearance-none pl-9 pr-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors outline-none cursor-pointer ${isDark ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-zinc-700 border-zinc-200 shadow-sm hover:bg-zinc-50'}`}>
+              <option value="24h">Últimas 24h</option>
+              <option value="7d">Esta Semana</option>
+              <option value="all">Histórico</option>
+            </select>
+            <CalendarDays size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-zinc-400' : 'text-zinc-500'} pointer-events-none`} />
+            <ChevronRight size={12} className={`absolute right-3 top-1/2 -translate-y-1/2 rotate-90 ${isDark ? 'text-zinc-400' : 'text-zinc-500'} pointer-events-none`} />
+          </div>
+          <div className={`w-px h-6 mx-1 hidden md:block ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`}></div>
+          <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-zinc-800 text-amber-400 border-zinc-700 hover:bg-zinc-700' : 'bg-zinc-900 text-white border-zinc-900 shadow-sm hover:bg-zinc-800'}`}>
+            {isDark ? <Sun size={14}/> : <Moon size={14}/>}
+          </button>
+          <button onClick={purgarDatos} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white' : 'bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white shadow-sm'}`}>
+            <Trash2 size={14} /> Purgar
+          </button>
         </div>
       </div>
 
       <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* COLUMNA 1: CELULAR (Ahora con Z3) */}
+        {/* COL 1: CELULAR CON ZONAS DIVIDIDAS */}
         <div className="lg:col-span-4 flex flex-col h-[850px]">
-          <div className="w-full h-full bg-white border-[10px] border-zinc-900 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col">
-            <div className="bg-[#111111] pt-10 pb-0 px-5 relative z-50 flex flex-col">
-              <div className="mb-6">
-                <h1 className="font-black text-2xl text-white leading-none tracking-tight">{p.cliente}</h1>
-                <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2">Análisis Visual en vivo</p>
-              </div>
-              <div className="flex overflow-x-auto gap-2 items-end hide-scroll">
+          <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
+            <div className={`pt-10 pb-0 px-5 relative z-50 ${isDark ? 'bg-[#111]' : 'bg-zinc-100'}`}>
+              <h1 className={`font-black text-2xl leading-none tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'} px-1 truncate`}>{p.cliente}</h1>
+              <p className="text-[9px] text-amber-500 uppercase tracking-widest font-bold mt-2 mb-4 px-1">Análisis Visual</p>
+              <div className="flex gap-1 overflow-x-auto hide-scroll pb-0">
                 {p.ambientes.map((a:any, i:number) => (
-                  <button key={i} onClick={() => setActiveTab(i)} className={`shrink-0 px-5 py-3 rounded-t-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === i ? 'bg-white text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>{a.tab || `Amb 1`}</button>
+                  <button key={i} onClick={() => setActiveTab(i)} className={`px-5 py-3 rounded-t-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === i ? (isDark ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 shadow-sm') : (isDark ? 'bg-zinc-800 text-zinc-400 hover:text-zinc-200' : 'bg-zinc-200 text-zinc-500 hover:text-zinc-700')}`}>{a.tab}</button>
                 ))}
               </div>
             </div>
 
-            <div className="flex-1 bg-zinc-50 relative hide-scroll overflow-y-auto pb-10">
-              <div className="relative w-full h-[380px] mb-6">
-                <div className="absolute inset-0 bg-zinc-100 rounded-b-[2rem] overflow-hidden"><img src={env.obra || env.galeriaObra?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'} className="w-full h-full object-cover" /></div>
-                <div className="absolute inset-0 z-40 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-b-[2rem]">
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-blue-500">
-                    <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest mb-1 block">Z1: Render</span>
-                    <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z1.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z1.c} clics</span></div>
-                  </div>
-                  {renderDots(analytics.z1.dots)}
+            <div className={`flex-1 relative overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+              <img key={imgBg} src={imgBg} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isDark ? 'opacity-30 blur-[1px]' : 'opacity-40 blur-[2px]'}`} alt="bg"/>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"></div>
+
+              {/* Z1 */}
+              <div className="absolute top-0 left-0 w-full h-[45%] border-b border-dashed border-blue-400/30 overflow-hidden">
+                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
+                  <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div> Z1: Render</span>
+                  <div className="text-white font-black text-xs">{analytics.z1.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z1.c} clics</span></div>
                 </div>
-              </div>
-              
-              <div className="px-6 mb-6 relative">
-                <div className="bg-[#1a1a1a] rounded-[2rem] p-6 opacity-40"><p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest mb-2">Inversión Total</p><p className="text-4xl font-black text-white">{env.total}</p></div>
-                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-[2rem]">
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-red-500">
-                    <span className="text-[8px] font-black uppercase text-red-400 tracking-widest mb-1 block">Z2: Precio</span>
-                    <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z2.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z2.c} clics</span></div>
-                  </div>
-                  {renderDots(analytics.z2.dots)}
-                </div>
+                {renderDots(analytics.z1.dots, 'bg-amber-500/80 w-16 h-16 blur-xl')}
               </div>
 
-              {/* Caja Z3 en el panel */}
-              <div className="px-6 mb-6 relative">
-                <div className="bg-[#1a1a1a] rounded-[2rem] p-6 opacity-40 h-24"></div>
-                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-[2rem]">
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-yellow-500">
-                    <span className="text-[8px] font-black uppercase text-yellow-400 tracking-widest mb-1 block">Z3: Detalles</span>
-                    <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z3.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z3.c} clics</span></div>
-                  </div>
-                  {renderDots(analytics.z3.dots)}
+              {/* Z2 */}
+              <div className="absolute top-[45%] left-0 w-full h-[25%] border-b border-dashed border-red-400/30 overflow-hidden">
+                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
+                  <span className="text-[8px] font-black uppercase text-red-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-400"></div> Z2: Precio</span>
+                  <div className="text-white font-black text-xs">{analytics.z2.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z2.c} clics</span></div>
                 </div>
+                {renderDots(analytics.z2.dots, 'bg-red-600/90 w-20 h-20 blur-xl')}
               </div>
 
+              {/* Z3 */}
+              <div className="absolute top-[70%] left-0 w-full h-[30%] overflow-hidden">
+                <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 border border-white/10 rounded-xl p-2 px-3 flex gap-3 items-center shadow-lg">
+                  <span className="text-[8px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div> Z3: Detalles</span>
+                  <div className="text-white font-black text-xs">{analytics.z3.t} <span className="text-zinc-400 text-[8px] ml-1 font-bold">• {analytics.z3.c} clics</span></div>
+                </div>
+                {renderDots(analytics.z3.dots, 'bg-yellow-500/80 w-12 h-12 blur-lg')}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* COLUMNA 2: KPIS Y ACORDEÓN */}
-        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto hide-scroll pb-10">
+        {/* COL 2: KPIS Y ESPECTADORES */}
+        <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
           <div className="grid grid-cols-4 gap-3 shrink-0">
-            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
-            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Scroll</p><span className="text-xl font-black text-emerald-500">{analytics.scroll}</span></div>
-            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Slider</p><span className="text-xl font-black text-blue-600">{analytics.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
-            <div className="bg-red-50 p-4 rounded-3xl border border-red-100 flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-1">Rage</p><span className="text-xl font-black text-red-600">{analytics.friccion}</span></div>
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Scroll</p><span className="text-xl font-black text-emerald-500">{analytics.scroll}</span></div>
+            <div className={`${colors.bgCard} p-4 rounded-2xl border ${colors.borderCard} shadow-sm transition-colors`}><p className={`text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Slider</p><span className="text-xl font-black text-blue-500">{analytics.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
+            <div className={`${isDark ? 'bg-red-500/5 border-red-500/20' : 'bg-red-50 border-red-100'} p-4 rounded-2xl border shadow-sm transition-colors`}><p className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-1">Rage</p><span className="text-xl font-black text-red-500">{analytics.friccion}</span></div>
           </div>
 
-          <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-200 shadow-sm relative shrink-0">
+          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Espectadores Detectados</h2>
-              <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-700">{analytics.espectadores.length} IPs Activas</div>
+              <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} flex items-center gap-2`}><Activity size={14}/> Espectadores Activos</h2>
+              <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isDark ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-amber-50 text-amber-600 border-amber-200'} transition-colors`}>{analytics.espectadores.length} IPs</div>
             </div>
             
-            {/* EL ACORDEÓN */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {analytics.espectadores.map((e:any, idx:number) => {
                 const isExpanded = expandedUser === idx;
                 return (
-                  <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden transition-all">
-                    <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer hover:bg-zinc-100">
+                  <div key={idx} className={`rounded-2xl transition-all duration-300 overflow-hidden border ${isExpanded ? colors.headerAcc : colors.bgCard} ${colors.borderCard} ${colors.bgHover}`}>
+                    <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-white border border-zinc-200 rounded-lg text-xs font-black text-zinc-500 flex items-center justify-center">{idx + 1}</div>
-                        <span className="text-sm font-black text-zinc-900">{e.rol}</span>
+                        <div className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${idx === 0 ? (isDark ? 'bg-amber-500/20 text-amber-500' : 'bg-amber-100 text-amber-600') : (isDark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-100 text-zinc-500')}`}>{idx + 1}</div>
+                        <span className={`text-sm font-black ${colors.textMain} truncate max-w-[100px] md:max-w-none`}>{e.rol}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md border ${e.statusClass}`}>{e.status}</span>
-                        <ChevronRight size={16} className={`text-zinc-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md border flex items-center gap-1 ${e.statusClass}`}>
+                          {e.statusRel} <span className="opacity-60 font-black tracking-widest">({e.statusAbs})</span>
+                        </span>
+                        <ChevronRight size={16} className={`${colors.textMuted} transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                       </div>
                     </div>
-                    
-                    {/* CONTENIDO DESPLEGABLE */}
                     {isExpanded && (
-                      <div className="p-4 pt-0 border-t border-zinc-200/50 bg-white grid grid-cols-2 gap-4 mt-2">
-                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Dispositivo</span><span className="text-xs font-bold text-zinc-800">{e.disp}</span></div>
-                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Ubicación</span><span className="text-xs font-bold text-zinc-800">{e.geo}</span></div>
-                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Red & ISP</span><span className="text-xs font-bold text-zinc-800">{e.isp}</span></div>
-                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Batería</span><span className="text-xs font-bold text-zinc-800">{e.bat}</span></div>
+                      <div className={`p-4 pt-0 grid grid-cols-2 gap-4 mt-2 border-t ${isDark ? 'border-zinc-700/50' : 'border-zinc-200/60'}`}>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Smartphone size={10}/> Dispositivo</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.disp}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><MapPin size={10}/> Ubicación</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.geo}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><Wifi size={10}/> Red & ISP</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.isp}</span></div>
+                        <div><span className={`text-[8px] font-black ${colors.textMuted} block uppercase tracking-widest mb-1 flex items-center gap-1`}><BatteryMedium size={10}/> Batería</span><span className={`text-xs font-bold ${colors.textMain}`}>{e.bat}</span></div>
                       </div>
                     )}
                   </div>
@@ -1217,45 +1147,46 @@ function AdminAnalytics() {
             </div>
           </div>
           
-          <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-200 shadow-sm shrink-0">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Ranking Materiales</h2>
+          <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
+            <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-6`}>Ranking Materiales Z3</h2>
             <div className="space-y-2">
-              {analytics.ranking.length > 0 ? analytics.ranking.map((r:any, i:number) => (
-                <div key={i} className={`flex justify-between items-center p-3 rounded-xl ${i === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-zinc-50 border border-zinc-100'}`}>
-                  <div className="flex items-center gap-3"><span className="text-lg">{i === 0 ? '🏆' : <span className="text-xs text-zinc-400 font-black px-1">{i+1}º</span>}</span><span className="text-sm font-bold text-zinc-900">{r.n}</span></div>
-                  <span className={`text-[10px] font-black px-2 py-1 rounded-md ${i === 0 ? 'bg-amber-200 text-amber-800' : 'bg-zinc-200 text-zinc-600'}`}>{r.c} clics</span>
-                </div>
-              )) : <div className="text-center p-4 text-xs text-zinc-500 font-bold uppercase tracking-widest">Sin datos aún</div>}
+                {analytics.ranking.length > 0 ? analytics.ranking.map((r:any, i:number) => (
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${i === 0 ? (isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') : (isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-50 border-zinc-200')}`}>
+                    <div className="flex items-center gap-3"><span className="text-lg">{i === 0 ? '🏆' : <span className={`text-xs font-black px-1 ${colors.textMuted}`}>{i+1}º</span>}</span><span className={`text-sm font-bold ${i === 0 ? (isDark?'text-amber-500':'text-amber-700') : colors.textMain}`}>{r.n}</span></div>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-md ${i === 0 ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-200 text-amber-800') : (isDark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600')}`}>{r.c} clics</span>
+                  </div>
+                )) : <div className={`text-center p-4 text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Sin clics en Z3</div>}
             </div>
-          </div>
-
-          <div className="bg-[#111111] p-6 rounded-[2.5rem] border border-zinc-800 shrink-0">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Acción Final (Embudo)</h2>
-            <p className="text-xl font-black text-amber-500 leading-none mb-2">{analytics.wppEstado}</p>
-            <p className="text-[10px] font-bold text-zinc-400 leading-relaxed">{analytics.wppDesc}</p>
           </div>
         </div>
 
-        {/* COLUMNA 3: IA Y DATA CRUDA */}
+        {/* COL 3: IA Y DATA CRUDA */}
         <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px]">
-          <div className="bg-[#1C1A3B] rounded-[3rem] p-8 shadow-2xl border border-indigo-900/50 relative overflow-hidden flex flex-col shrink-0">
-            <div className="flex items-center gap-4 mb-8 relative z-10">
-                <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20"><CheckCircle2 size={24} strokeWidth={2.5}/></div>
-                <div><h3 className="text-base font-black text-white uppercase tracking-widest leading-none mb-1">Asistente IA</h3><p className="text-[9px] text-indigo-300 uppercase tracking-widest font-bold">Estrategia de Ventas</p></div>
+          <div className={`rounded-[2.5rem] p-8 shadow-xl border relative overflow-hidden flex flex-col shrink-0 transition-colors ${isDark ? 'bg-indigo-950/40 border-indigo-500/20' : 'bg-indigo-50 border-indigo-200'}`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-500/20'}`}></div>
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-colors ${isDark ? 'bg-indigo-500 text-white shadow-indigo-500/20 ring-1 ring-indigo-400/50' : 'bg-indigo-600 text-white shadow-indigo-200'}`}><Cpu size={24} strokeWidth={2}/></div>
+                <div><h3 className={`text-base font-black uppercase tracking-widest leading-none mb-1 transition-colors ${isDark ? 'text-white' : 'text-indigo-900'}`}>Asistente IA</h3><p className={`text-[9px] uppercase tracking-widest font-bold transition-colors ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Estrategia de Ventas</p></div>
             </div>
-            <div className="space-y-6 relative z-10">
-                <div><span className="bg-indigo-900/40 border border-indigo-700/50 text-indigo-200 text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-xl inline-block">Analítico / Fricción Precio</span></div>
-                <div><p className="text-sm text-indigo-100/90 leading-relaxed font-medium">Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con el slider y evaluó los detalles. La Acción Final indica intención de compra trabada por costo.</p></div>
-                <div className="bg-[#0D1D20] border border-emerald-900/50 p-6 rounded-2xl mt-4"><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 block mb-3">Acción Sugerida</span><p className="text-xs text-emerald-100/80 font-medium leading-relaxed">Toma la iniciativa. Ofréceles un plan de financiación para destrabar el cierre.</p></div>
+            <div className="space-y-5 relative z-10">
+                <div><span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg inline-block border transition-colors ${isDark ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 'bg-indigo-200 border-indigo-300 text-indigo-800'}`}>Fricción en Precio</span></div>
+                <p className={`text-sm leading-relaxed font-medium transition-colors ${isDark ? 'text-indigo-200/80' : 'text-indigo-900/80'}`}>Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con los renders. La Acción Final indica intención de compra trabada por costo.</p>
+                <div className={`p-5 rounded-2xl mt-2 border transition-colors ${isDark ? 'bg-emerald-950/50 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
+                  <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 mb-2 transition-colors ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}><Zap size={12}/> Acción Sugerida</span>
+                  <p className={`text-xs font-medium leading-relaxed transition-colors ${isDark ? 'text-emerald-200/70' : 'text-emerald-900/80'}`}>Toma la iniciativa. Tienen poder adquisitivo alto, pero buscan sentir que ganan negociando. Ofreceles un plan de financiación para destrabar el cierre.</p>
+                </div>
             </div>
           </div>
 
-          <div className="bg-[#0A0A0A] rounded-[3rem] p-8 shadow-2xl border border-zinc-800 flex-1 flex flex-col overflow-hidden min-h-[300px]">
-             <div className="flex items-center gap-2 mb-6"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda (En Vivo)</h3></div>
-             <div className="flex-1 overflow-y-auto hide-scroll space-y-2 font-mono text-[10px]">
+          <div className={`rounded-[2.5rem] p-6 shadow-sm border flex-1 flex flex-col overflow-hidden transition-colors ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/5' : 'bg-zinc-900 border-zinc-900'}`}>
+             <div className="flex items-center gap-2 mb-4 pb-4 border-b border-zinc-800">
+               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda (En Vivo)</h3>
+             </div>
+             <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 font-mono text-[10px]">
                 {analytics.logs.length > 0 ? analytics.logs.map((log:any, i:number) => (
                   <div key={i} className="flex gap-3"><span className="text-zinc-600 shrink-0">[{log.time}]</span><span className={`${log.color} break-words`}>{log.txt}</span></div>
-                )) : <div className="text-zinc-600 italic">Esperando eventos...</div>}
+                )) : <div className="text-zinc-600 italic">Esperando eventos de red...</div>}
              </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import {
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
-  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, ThumbsUp
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, ThumbsUp, Maximize
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -25,11 +25,11 @@ const parsePrice = (str: string) => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Función global para Wpp Genérico
+// Función global para Wpp Genérico (con truco anti-caché ?v=1)
 const handleShareWpp = (id: string, e?: React.MouseEvent) => {
   if (e) e.stopPropagation();
-  const url = `${window.location.origin}/ver/${id}`;
-  const text = `¡Hola! Aquí tienes tu propuesta de diseño interactiva de STUDIO.MUD: ${url}`;
+  const url = `${window.location.origin}/ver/${id}?v=${Math.floor(Math.random() * 100)}`;
+  const text = `¡Hola! Aquí tienes tu propuesta de diseño interactiva de STUDIO.MUD: \n\n${url}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 };
 
@@ -125,12 +125,13 @@ function AdminDashboard() {
   const nuevoProyecto = async () => {
     const ambienteInicial = {
       id: crypto.randomUUID(), tab: "Ambiente 1", titulo: "Cocina Principal",
+      z3Title: "Variantes de Material", z3Subtitle: "Toca los puntos para detalles",
       galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
       items: [
         { id: crypto.randomUUID(), lbl: 'Materiales', val: 'USD 0', incluido: true },
         { id: crypto.randomUUID(), lbl: 'Diseño y Montaje', val: 'USD 0', incluido: true }
       ],
-      variantes: [] // Nueva propiedad para Z3
+      variantes: [] 
     };
     const { data, error } = await supabase.from('proyectos').insert([{
       cliente: "Nuevo Cliente", whatsapp: "549",
@@ -143,7 +144,7 @@ function AdminDashboard() {
 
   const handleCopy = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/ver/${id}`;
+    const url = `${window.location.origin}/ver/${id}?v=${Math.floor(Math.random() * 100)}`;
     navigator.clipboard.writeText(url);
     setCopiedStates({ ...copiedStates, [id]: true });
     setTimeout(() => setCopiedStates({ ...copiedStates, [id]: false }), 2000);
@@ -262,7 +263,7 @@ function AdminEditor() {
   };
 
   const handleCopy = () => {
-    const url = `${window.location.origin}/ver/${id}`;
+    const url = `${window.location.origin}/ver/${id}?v=${Math.floor(Math.random() * 100)}`;
     navigator.clipboard.writeText(url);
     setCopiedStates({ editorLink: true });
     setTimeout(() => setCopiedStates({ editorLink: false }), 2000);
@@ -271,6 +272,7 @@ function AdminEditor() {
   const addAmbiente = () => {
     const nuevo = {
       id: crypto.randomUUID(), tab: `Ambiente ${p.ambientes.length + 1}`, titulo: "Nuevo Ambiente",
+      z3Title: "Variantes de Material", z3Subtitle: "Toca los puntos para detalles",
       galeriaObra: [], galeriaRender: [], lblIzq: "Antes", lblDer: "Render 3D", invertido: false, total: "0",
       items: [
         { id: crypto.randomUUID(), lbl: 'Materiales', val: '0', incluido: true },
@@ -596,7 +598,22 @@ function AdminEditor() {
 
               {/* EDITOR Z3 REAL CON OBJECT-CONTAIN Y FONDO BLUR */}
               <div className="pt-10 mt-10 border-t border-zinc-100">
-                <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2"><Layers size={16} className="text-amber-500"/> Z3: Editor de Materiales</h3>
+                
+                {/* Textos Editables de Z3 */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                  <h3 className="text-[12px] font-black uppercase tracking-widest text-zinc-900 flex items-center gap-2"><Layers size={16} className="text-amber-500"/> Z3: Editor de Variantes</h3>
+                  <div className="flex gap-4">
+                     <div className="flex flex-col">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 ml-1 mb-1">Título de Sección</label>
+                        <input className="bg-white border border-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold outline-none focus:border-amber-500" value={env.z3Title || 'Variantes de Material'} onChange={e => updateEnv('z3Title', e.target.value)} />
+                     </div>
+                     <div className="flex flex-col">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-zinc-400 ml-1 mb-1">Subtítulo</label>
+                        <input className="bg-white border border-zinc-200 px-3 py-1.5 rounded-lg text-xs font-bold outline-none focus:border-amber-500" value={env.z3Subtitle || 'Toca los puntos para detalles'} onChange={e => updateEnv('z3Subtitle', e.target.value)} />
+                     </div>
+                  </div>
+                </div>
+                
                 <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-6">Sube una imagen base y haz clic para agregar puntos interactivos con nombres editables.</p>
                 
                 <div className="bg-zinc-50 p-6 rounded-[2rem] border border-zinc-200 flex flex-col lg:flex-row gap-6">
@@ -656,12 +673,13 @@ function AdminEditor() {
                                    <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm relative z-10"></div>
                                 </div>
 
+                                {/* EDITAR PUNTO (MODAL FLOTANTE CENTRADO) */}
                                 {editingPoint === pt.id && (
-                                  <div onClick={(e) => e.stopPropagation()} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-default">
-                                    <div className="bg-white p-5 rounded-3xl shadow-2xl border border-zinc-200 w-64 animate-in zoom-in-95 duration-200">
+                                  <div onClick={(e) => { e.stopPropagation(); setEditingPoint(null); }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm cursor-default">
+                                    <div onClick={(e) => e.stopPropagation()} className="bg-white p-5 rounded-3xl shadow-2xl border border-zinc-200 w-72 animate-in zoom-in-95 duration-200">
                                       <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2 block">Nombre del Material / Detalle</label>
                                       <input 
-                                        className="w-full bg-zinc-100 px-3 py-3 rounded-xl text-sm font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-4" 
+                                        className="w-full bg-zinc-100 px-4 py-3 rounded-xl text-sm font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-4" 
                                         value={pt.material}
                                         onChange={(e) => updatePuntoMaterial(pt.id, e.target.value)}
                                         autoFocus 
@@ -787,7 +805,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
 }
 
 // =====================================================================
-// 📱 VISTA 3: CLIENTE FINAL (COMPACTA Y CORREGIDA)
+// 📱 VISTA 3: CLIENTE FINAL (LIGHT MODE DEFAULT)
 // =====================================================================
 function VistaCliente() {
   const { id } = useParams();
@@ -796,16 +814,16 @@ function VistaCliente() {
   const [showIndex, setShowIndex] = useState(false);
   const [isSimulatingLoad, setIsSimulatingLoad] = useState(true);
   
-  const [clientTheme, setClientTheme] = useState('dark');
+  // TEMA CLARO POR DEFECTO
+  const [clientTheme, setClientTheme] = useState('light');
   const isDark = clientTheme === 'dark';
   
   const colors = {
-    bgMain: isDark ? 'bg-[#0A0A0A]' : 'bg-zinc-50',
+    bgMain: isDark ? 'bg-[#0A0A0A]' : 'bg-[#f4f4f5]', // zinc-50
     bgCard: isDark ? 'bg-[#111111]' : 'bg-white',
     textMain: isDark ? 'text-white' : 'text-zinc-900',
     textMuted: isDark ? 'text-zinc-500' : 'text-zinc-500',
-    borderMain: isDark ? 'border-zinc-800' : 'border-zinc-200',
-    borderSub: isDark ? 'border-white/5' : 'border-black/5',
+    borderMain: isDark ? 'border-white/5' : 'border-black/5',
   };
 
   useEffect(() => {
@@ -870,28 +888,33 @@ function VistaCliente() {
       {/* Background PC Blur */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         <img src={env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className={`w-full h-full object-cover blur-3xl scale-110 transition-opacity duration-500 ${isDark ? 'opacity-10' : 'opacity-20'}`} alt="bg"/>
-        <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/50 to-[#0A0A0A]/90' : 'from-white/50 to-zinc-50/90'}`}></div>
+        <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/50 to-[#0A0A0A]/90' : 'from-white/50 to-[#f4f4f5]/90'}`}></div>
       </div>
 
       <div className={`w-full md:max-w-[420px] min-h-screen md:min-h-[85vh] md:max-h-[900px] ${colors.bgMain} md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] border-0 md:border-[6px] ${colors.borderMain} relative z-10 flex flex-col overflow-hidden ring-1 ${isDark ? 'ring-white/10' : 'ring-black/5'} transition-colors duration-500`}>
         
         {/* HEADER SÓLIDO COMPACTO */}
-        <div className={`${colors.bgCard} pt-6 pb-4 px-5 z-40 flex justify-between items-center shadow-md border-b ${colors.borderSub}`}>
+        <div className={`${colors.bgCard} pt-6 pb-4 px-5 z-40 flex justify-between items-center shadow-sm border-b ${colors.borderSub} transition-colors duration-500`}>
            <div>
-             <h1 className={`font-black text-[20px] tracking-tighter italic ${colors.textMain} leading-none`}>STUDIO<span className="text-amber-500">.MUD</span></h1>
+             <h1 className={`font-black text-[20px] tracking-tighter italic ${colors.textMain} leading-none transition-colors duration-500`}>STUDIO<span className="text-amber-500">.MUD</span></h1>
              <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-bold mt-1 block">Diseño a Medida</span>
            </div>
-           <div className="flex gap-3">
-             <button onClick={handleShareClient} className={`${colors.textMuted} hover:${colors.textMain} transition-colors`} title="Compartir Proyecto"><Share2 size={18} /></button>
-             <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="text-amber-500 hover:text-amber-400 transition-colors" title="Modo Claro">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
+           {/* Botones más separados (gap-6) */}
+           <div className="flex gap-6">
+             <button onClick={handleShareClient} className={`${colors.textMuted} hover:${colors.textMain} transition-colors p-1`} title="Compartir Proyecto">
+               <Share2 size={20} />
+             </button>
+             <button onClick={() => setClientTheme(isDark ? 'light' : 'dark')} className="text-amber-500 hover:text-amber-400 transition-colors p-1" title="Modo Claro/Oscuro">
+               {isDark ? <Sun size={20} /> : <Moon size={20} />}
+             </button>
            </div>
         </div>
 
         {/* INDEX MÚLTIPLES AMBIENTES */}
         {showIndex && (
           <div className={`flex-1 ${colors.bgMain} overflow-y-auto p-6 pt-10 transition-colors`}>
-            <h2 className={`text-3xl font-black ${colors.textMain} tracking-tight leading-tight mb-2`}>Proyecto<br/><span className={colors.textMuted}>{p.cliente}</span></h2>
-            <p className="text-xs text-amber-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
+            <h2 className={`text-3xl font-serif font-bold ${colors.textMain} tracking-wide leading-tight mb-2`}>Proyecto<br/><span className={colors.textMuted}>{p.cliente}</span></h2>
+            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-8">Selecciona un ambiente</p>
             <div className="space-y-4">
               {p.ambientes.map((a:any, i:number) => {
                 const imgThumb = (a.invertido ? (a.galeriaObra || [a.obra]) : (a.galeriaRender || [a.render]))[0] || "";
@@ -922,7 +945,7 @@ function VistaCliente() {
               <div className="px-4 pt-4 mb-2"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.bgCard} px-4 py-2 rounded-full border ${colors.borderMain} transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            {/* Z1: RENDER CORREGIDO (CLIP-PATH PARA NO SOLAPAR) */}
+            {/* Z1: RENDER ORIGINAL RESTAURADO (OBJECT-COVER) */}
             <div 
               onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
               onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative h-[60vh] min-h-[450px] w-full mb-6 cursor-default animate-in fade-in fill-mode-both"
@@ -930,16 +953,17 @@ function VistaCliente() {
                <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
             </div>
 
-            <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-              <h2 className={`text-3xl font-black ${colors.textMain} leading-tight tracking-tighter italic`}>{env.titulo}</h2>
-              <p className={`${colors.textMuted} font-medium text-sm mt-1`}>{p.cliente}</p>
+            {/* Títulos Opción A Elegante */}
+            <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both text-center">
+              <h2 className={`text-3xl font-serif font-bold ${colors.textMain} leading-tight tracking-wide transition-colors`}>{env.titulo}</h2>
+              <p className={`font-bold tracking-[0.15em] uppercase text-[10px] mt-1.5 ${isDark ? 'text-amber-500' : 'text-amber-700'} transition-colors`}>{p.cliente}</p>
             </div>
 
             <div className="px-5 space-y-6">
               {/* Z2: PRECIO LIMPIO SIN OPCIONAL */}
               <div 
                 onMouseEnter={() => handleZoneEnter('Z2')} onMouseLeave={() => handleZoneLeave('Z2')} onTouchStart={() => handleZoneEnter('Z2')} onTouchEnd={() => handleZoneLeave('Z2')}
-                onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className={`${isDark ? 'bg-[#111111] border-white/5 text-white' : 'bg-white border-zinc-200 text-zinc-900'} rounded-[2rem] p-6 shadow-xl relative overflow-hidden border animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both transition-colors`}
+                onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className={`${colors.bgCard} rounded-[2rem] p-6 shadow-xl relative overflow-hidden border ${colors.borderMain} animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both transition-colors`}
               >
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <p className={`${colors.textMuted} text-[8px] font-black uppercase tracking-[0.3em] mb-2 flex items-center gap-1.5`}><Info size={12}/> Inversión del Ambiente</p>
@@ -952,7 +976,7 @@ function VistaCliente() {
                     <div key={item.id} className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-3">
                         {item.incluido ? <CheckCircle2 size={16} className="text-emerald-500" /> : <div className={`w-4 h-4 rounded-full border-2 ${isDark?'border-zinc-700':'border-zinc-300'}`}></div>}
-                        <span className={`${item.incluido ? (isDark?'text-zinc-200':'text-zinc-800') : colors.textMuted} font-${item.incluido?'bold':'medium'}`}>{item.lbl}</span>
+                        <span className={`${item.incluido ? colors.textMain : colors.textMuted} font-${item.incluido?'bold':'medium'}`}>{item.lbl}</span>
                       </div>
                       <span className={`font-black ${item.incluido ? 'text-amber-500' : colors.textMuted}`}>{item.val}</span>
                     </div>
@@ -969,10 +993,10 @@ function VistaCliente() {
                 </div>
               )}
 
-              {/* Z3 ALTERNATIVAS CON DISEÑO MINIMALISTA Y BLUR */}
+              {/* Z3 ALTERNATIVAS CON DISEÑO MINIMALISTA */}
               {variantes.length > 0 && (
                 <div onMouseEnter={() => handleZoneEnter('Z3')} onMouseLeave={() => handleZoneLeave('Z3')} onTouchStart={() => handleZoneEnter('Z3')} onTouchEnd={() => handleZoneLeave('Z3')} className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
-                   <Z3Alternativas variantes={variantes} trackClick={trackClick} logEvent={logEvent} wppNum={p.whatsapp} isDark={isDark} colors={colors} />
+                   <Z3Alternativas variantes={variantes} env={env} trackClick={trackClick} logEvent={logEvent} wppNum={p.whatsapp} isDark={isDark} colors={colors} />
                 </div>
               )}
             </div>
@@ -980,7 +1004,7 @@ function VistaCliente() {
         )}
 
         {/* BOTÓN FLOTANTE WPP FIJO */}
-        <div className={`absolute bottom-0 left-0 w-full p-5 ${isDark ? 'bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent' : 'bg-gradient-to-t from-white via-white/95 to-transparent'} z-30 pt-10 pointer-events-none transition-colors`}>
+        <div className={`absolute bottom-0 left-0 w-full p-4 pt-10 bg-gradient-to-t ${isDark ? 'from-[#0A0A0A] via-[#0A0A0A]/90' : 'from-[#f4f4f5] via-[#f4f4f5]/90'} to-transparent z-40 pointer-events-none transition-colors`}>
           <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className="pointer-events-auto w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-green-500/20 hover:scale-[1.02] transition-transform">
             <MessageCircle size={20} fill="white" /> Aprobar Proyecto
           </a>
@@ -991,12 +1015,13 @@ function VistaCliente() {
   );
 }
 
-// --- SUB-COMPONENTE: SLIDER MÁGICO (SIN SUPERPOSICIÓN - CLIP PATH) ---
+// --- SUB-COMPONENTE: SLIDER MÁGICO CON GALERÍA FULLSCREEN ---
 function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any, activeTab: number, onSliderMove: () => void, isDark?: boolean }) {
   const [val, setVal] = useState(50);
   const [anim, setAnim] = useState('');
   const [idxIzq, setIdxIzq] = useState(0);
   const [idxDer, setIdxDer] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     setIdxIzq(0); setIdxDer(0); setAnim('transition-all duration-[450ms] cubic-bezier(0.25, 1, 0.5, 1)');
@@ -1011,59 +1036,112 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark }: { env: any
   if(!arrIzq[0]) arrIzq = ["https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800"];
   if(!arrDer[0]) arrDer = ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"];
 
+  // Funciones para Fullscreen
+  const allImages = [...arrIzq, ...arrDer]; // Todas las fotos del ambiente
+  const [fullIdx, setFullIdx] = useState(0);
+  
+  const openFullscreen = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFullIdx(0);
+      setIsFullscreen(true);
+  };
+
+  const nextFull = (e:any) => { e.stopPropagation(); setFullIdx((i) => (i + 1) % allImages.length); };
+  const prevFull = (e:any) => { e.stopPropagation(); setFullIdx((i) => (i - 1 + allImages.length) % allImages.length); };
   const nextIzq = (e:any) => { e.stopPropagation(); setIdxIzq((i) => (i + 1) % arrIzq.length); };
   const prevIzq = (e:any) => { e.stopPropagation(); setIdxIzq((i) => (i - 1 + arrIzq.length) % arrIzq.length); };
   const nextDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i + 1) % arrDer.length); };
   const prevDer = (e:any) => { e.stopPropagation(); setIdxDer((i) => (i - 1 + arrDer.length) % arrDer.length); };
 
   return (
-    <div className={`w-full h-full relative cursor-default pointer-events-auto transition-colors bg-zinc-900 rounded-b-[2.5rem] overflow-hidden`}>
-      
-      {/* IMAGEN DERECHA (Fondo Base) */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-der" />
-        <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-contain z-10" alt="render" />
-        {arrDer.length > 1 && (
-          <div className="absolute inset-0 pointer-events-none z-30">
-            <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
-            <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
-            <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxDer+1}/{arrDer.length}</div>
-          </div>
-        )}
-      </div>
+    <>
+      {/* CARTA SLIDER */}
+      <div className={`w-full h-full relative cursor-default pointer-events-auto transition-colors ${isDark ? 'bg-zinc-950' : 'bg-zinc-200'} rounded-b-[2.5rem] overflow-hidden`}>
+        
+        {/* IMAGEN DERECHA (RENDER) - OBJECT COVER (Como antes) */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+          <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-cover" alt="render" />
+          {arrDer.length > 1 && (
+            <div className="absolute inset-0 pointer-events-none z-30">
+              <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
+              <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
+              <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxDer+1}/{arrDer.length}</div>
+            </div>
+          )}
+        </div>
 
-      {/* IMAGEN IZQUIERDA (Corte Perfecto con Clip-Path) */}
-      <div className={`absolute inset-0 w-full h-full pointer-events-none ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
-        <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-izq" />
-        <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-contain z-10" alt="obra" />
-        {arrIzq.length > 1 && (
-          <div className="absolute inset-0 pointer-events-none z-30">
-            <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
-            <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
-            <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
-          </div>
-        )}
-      </div>
+        {/* IMAGEN IZQUIERDA (OBRA) - CLIP PATH PERFECTO */}
+        <div className={`absolute inset-0 w-full h-full pointer-events-none ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
+          <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover" alt="obra" />
+          {arrIzq.length > 1 && (
+            <div className="absolute inset-0 pointer-events-none z-30">
+              <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
+              <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
+              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
+            </div>
+          )}
+        </div>
 
-      {/* LÍNEA DIVISORIA Y DRAGGER */}
-      <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
-          <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
+        {/* LÍNEA DIVISORIA Y DRAGGER */}
+        <div className={`absolute top-0 bottom-0 w-[2px] bg-amber-500 z-10 -translate-x-1/2 shadow-[0_0_15px_rgba(245,158,11,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-10 bg-amber-500 rounded-md shadow-xl flex items-center justify-center gap-1">
+            <div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div><div className="w-0.5 h-4 bg-amber-900/50 rounded-full"></div>
+          </div>
+        </div>
+        <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
+        
+        {/* BOTÓN MAXIMIZAR GALERÍA */}
+        <button onClick={openFullscreen} className="absolute top-4 right-4 bg-black/50 backdrop-blur-md text-white p-2 rounded-full z-30 shadow-lg border border-white/20 hover:scale-110 transition-transform hover:bg-black/70">
+            <Maximize size={16} />
+        </button>
+
+        {/* BOTONERA SLIDER */}
+        <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1.5 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
+          <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
+          <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
         </div>
       </div>
-      <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
-      
-      {/* BOTONERA SLIDER */}
-      <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex backdrop-blur-md p-1.5 rounded-full shadow-2xl border z-30 pointer-events-auto transition-colors ${isDark ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblIzq || 'Antes'}</button>
-        <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? (isDark ? 'bg-white text-zinc-900 shadow-md' : 'bg-zinc-900 text-white shadow-md') : (isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-zinc-900')}`}>{env.lblDer || 'Render'}</button>
-      </div>
-    </div>
+
+      {/* GALERÍA FULLSCREEN */}
+      {isFullscreen && (
+          <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              {/* Header Fullscreen */}
+              <div className="flex justify-between items-center p-5 text-white z-50 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 w-full pointer-events-none">
+                  <span className="text-xs font-black uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md">{fullIdx + 1} / {allImages.length}</span>
+                  <button onClick={() => setIsFullscreen(false)} className="pointer-events-auto bg-white/10 p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-colors">
+                      <X size={20} />
+                  </button>
+              </div>
+              
+              {/* Imagen Object-Contain (sin cortes) */}
+              <div className="flex-1 relative flex items-center justify-center">
+                  <img src={allImages[fullIdx]} className="w-full h-full object-contain" alt="Pantalla Completa" />
+                  
+                  {/* Controles de navegación */}
+                  {allImages.length > 1 && (
+                    <>
+                      <button onClick={prevFull} className="absolute left-4 bg-black/50 text-white p-3 rounded-full backdrop-blur-md hover:bg-black/80 transition-colors">
+                          <ChevronLeft size={24} />
+                      </button>
+                      <button onClick={nextFull} className="absolute right-4 bg-black/50 text-white p-3 rounded-full backdrop-blur-md hover:bg-black/80 transition-colors">
+                          <ChevronRight size={24} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Indicador de Zoom */}
+                  <div className="absolute bottom-10 bg-black/60 text-white/70 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border border-white/10 flex items-center gap-2 pointer-events-none">
+                      <Maximize size={12}/> Pellizca para acercar
+                  </div>
+              </div>
+          </div>
+      )}
+    </>
   );
 }
 
 // --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS (TRIPLE BOTONERA MINIMALISTA Y BLUR) ---
-function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true, colors }: { variantes: any[], trackClick: any, logEvent: any, wppNum: string, isDark?: boolean, colors?: any }) {
+function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark = true, colors }: { variantes: any[], env: any, trackClick: any, logEvent: any, wppNum: string, isDark?: boolean, colors?: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [likedMap, setLikedMap] = useState<{[key:string]: boolean}>({});
@@ -1105,10 +1183,12 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
     }
   };
 
+  // Calcula si el tooltip debe abrirse hacia la derecha, izquierda, arriba o abajo
   const getTooltipPos = (x: number, y: number) => {
-    let pos = "";
-    if (y > 50) pos += "bottom-8 origin-bottom "; else pos += "top-8 origin-top ";
-    if (x > 70) pos += "right-0 "; else if (x < 30) pos += "left-0 "; else pos += "left-1/2 -translate-x-1/2 ";
+    let pos = y > 50 ? 'bottom-10 origin-bottom ' : 'top-10 origin-top ';
+    if (x > 70) pos += 'right-0 translate-x-1/4 ';
+    else if (x < 30) pos += 'left-0 -translate-x-1/4 ';
+    else pos += 'left-1/2 -translate-x-1/2 ';
     return pos;
   };
 
@@ -1116,9 +1196,10 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
 
   return (
     <div id="sensor-Z3" data-zona="Z3" className="mt-6 mb-6">
-      <div className="px-2 mb-4">
-        <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-zinc-900'} italic tracking-tight leading-none transition-colors`}>Variantes de Material</h3>
-        <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'} font-bold uppercase tracking-widest mt-1 transition-colors`}>Toca los puntos para detalles</p>
+      <div className="px-2 mb-5 text-center">
+        {/* Títulos Editables de Z3 */}
+        <h3 className={`text-2xl font-serif font-bold tracking-wide leading-tight ${colors.textMain} transition-colors`}>{env.z3Title || 'Variantes de Material'}</h3>
+        <p className={`text-[9px] font-bold uppercase tracking-[0.15em] mt-1.5 ${isDark ? 'text-zinc-400' : 'text-zinc-600'} transition-colors`}>{env.z3Subtitle || 'Toca los puntos para detalles'}</p>
       </div>
       
       {/* CUERPO DEL Z3 CON CLICK GENERAL TRACKING */}
@@ -1131,7 +1212,9 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
         <img key={`blur-${varActual.id}`} src={varActual.img} className="absolute inset-0 w-full h-full object-cover opacity-30 blur-xl scale-110 pointer-events-none" alt="blur-bg" />
         <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
         
-        {/* NAVEGACIÓN SUPERIOR FLOTANTE (Sin ensuciar abajo) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none z-10"></div>
+
+        {/* NAVEGACIÓN SUPERIOR FLOTANTE */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-4 z-30 shadow-lg">
           <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="hover:scale-110 transition-transform"><ChevronLeft size={16} className="text-white"/></button>
           <div className="flex flex-col items-center pointer-events-none">
@@ -1160,29 +1243,33 @@ function Z3Alternativas({ variantes, trackClick, logEvent, wppNum, isDark = true
           </div>
         )}
 
-        {/* PUNTOS INTERACTIVOS MÁS SUTILES (Z-20 para que estén arriba del blur de fondo) */}
+        {/* PUNTOS INTERACTIVOS (Z-20 para que estén arriba del blur de fondo) */}
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-5 h-5 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95`}>
-              <span className="absolute w-full h-full rounded-full animate-ping opacity-40 bg-amber-400"></span>
-              <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm relative z-10"></div>
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 group`}>
+              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-amber-400"></span>
+              <div className="absolute w-6 h-6 bg-amber-500/70 backdrop-blur-sm rounded-full border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+              <div className="w-2.5 h-2.5 bg-white rounded-full shadow-sm relative z-10 group-hover:scale-125 transition-transform"></div>
             </button>
+            
+            {/* Tooltip Inteligente (Tarjeta Clásica) */}
             {activeTooltip === punto.id && (
-              <div className={`absolute w-48 bg-[#111]/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${getTooltipPos(punto.x, punto.y)}`}>
-                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
-                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-1">Detalle</span><span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
+              <div className={`absolute ${getTooltipPos(punto.x, punto.y)} w-48 ${isDark ? 'bg-[#1a1a1a]/95' : 'bg-white/95'} backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border ${isDark ? 'border-white/5' : 'border-zinc-200'} animate-in fade-in zoom-in-95 duration-200`}>
+                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2 right-2 ${colors.textMuted} hover:${colors.textMain}`}><X size={14} /></button>
+                <span className={`block text-[8px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Detalle</span>
+                <span className={`block text-sm font-bold ${colors.textMain} leading-tight`}>{punto.material}</span>
               </div>
             )}
           </div>
         ))}
 
         {/* DOCK INFERIOR MINIMALISTA */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] bg-black/60 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl flex justify-between items-center z-30 shadow-2xl">
+        <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] ${colors.dockBg} backdrop-blur-md p-1.5 rounded-2xl flex justify-between items-center z-30 shadow-2xl transition-colors`}>
            <div className="flex gap-1.5">
-             <button onClick={handleLike} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isLiked ? 'bg-red-500/20 text-red-500' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Me gusta esta opción">
+             <button onClick={handleLike} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isLiked ? 'bg-red-500/10 text-red-500' : colors.dockIcon}`} title="Me gusta esta opción">
                <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
              </button>
-             <button onClick={(e) => { e.stopPropagation(); setIsCommenting(!isCommenting); }} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isCommenting ? 'bg-amber-500/20 text-amber-500' : 'bg-white/10 text-white hover:bg-white/20'}`} title="Dejar una nota">
+             <button onClick={(e) => { e.stopPropagation(); setIsCommenting(!isCommenting); }} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isCommenting ? 'bg-amber-500/10 text-amber-500' : colors.dockIcon}`} title="Dejar una nota">
                <MessageSquarePlus size={18} />
              </button>
            </div>
@@ -1262,7 +1349,7 @@ function AdminAnalytics() {
     const totalSliders = latestUpdates.reduce((acc: number, curr: any) => acc + (curr.detalle?.slider_total || 0), 0);
     const friccionEvents = evsAmbiente.filter((e: any) => e.tipo === 'FRICCION').length;
     
-    // PODIO 1: CLICS (Exploración) - Incluye clics en puntos y en la imagen general
+    // PODIO 1: CLICS (Exploración)
     const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     const getDots = (zonaId: string, colorClass: string) => clicks.filter((e: any) => e.detalle?.zona?.includes(zonaId)).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
     const dotsZ1 = getDots('Z1_RENDER', 'dot-blue');
@@ -1379,7 +1466,6 @@ function AdminAnalytics() {
       {/* 3 COLUMNAS PC */}
       <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* COL 1: EL TELÉFONO ESPEJO */}
         <div className="flex flex-col h-[850px]">
           <div className={`w-full h-full border-[8px] rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800 ring-1 ring-white/10' : 'bg-white border-zinc-900 ring-1 ring-black/5'}`}>
             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 rounded-b-3xl z-50 ${isDark ? 'bg-zinc-800' : 'bg-zinc-900'}`}></div>
@@ -1440,7 +1526,6 @@ function AdminAnalytics() {
           </div>
         </div>
 
-        {/* COL 2: KPI, ESPECTADORES Y PODIO DE LIKES */}
         <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
           <div className="grid grid-cols-2 gap-4 shrink-0">
             <div className={`${colors.bgCard} border ${colors.borderCard} p-5 rounded-3xl shadow-sm transition-colors`}><p className={`text-[9px] font-black uppercase tracking-widest ${colors.textMuted} mb-1`}>Total</p><span className="text-2xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
@@ -1486,7 +1571,6 @@ function AdminAnalytics() {
              </div>
           </div>
 
-          {/* NUEVO PODIO 2: CORAZONES (ME GUSTA) */}
           <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm flex-1 transition-colors flex flex-col`}>
             <h2 className={`text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4 flex items-center gap-2`}><Heart size={14} className="fill-pink-500"/> Favoritos Z3 (Me Gusta)</h2>
             <div className="space-y-2 overflow-y-auto hide-scroll">
@@ -1500,10 +1584,7 @@ function AdminAnalytics() {
           </div>
         </div>
 
-        {/* COL 3: IA, PODIO CLICS Z3 Y DATA CRUDA */}
         <div className="flex flex-col gap-6 lg:h-[850px] overflow-y-auto pb-10 hide-scroll">
-          
-          {/* PODIO 1: CLICS */}
           <div className={`${colors.bgCard} border ${colors.borderCard} p-6 rounded-[2rem] shadow-sm shrink-0 transition-colors`}>
             <h2 className={`text-[10px] font-black uppercase tracking-widest ${colors.textMuted} mb-4 flex items-center gap-2`}><Monitor size={14}/> Exploración Z3 (Clics)</h2>
             <div className="space-y-2">

@@ -14,7 +14,7 @@ const supabaseKey = 'sb_publishable_0JMVVW3e4hHqPYR2gXCR-g_XWI7MoSg';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Función auxiliar para parsear y sumar precios (remueve puntos)
+// Función auxiliar para parsear y sumar precios
 const parsePrice = (str: string) => {
   if (!str) return 0;
   const cleaned = str.toString().replace(/\./g, '').replace(/,/g, '');
@@ -85,7 +85,7 @@ function Login() {
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Email</label>
             <input type="email" required className="w-full bg-zinc-50 border-none p-4 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-amber-500" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
-      
+     
           <div className="space-y-2">
             <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Contraseña</label>
             <div className="relative">
@@ -310,7 +310,6 @@ function AdminEditor() {
         <div className="flex flex-wrap gap-3">
           {fotos.map((url: string, i: number) => (
             <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group shadow-sm ring-1 ring-black/5">
-              {/* Bug 3 Corregido: object-center para que la miniatura no se deforme feo */}
               <img src={url} className="w-full h-full object-cover object-center" />
               <button onClick={() => {
                 const nuevas = fotos.filter((_:any, idx:number) => idx !== i);
@@ -438,7 +437,6 @@ function AdminEditor() {
               </div>
 
               <div className="relative">
-                {/* Bug 2 Corregido: Ahora cruza las letras además de la foto */}
                 <button onClick={() => {
                   const nuevosAmb = [...p.ambientes];
                   const ambiente = nuevosAmb[activeTab];
@@ -500,47 +498,35 @@ function AdminEditor() {
 }
 
 // =====================================================================
-// 🕵️ MOTOR ESPÍA (ANALYTICS HOOK)
-// =====================================================================
-// =====================================================================
-// 🕵️ MOTOR ESPÍA v2.0 (ADVANCED FINGERPRINTING & GEO)
-// =====================================================================
-// =====================================================================
-// 🕵️ MOTOR ESPÍA v2.0 (ADVANCED FINGERPRINTING & GEO)
+// 🕵️ MOTOR ESPÍA v3.0 (TIEMPO DE PERMANENCIA Y REAL-TIME)
 // =====================================================================
 function useAnalytics(proyectoId: string, ambienteTab: string) {
   const [sessionId] = useState(() => crypto.randomUUID());
   const maxScroll = useRef(0);
   const sliderMovs = useRef(0);
-  
-  // Memoria temporal para Rage Clicks (Fricción)
   const clickTimes = useRef<number[]>([]);
-  
-  // Cache del contexto para no saturar APIs externas
   const contextoCache = useRef<any>(null);
 
-  // Genera la huella digital avanzada (Geo, Batería, Red) de forma asíncrona
+  // Cronómetros para cada zona
+  const dwellTimes = useRef<{ [key: string]: number }>({ Z1: 0, Z2: 0, Z3: 0 });
+  const entryTimes = useRef<{ [key: string]: number }>({ Z1: 0, Z2: 0, Z3: 0 });
+
   const buildContext = async () => {
     if (contextoCache.current) return contextoCache.current;
-
-    let bat = "-"; let net = "Wi-Fi / LAN"; let geoStr = "Local";
-    
+    let bat = "-"; let net = "Wi-Fi"; let geoStr = "Local";
     try {
-      // 1. Sensor de Batería
       if ('getBattery' in navigator) {
         const battery: any = await (navigator as any).getBattery();
         bat = `${Math.round(battery.level * 100)}%`;
       }
-      // 2. Sensor de Red
       if ('connection' in navigator) {
         const conn = (navigator as any).connection;
         net = conn.effectiveType ? conn.effectiveType.toUpperCase() : "Wi-Fi";
       }
-      // 3. Sensor de Geo por IP
       const res = await fetch('https://ipapi.co/json/');
       const geoData = await res.json();
       if (geoData.city) geoStr = `${geoData.city}, ${geoData.region_code}`;
-    } catch (e) { console.warn("Motor: Sensores avanzados bloqueados."); }
+    } catch (e) { console.warn("Sensores avanzados bloqueados."); }
 
     contextoCache.current = {
       userAgent: navigator.userAgent,
@@ -565,15 +551,33 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
         detalle: { ...detalle, ambiente: ambienteTab },
         contexto: ctx
       }]);
-    } catch(e) {
-      console.error('Error silencioso de analytics', e);
-    }
+    } catch(e) { console.error('Error silencioso', e); }
   };
 
   useEffect(() => {
     logEvent('SESSION_START', { url: window.location.href });
     
-    // Sensor de Scroll Híbrido
+    // SENSOR DE PERMANENCIA
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const zona = entry.target.getAttribute('data-zona');
+        if (!zona) return;
+        if (entry.isIntersecting) {
+          entryTimes.current[zona] = Date.now();
+        } else if (entryTimes.current[zona] > 0) {
+          dwellTimes.current[zona] += Date.now() - entryTimes.current[zona];
+          entryTimes.current[zona] = 0;
+        }
+      });
+    }, { threshold: 0.6 }); 
+
+    setTimeout(() => {
+      ['Z1', 'Z2', 'Z3'].forEach(z => {
+        const el = document.getElementById(`sensor-${z}`);
+        if (el) observer.observe(el);
+      });
+    }, 1000);
+
     const handleGlobalScroll = () => {
       const doc = document.documentElement;
       const max = doc.scrollHeight - doc.clientHeight;
@@ -585,13 +589,17 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
     window.addEventListener('scroll', handleGlobalScroll);
 
     const handleUnload = () => {
-      logEvent('SESSION_END', { scroll_max: maxScroll.current, slider_total: sliderMovs.current });
+      ['Z1', 'Z2', 'Z3'].forEach(z => {
+        if (entryTimes.current[z] > 0) dwellTimes.current[z] += Date.now() - entryTimes.current[z];
+      });
+      logEvent('SESSION_END', { scroll_max: maxScroll.current, slider_total: sliderMovs.current, tiempos: dwellTimes.current });
     };
     
     window.addEventListener('beforeunload', handleUnload);
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
       window.removeEventListener('scroll', handleGlobalScroll);
+      observer.disconnect();
       handleUnload();
     }
   }, [proyectoId, ambienteTab]);
@@ -600,10 +608,7 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-    
     logEvent('CLICK_ZONA', { zona, x, y, material: materialNombre });
-
-    // Lógica de Fricción: 3 clics en menos de 1.5s
     const now = Date.now();
     clickTimes.current.push(now);
     if (clickTimes.current.length > 3) clickTimes.current.shift();
@@ -627,7 +632,6 @@ function useAnalytics(proyectoId: string, ambienteTab: string) {
   return { trackClick, trackScroll, trackSliderMove, logEvent };
 }
 
-
 // --- VISTA 3: CLIENTE (SIMULADOR CELULAR REAL CON GALERÍAS Y ESPÍA) ---
 function VistaCliente() {
   const { id } = useParams();
@@ -635,7 +639,6 @@ function VistaCliente() {
   const [activeTab, setActiveTab] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
 
-  // 🔌 CONECTAMOS EL ESPÍA AL PROYECTO ACTUAL
   const { trackClick, trackScroll, trackSliderMove, logEvent } = useAnalytics(
     id || '', 
     p?.ambientes?.[activeTab]?.tab || 'Global'
@@ -741,7 +744,7 @@ function VistaCliente() {
             )}
 
             {/* ZONA 1: RENDER Y SLIDER */}
-            <div onClick={(e) => trackClick('Z1_RENDER', e)} className="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default">
+            <div onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative aspect-[4/5] w-full mb-5 mt-2 px-2 cursor-default">
               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} />
             </div>
 
@@ -752,7 +755,7 @@ function VistaCliente() {
 
             <div className="px-6 space-y-3">
               {/* ZONA 2: PRECIO E INVERSIÓN */}
-              <div onClick={(e) => trackClick('Z2_PRECIO', e)} className="bg-[#1a1a1a] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100 cursor-default active:scale-[0.98]">
+              <div onClick={(e) => trackClick('Z2_PRECIO', e)} id="sensor-Z2" data-zona="Z2" className="bg-[#1a1a1a] rounded-3xl p-6 text-white shadow-lg relative overflow-hidden reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-100 cursor-default active:scale-[0.98]">
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] mb-1">Costo de este Ambiente</p>
                 <div className="flex items-baseline gap-2 mb-6">
@@ -777,6 +780,9 @@ function VistaCliente() {
                   <span className="text-zinc-900 font-black text-lg">{c.moneda === 'ARS' ? '$' : 'USD'} {totalSuma.toLocaleString('es-AR')}</span>
                 </div>
               )}
+
+              {/* INYECTAMOS LA NUEVA ZONA 3 (Alternativas) */}
+              <Z3Alternativas trackClick={trackClick} />
             </div>
           </div>
         )}
@@ -820,7 +826,6 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
   const handleDrag = (e: any) => { 
     setAnim(''); 
     setVal(e.target.value); 
-    // Notificamos al espía cada vez que arrastran el slider
     onSliderMove();
   };
   const snap = (v: number) => { 
@@ -892,10 +897,85 @@ function SliderAntesDespues({ env, activeTab, onSliderMove }: { env: any, active
   );
 }
 
+// --- SUB-COMPONENTE: ZONA 3 (ALTERNATIVAS Y MATERIALES INTERACTIVOS) ---
+function Z3Alternativas({ trackClick }: { trackClick: (zona: string, e: React.MouseEvent, material?: string) => void }) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
-// =====================================================================
-// 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS)
-// =====================================================================
+  const variantes = [
+    {
+      id: "v1", nombre: "Madera Natural",
+      img: "https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=800",
+      puntos: [
+        { id: 1, x: 30, y: 50, material: "MDF Enchapado Roble", codigo: "ROB-450", color: "bg-amber-500", shadow: "shadow-amber-500/50" },
+        { id: 2, x: 70, y: 65, material: "Mesada Silestone", codigo: "BLANCO-N", color: "bg-zinc-200", shadow: "shadow-white/50" }
+      ]
+    },
+    {
+      id: "v2", nombre: "Laca Oscura",
+      img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800",
+      puntos: [
+        { id: 3, x: 45, y: 55, material: "Laca Poliuretánica Negra", codigo: "LAK-900", color: "bg-zinc-800", shadow: "shadow-black/50" },
+        { id: 4, x: 80, y: 40, material: "Herrajes Cobre", codigo: "CU-100", color: "bg-orange-400", shadow: "shadow-orange-500/50" }
+      ]
+    }
+  ];
+
+  const nextSlide = () => { setActiveSlide((i) => (i + 1) % variantes.length); setActiveTooltip(null); };
+  const prevSlide = () => { setActiveSlide((i) => (i - 1 + variantes.length) % variantes.length); setActiveTooltip(null); };
+  const varianteActual = variantes[activeSlide];
+
+  return (
+    <div id="sensor-Z3" data-zona="Z3" className="mt-6 mb-6 reveal-elem opacity-0 translate-y-4 transition-all duration-500 delay-300">
+      <div className="px-2 mb-4">
+        <h3 className="text-2xl font-black text-zinc-900 italic tracking-tight leading-none">Variantes y Materiales</h3>
+        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Toca los puntos para ver opciones</p>
+      </div>
+
+      <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white ring-1 ring-black/5 bg-zinc-100">
+        <img key={varianteActual.id} src={varianteActual.img} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Variante" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
+
+        {varianteActual.puntos.map((punto) => (
+          <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
+            <button onClick={(e) => { e.stopPropagation();
+              setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES', e, punto.material);
+            }} className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg ring-2 ring-white transition-all hover:scale-110 active:scale-95 ${punto.color} ${punto.shadow}`}>
+              <span className="absolute w-full h-full rounded-full animate-ping opacity-60 bg-white"></span>
+              <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+            </button>
+
+            {activeTooltip === punto.id && (
+              <div className={`absolute left-1/2 -translate-x-1/2 w-48 bg-zinc-900/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-50 border border-zinc-700/50 animate-in fade-in zoom-in-95 duration-200 ${punto.y > 50 ? 'bottom-12 origin-bottom' : 'top-12 origin-top'}`}>
+                <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className="absolute top-2 right-2 text-zinc-500 hover:text-white"><X size={14} /></button>
+                <span className="block text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Material</span>
+                <span className="block text-sm font-bold text-white leading-tight">{punto.material}</span>
+                <span className="inline-block mt-2 text-[9px] bg-amber-500/10 text-amber-500 px-2 py-1 rounded-md font-mono border border-amber-500/20">{punto.codigo}</span>
+              </div>
+            )}
+          </div>
+        ))}
+
+        <div className="absolute bottom-6 left-0 w-full px-4 flex justify-between items-end pointer-events-none z-10">
+          <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all active:scale-95"><ChevronLeft size={20}/></button>
+          
+          <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full pointer-events-auto flex flex-col items-center border border-white/10">
+            <span className="text-[9px] text-white font-black uppercase tracking-widest">{varianteActual.nombre}</span>
+            <div className="flex gap-1.5 mt-1.5">
+              {variantes.map((_, idx) => (
+                <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/30'}`}></div>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="pointer-events-auto w-10 h-10 bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:text-black transition-all active:scale-95"><ChevronRight size={20}/></button>
+        </div>
+      </div>
+      {activeTooltip && <div className="fixed inset-0 z-10" onClick={() => setActiveTooltip(null)}></div>}
+    </div>
+  );
+}
+
 // =====================================================================
 // 📊 VISTA 4: CENTRO DE COMANDO (ANALYTICS v2.0 - NUEVA INTERFAZ)
 // =====================================================================
@@ -905,9 +985,11 @@ function AdminAnalytics() {
   const [p, setP] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [expandedUser, setExpandedUser] = useState<number | null>(0); 
 
   useEffect(() => {
     if (!id) return;
+
     const fetchData = async () => {
       const { data: proyecto } = await supabase.from('proyectos').select('*').eq('id', id).single();
       if (proyecto) setP(proyecto);
@@ -915,14 +997,22 @@ function AdminAnalytics() {
       const { data: eventos } = await supabase.from('eventos_analitica')
         .select('*')
         .eq('proyecto_id', id)
-        .order('created_at', { ascending: true }); // Orden cronológico
+        .order('created_at', { ascending: true });
 
       if (eventos && proyecto) {
-        const ambienteActual = proyecto.ambientes[activeTab]?.tab || 'Global';
-        procesarEventos(eventos, ambienteActual);
+        procesarEventos(eventos, proyecto.ambientes[activeTab]?.tab || 'Global');
       }
     };
+
     fetchData();
+
+    const channel = supabase
+      .channel('cambios-analitica')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'eventos_analitica', filter: `proyecto_id=eq.${id}` }, 
+      () => { fetchData(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [id, activeTab]);
 
   const procesarEventos = (eventos: any[], ambienteActual: string) => {
@@ -933,61 +1023,76 @@ function AdminAnalytics() {
     const maxScroll = ends.length ? Math.max(...ends.map((e: any) => e.detalle?.scroll_max || 0)) : 0;
     const totalSliders = ends.reduce((acc: number, curr: any) => acc + (curr.detalle?.slider_total || 0), 0);
     const friccionEvents = evsAmbiente.filter((e: any) => e.tipo === 'FRICCION').length;
-
     const clicks = evsAmbiente.filter((e: any) => e.tipo === 'CLICK_ZONA');
     
-    // Extracción para mapas de calor
     const getDots = (zonaId: string, colorClass: string) => 
-      clicks.filter((e: any) => e.detalle?.zona === zonaId)
-            .map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
+      clicks.filter((e: any) => e.detalle?.zona === zonaId).map((c: any) => ({ x: c.detalle.x, y: c.detalle.y, c: colorClass }));
 
     const dotsZ1 = getDots('Z1_RENDER', 'dot-orange');
     const dotsZ2 = getDots('Z2_PRECIO', 'dot-red');
     const dotsZ3 = getDots('Z3_DETALLES', 'dot-yellow');
     
-    // Extracción para Ranking de Materiales
     const materiales = clicks.filter((c:any) => c.detalle?.material).map((c:any) => c.detalle.material);
     const rankingMap = materiales.reduce((acc:any, curr:any) => ({...acc, [curr]: (acc[curr] || 0) + 1}), {});
     const rankingArray = Object.entries(rankingMap).map(([n, c]) => ({ n, c })).sort((a:any, b:any) => b.c - a.c);
 
-    // Data Cruda (Logs)
     const dataCruda = evsAmbiente.slice(-30).map((e: any) => {
       const time = new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let txt = e.tipo;
-      let color = "text-zinc-500";
+      let txt = e.tipo; let color = "text-zinc-500";
       if (e.tipo === 'SESSION_START') { txt = `NEW_IP: ${e.contexto?.geo || 'Local'}`; color = "text-blue-400"; }
-      if (e.tipo === 'CLICK_ZONA') { txt = `CLICK (${e.detalle?.zona?.replace('Z1_','')?.replace('Z2_','')})`; color = "text-amber-400"; }
-      if (e.tipo === 'WPP_CLICK') { txt = "INTENTO DE CONTACTO (WhatsApp)"; color = "text-green-400"; }
-      if (e.tipo === 'FRICCION') { txt = "RAGE CLICK DETECTADO"; color = "text-red-400"; }
+      if (e.tipo === 'CLICK_ZONA') { txt = `CLICK (${e.detalle?.zona?.replace('Z1_','')?.replace('Z2_','')?.replace('Z3_','')})`; color = "text-amber-400"; }
+      if (e.tipo === 'WPP_CLICK') { txt = "INTENTO DE CONTACTO"; color = "text-green-400"; }
+      if (e.tipo === 'FRICCION') { txt = "RAGE CLICK"; color = "text-red-400"; }
       return { time, txt, color };
     });
 
     const wppClicks = eventos.filter((e: any) => e.tipo === 'WPP_CLICK').length;
 
+    const formatTime = (ms: number) => {
+      if (!ms) return "00:00m";
+      const totalSeconds = Math.floor(ms / 1000);
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}m`;
+    };
+
+    const totalTimes = ends.reduce((acc: any, curr: any) => {
+      const t = curr.detalle?.tiempos || {};
+      return { Z1: (acc.Z1 || 0) + (t.Z1 || 0), Z2: (acc.Z2 || 0) + (t.Z2 || 0), Z3: (acc.Z3 || 0) + (t.Z3 || 0) };
+    }, { Z1: 0, Z2: 0, Z3: 0 });
+
+    const granTotalMs = totalTimes.Z1 + totalTimes.Z2 + totalTimes.Z3;
+
     setAnalytics({
       scroll: `${maxScroll}%`,
       slider: totalSliders.toString(),
       friccion: friccionEvents.toString(),
+      tiempoTotal: formatTime(granTotalMs),
       espectadores: sesiones.map((s, i) => {
-        const startEv = evsAmbiente.find((e: any) => e.sesion_id === s && e.tipo === 'SESSION_START');
+        const evsDeSesion = evsAmbiente.filter((e: any) => e.sesion_id === s);
+        const startEv = evsDeSesion.find((e: any) => e.tipo === 'SESSION_START');
+        const ultimoEvento = evsDeSesion[evsDeSesion.length - 1];
+        
+        const horaUltimaActividad = ultimoEvento ? new Date(ultimoEvento.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
         const ctx = startEv?.contexto || {};
+        
         return {
           id: s,
-          rol: i === 0 ? "Titular" : `Espectador Secundario`,
-          disp: ctx.plataforma || "Dispositivo Web",
+          rol: i === 0 ? "Titular" : `Visita #${i+1}`,
+          disp: ctx.plataforma || "Web",
           geo: ctx.geo || "Desconocido",
           isp: ctx.red || "-", bat: ctx.bateria || "-",
-          status: i === 0 ? "Online" : "Desconectado",
-          statusClass: i === 0 ? "text-green-600 bg-green-100 border-green-200" : "text-zinc-500 bg-white border-zinc-200"
+          status: i === 0 ? "Online" : `Visto ${horaUltimaActividad}`,
+          statusClass: i === 0 ? "text-green-600 bg-green-100" : "text-zinc-500 bg-zinc-100"
         };
       }),
       ranking: rankingArray,
       logs: dataCruda,
       wppEstado: wppClicks > 0 ? "Dudó en Comprar" : "Observación",
-      wppDesc: wppClicks > 0 ? `Tocó 'Aprobar' ${wppClicks} veces pero cerró sin confirmar.` : "Aún no interactuó con el CTA.",
-      z1: { t: "Histórico", c: dotsZ1.length, dots: dotsZ1 },
-      z2: { t: "Histórico", c: dotsZ2.length, dots: dotsZ2 },
-      z3: { t: "Histórico", c: dotsZ3.length, dots: dotsZ3 }
+      wppDesc: wppClicks > 0 ? `Tocó 'Aprobar' ${wppClicks} veces pero cerró sin confirmar.` : "Aún no interactuó.",
+      z1: { t: formatTime(totalTimes.Z1), c: dotsZ1.length, dots: dotsZ1 },
+      z2: { t: formatTime(totalTimes.Z2), c: dotsZ2.length, dots: dotsZ2 },
+      z3: { t: formatTime(totalTimes.Z3), c: dotsZ3.length, dots: dotsZ3 }
     });
   };
 
@@ -1000,25 +1105,20 @@ function AdminAnalytics() {
   ));
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start p-4 md:p-8 overflow-x-hidden bg-zinc-50 font-sans">
+    <div className="min-h-screen w-full flex flex-col items-center justify-start p-4 md:p-8 bg-zinc-50 font-sans">
       <div className="w-full max-w-[1400px] mb-8 flex justify-between items-end border-b border-zinc-200 pb-4">
         <div>
           <button onClick={() => navigate(`/admin/editar/${id}`)} className="text-zinc-400 hover:text-zinc-900 font-black text-[10px] uppercase tracking-widest mb-2"><ArrowLeft size={14} className="inline mr-1"/> Volver al Editor</button>
           <h1 className="text-3xl font-black text-zinc-900 tracking-tighter italic leading-none">STUDIO<span className="text-amber-600">.MUD</span></h1>
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Centro de Comando Analítico</p>
         </div>
-        <div className="flex gap-2">
-          <button className="hidden md:block bg-white border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-zinc-50">Descargar CSV</button>
-          <button className="bg-zinc-900 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-zinc-800">Exportar PDF</button>
-        </div>
       </div>
 
       <div className="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* COLUMNA 1: CELULAR */}
+        {/* COLUMNA 1: CELULAR (Ahora con Z3) */}
         <div className="lg:col-span-4 flex flex-col h-[850px]">
           <div className="w-full h-full bg-white border-[10px] border-zinc-900 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-900 rounded-b-3xl z-50"></div>
             <div className="bg-[#111111] pt-10 pb-0 px-5 relative z-50 flex flex-col">
               <div className="mb-6">
                 <h1 className="font-black text-2xl text-white leading-none tracking-tight">{p.cliente}</h1>
@@ -1033,88 +1133,106 @@ function AdminAnalytics() {
 
             <div className="flex-1 bg-zinc-50 relative hide-scroll overflow-y-auto pb-10">
               <div className="relative w-full h-[380px] mb-6">
-                <div className="absolute inset-0 bg-zinc-100 rounded-b-[2rem] overflow-hidden">
-                  <img src={env.obra || env.galeriaObra?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'} className="w-full h-full object-cover" />
-                </div>
-                <div className="absolute inset-0 z-40 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-b-[2rem] transition-all">
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 flex flex-col shadow-2xl border-l-2 border-blue-500">
-                    <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest mb-1">Z1: Render</span>
+                <div className="absolute inset-0 bg-zinc-100 rounded-b-[2rem] overflow-hidden"><img src={env.obra || env.galeriaObra?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'} className="w-full h-full object-cover" /></div>
+                <div className="absolute inset-0 z-40 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-b-[2rem]">
+                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-blue-500">
+                    <span className="text-[8px] font-black uppercase text-blue-400 tracking-widest mb-1 block">Z1: Render</span>
                     <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z1.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z1.c} clics</span></div>
                   </div>
                   {renderDots(analytics.z1.dots)}
                 </div>
               </div>
               
-              <div className="px-6 mb-6"><h2 className="text-2xl font-black text-zinc-900 italic opacity-20">{env.titulo}</h2></div>
-              
               <div className="px-6 mb-6 relative">
                 <div className="bg-[#1a1a1a] rounded-[2rem] p-6 opacity-40"><p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest mb-2">Inversión Total</p><p className="text-4xl font-black text-white">{env.total}</p></div>
-                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-[2rem] transition-all">
-                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 flex flex-col shadow-2xl border-l-2 border-red-500">
-                    <span className="text-[8px] font-black uppercase text-red-400 tracking-widest mb-1">Z2: Precio</span>
+                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-[2rem]">
+                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-red-500">
+                    <span className="text-[8px] font-black uppercase text-red-400 tracking-widest mb-1 block">Z2: Precio</span>
                     <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z2.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z2.c} clics</span></div>
                   </div>
                   {renderDots(analytics.z2.dots)}
                 </div>
               </div>
+
+              {/* Caja Z3 en el panel */}
+              <div className="px-6 mb-6 relative">
+                <div className="bg-[#1a1a1a] rounded-[2rem] p-6 opacity-40 h-24"></div>
+                <div className="absolute inset-0 z-40 mx-6 pointer-events-none bg-black/40 backdrop-blur-[1px] rounded-[2rem]">
+                  <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border-l-2 border-yellow-500">
+                    <span className="text-[8px] font-black uppercase text-yellow-400 tracking-widest mb-1 block">Z3: Detalles</span>
+                    <div className="flex items-baseline gap-2"><span className="text-base font-black text-white">{analytics.z3.t}</span><span className="text-[10px] font-bold text-zinc-400">• {analytics.z3.c} clics</span></div>
+                  </div>
+                  {renderDots(analytics.z3.dots)}
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* COLUMNA 2: KPIS Y ESPECTADORES */}
+        {/* COLUMNA 2: KPIS Y ACORDEÓN */}
         <div className="lg:col-span-4 flex flex-col gap-6 lg:h-[850px] overflow-y-auto hide-scroll pb-10">
-          <div className="grid grid-cols-3 gap-4 shrink-0">
-            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Scroll</p><div className="flex items-center gap-1"><span className="text-3xl font-black text-emerald-500">{analytics.scroll}</span></div></div>
-            <div className="bg-white p-5 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Slider</p><span className="text-3xl font-black text-blue-600">{analytics.slider}<span className="text-xs text-blue-400 ml-1">mv</span></span></div>
-            <div className="bg-red-50/50 p-5 rounded-3xl border border-red-100 flex flex-col justify-center"><p className="text-[9px] font-black uppercase tracking-widest text-red-500 mb-2">Fricción (Rage)</p><span className="text-3xl font-black text-red-600">{analytics.friccion}</span></div>
+          <div className="grid grid-cols-4 gap-3 shrink-0">
+            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Total</p><span className="text-xl font-black text-indigo-500">{analytics.tiempoTotal}</span></div>
+            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Scroll</p><span className="text-xl font-black text-emerald-500">{analytics.scroll}</span></div>
+            <div className="bg-white p-4 rounded-3xl border border-zinc-200 shadow-sm flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">Slider</p><span className="text-xl font-black text-blue-600">{analytics.slider}<span className="text-[10px] text-blue-400 ml-1">mv</span></span></div>
+            <div className="bg-red-50 p-4 rounded-3xl border border-red-100 flex flex-col justify-center"><p className="text-[8px] font-black uppercase tracking-widest text-red-500 mb-1">Rage</p><span className="text-xl font-black text-red-600">{analytics.friccion}</span></div>
           </div>
 
           <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-200 shadow-sm relative shrink-0">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Espectadores Detectados</h2>
-              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-700">{analytics.espectadores.length} IPs Activas</div>
+              <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-700">{analytics.espectadores.length} IPs Activas</div>
             </div>
-            <div className="space-y-3">
-              {analytics.espectadores.map((e:any, idx:number) => (
-                <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-zinc-200 rounded-lg text-xs font-black text-zinc-500 flex items-center justify-center">{idx + 1}</div>
-                      <span className="text-sm font-black text-zinc-900">{e.rol}</span>
+            
+            {/* EL ACORDEÓN */}
+            <div className="space-y-2">
+              {analytics.espectadores.map((e:any, idx:number) => {
+                const isExpanded = expandedUser === idx;
+                return (
+                  <div key={idx} className="bg-zinc-50 border border-zinc-200 rounded-2xl overflow-hidden transition-all">
+                    <div onClick={() => setExpandedUser(isExpanded ? null : idx)} className="p-4 flex justify-between items-center cursor-pointer hover:bg-zinc-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 bg-white border border-zinc-200 rounded-lg text-xs font-black text-zinc-500 flex items-center justify-center">{idx + 1}</div>
+                        <span className="text-sm font-black text-zinc-900">{e.rol}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md border ${e.statusClass}`}>{e.status}</span>
+                        <ChevronRight size={16} className={`text-zinc-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${e.statusClass}`}>{e.status}</span>
+                    
+                    {/* CONTENIDO DESPLEGABLE */}
+                    {isExpanded && (
+                      <div className="p-4 pt-0 border-t border-zinc-200/50 bg-white grid grid-cols-2 gap-4 mt-2">
+                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Dispositivo</span><span className="text-xs font-bold text-zinc-800">{e.disp}</span></div>
+                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Ubicación</span><span className="text-xs font-bold text-zinc-800">{e.geo}</span></div>
+                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Red & ISP</span><span className="text-xs font-bold text-zinc-800">{e.isp}</span></div>
+                        <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Batería</span><span className="text-xs font-bold text-zinc-800">{e.bat}</span></div>
+                      </div>
+                    )}
                   </div>
-                  {idx === 0 && (
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-200/60">
-                      <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Dispositivo</span><span className="text-xs font-bold text-zinc-800">{e.disp}</span></div>
-                      <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Ubicación</span><span className="text-xs font-bold text-zinc-800">{e.geo}</span></div>
-                      <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Red & ISP</span><span className="text-xs font-bold text-zinc-800">{e.isp}</span></div>
-                      <div><span className="text-[8px] font-black text-zinc-400 block uppercase tracking-widest mb-1">Batería</span><span className="text-xs font-bold text-zinc-800">{e.bat}</span></div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-
+          
           <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-200 shadow-sm shrink-0">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Ranking Materiales</h2>
-            {analytics.ranking.length > 0 ? (
-              <div className="space-y-3">
-                {analytics.ranking.map((r:any, i:number) => (
-                  <div key={i} className={`flex justify-between items-center p-4 rounded-xl border ${i===0 ? 'bg-amber-50/50 border-amber-200' : 'bg-zinc-50 border-zinc-100'}`}>
-                    <span className={`text-sm font-black ${i===0 ? 'text-amber-700' : 'text-zinc-700'}`}>{i===0 && '🏆 '} {r.n}</span>
-                    <span className="text-xs font-bold text-zinc-500">{r.c} clics</span>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-xs font-bold text-zinc-400 italic text-center py-4">Sin datos de materiales aún.</p>}
+            <div className="space-y-2">
+              {analytics.ranking.length > 0 ? analytics.ranking.map((r:any, i:number) => (
+                <div key={i} className={`flex justify-between items-center p-3 rounded-xl ${i === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-zinc-50 border border-zinc-100'}`}>
+                  <div className="flex items-center gap-3"><span className="text-lg">{i === 0 ? '🏆' : <span className="text-xs text-zinc-400 font-black px-1">{i+1}º</span>}</span><span className="text-sm font-bold text-zinc-900">{r.n}</span></div>
+                  <span className={`text-[10px] font-black px-2 py-1 rounded-md ${i === 0 ? 'bg-amber-200 text-amber-800' : 'bg-zinc-200 text-zinc-600'}`}>{r.c} clics</span>
+                </div>
+              )) : <div className="text-center p-4 text-xs text-zinc-500 font-bold uppercase tracking-widest">Sin datos aún</div>}
+            </div>
           </div>
 
-          <div className="bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-800 shadow-xl relative overflow-hidden shrink-0 mt-auto">
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">Acción Final (Embudo)</p>
-              <span className="text-2xl font-black text-amber-500 block mb-1">{analytics.wppEstado}</span>
-              <p className="text-xs text-zinc-300 font-medium leading-relaxed">{analytics.wppDesc}</p>
+          <div className="bg-[#111111] p-6 rounded-[2.5rem] border border-zinc-800 shrink-0">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Acción Final (Embudo)</h2>
+            <p className="text-xl font-black text-amber-500 leading-none mb-2">{analytics.wppEstado}</p>
+            <p className="text-[10px] font-bold text-zinc-400 leading-relaxed">{analytics.wppDesc}</p>
           </div>
         </div>
 
@@ -1127,17 +1245,17 @@ function AdminAnalytics() {
             </div>
             <div className="space-y-6 relative z-10">
                 <div><span className="bg-indigo-900/40 border border-indigo-700/50 text-indigo-200 text-[10px] font-black tracking-widest uppercase px-4 py-2 rounded-xl inline-block">Analítico / Fricción Precio</span></div>
-                <div><p className="text-sm text-indigo-100/90 leading-relaxed font-medium">Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con el slider. Sin embargo, la Acción Final indica intención de compra trabada por costo.</p></div>
-                <div className="bg-[#0D1D20] border border-emerald-900/50 p-6 rounded-2xl mt-4"><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 block mb-3">Acción Sugerida</span><p className="text-xs text-emerald-100/80 font-medium leading-relaxed">Toma la iniciativa. Ofrecerles un plan de financiación para destrabar el cierre.</p></div>
+                <div><p className="text-sm text-indigo-100/90 leading-relaxed font-medium">Se detectó Alta Viralidad ({analytics.espectadores.length} espectadores). El titular interactuó extensamente con el slider y evaluó los detalles. La Acción Final indica intención de compra trabada por costo.</p></div>
+                <div className="bg-[#0D1D20] border border-emerald-900/50 p-6 rounded-2xl mt-4"><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 block mb-3">Acción Sugerida</span><p className="text-xs text-emerald-100/80 font-medium leading-relaxed">Toma la iniciativa. Ofréceles un plan de financiación para destrabar el cierre.</p></div>
             </div>
           </div>
 
           <div className="bg-[#0A0A0A] rounded-[3rem] p-8 shadow-2xl border border-zinc-800 flex-1 flex flex-col overflow-hidden min-h-[300px]">
-             <div className="flex items-center gap-2 mb-6"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda</h3></div>
+             <div className="flex items-center gap-2 mb-6"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div><h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Data Cruda (En Vivo)</h3></div>
              <div className="flex-1 overflow-y-auto hide-scroll space-y-2 font-mono text-[10px]">
                 {analytics.logs.length > 0 ? analytics.logs.map((log:any, i:number) => (
                   <div key={i} className="flex gap-3"><span className="text-zinc-600 shrink-0">[{log.time}]</span><span className={`${log.color} break-words`}>{log.txt}</span></div>
-                )) : <div className="text-zinc-600 italic">Esperando eventos de red...</div>}
+                )) : <div className="text-zinc-600 italic">Esperando eventos...</div>}
              </div>
           </div>
         </div>

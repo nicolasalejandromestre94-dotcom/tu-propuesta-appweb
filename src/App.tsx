@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, MessageCircle, Edit3, Eye, EyeOff, Image as ImageIcon, 
-  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Check, 
+  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
-  Play, Link2, UploadCloud, Settings, Sun, Moon, Info, Share2, Layers, Heart, MessageSquarePlus, Maximize, Phone
+  Play, Link2, UploadCloud, Settings, Sun, Moon, Info, Share2, Layers, Heart, MessageSquarePlus, Maximize
 } from 'lucide-react';
-import { BrowserRouter, Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
 // =====================================================================
@@ -703,7 +703,6 @@ function AdminEditor() {
   );
 }
 
-
 // =====================================================================
 // 📱 VISTA 3: CLIENTE FINAL (LIGHT MODE DEFAULT)
 // =====================================================================
@@ -793,9 +792,9 @@ function VistaCliente() {
   };
 
   return (
-    <div className={`h-[100dvh] md:min-h-screen ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
+    <div className={`h-[100dvh] ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
       
-      {/* Background PC Blur (Solo PC para no matar la batería del celular) */}
+      {/* Background PC Blur - Solo Visible en Desktop */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         <img src={env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className={`w-full h-full object-cover blur-3xl scale-110 transition-opacity duration-500 ${isDark ? 'opacity-10' : 'opacity-20'}`} alt="bg"/>
         <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/50 to-[#1C1A18]/90' : 'from-white/50 to-[#EAE5DF]/90'}`}></div>
@@ -860,12 +859,12 @@ function VistaCliente() {
               <div className="px-4 pt-2 mb-4 relative z-10"><button onClick={() => setShowIndex(true)} className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${colors.textMuted} ${colors.glassCard} px-4 py-2 rounded-full border transition`}><ArrowLeft size={14}/> Volver al Menú</button></div>
             )}
 
-            {/* Z1: RENDER */}
+            {/* Z1: RENDER ORIGINAL RESTAURADO (OBJECT-COVER) */}
             <div className ="relative h-[60vh] min-h-[450px] w-full mb-6 cursor-default animate-in fade-in fill-mode-both">
                <SliderAntesDespues env={env} activeTab={activeTab} isDark={isDark} colors={colors} />
             </div>
 
-            {/* Títulos */}
+            {/* Títulos Opción A Elegante */}
             <div className="px-6 mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both relative z-10">
               <p className={`font-sans text-[9px] uppercase tracking-[0.3em] font-semibold ${colors.textMuted} mb-1 transition-colors duration-700`}>{p.cliente}</p>
               <h2 className={`font-serif text-[2.2rem] ${colors.textMain} leading-tight tracking-wide transition-colors`}>{env.titulo}</h2>
@@ -901,7 +900,7 @@ function VistaCliente() {
                 </div>
               )}
 
-              {/* Z3 ALTERNATIVAS */}
+              {/* Z3 ALTERNATIVAS CON BOTONES GLASSMORPHISM Y TÍTULOS EDITABLES */}
               {variantes.length > 0 && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
                    <Z3Alternativas variantes={variantes} env={env} wppNum={p.whatsapp} isDark={isDark} colors={colors} />
@@ -911,16 +910,16 @@ function VistaCliente() {
           </div>
         )}
 
-        {/* BOTÓN FLOTANTE WPP FIJO Y CAMALEÓN (Tu idea UX) */}
+        {/* BOTÓN FLOTANTE WPP FIJO Y CAMALEÓN (Diseño UX) */}
         <div className={`absolute bottom-0 left-0 w-full p-5 pb-8 pt-16 z-40 pointer-events-none transition-all duration-700 ${isAtBottom ? 'translate-y-0' : 'translate-y-1'}`}
              style={{ backgroundImage: `linear-gradient(to top, ${isDark ? '#1C1A18' : '#EAE5DF'} 20%, transparent)` }}>
           <a href={`https://wa.me/${p?.whatsapp || ''}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" 
              className={`pointer-events-auto w-full py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 transition-all duration-700 border ${
                isAtBottom 
-                ? `${colors.accentColor} text-[#F8F6F0] border-white/20 shadow-xl ${colors.accentGlow} hover:scale-[1.02]` 
+                ? `bg-[#25D366] text-white border-white/20 shadow-xl shadow-green-500/20 hover:scale-[1.02]` 
                 : `bg-black/30 backdrop-blur-md border-white/20 text-[#F8F6F0] shadow-sm hover:bg-black/40`
              }`}>
-            <Phone size={18} strokeWidth={1.5} fill="currentColor" /> Escribir por WhatsApp
+            <MessageCircle size={20} fill={isAtBottom ? "white" : "currentColor"} /> Escribir por WhatsApp
           </a>
         </div>
       </div>
@@ -1040,7 +1039,7 @@ function SliderAntesDespues({ env, activeTab, isDark, colors }: { env: any, acti
   );
 }
 
-// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS ---
+// --- SUB-COMPONENTE: ZONA 3 ALTERNATIVAS (BOTONES DE CRISTAL SEPARADOS Y TÍTULOS EDITABLES) ---
 function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { variantes: any[], env: any, wppNum: string, isDark?: boolean, colors?: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
@@ -1080,37 +1079,42 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
 
   if(!varActual) return null;
 
-  const glassDockTooltip = isDark ? "bg-[#11100F]/70 backdrop-blur-xl border border-white/10" : "bg-white/70 backdrop-blur-xl border border-white/60";
+  // Estilos de botones Glass para la Z3
+  const glassDockTooltip = isDark ? "bg-[#11100F]/70 backdrop-blur-xl border border-white/10" : "bg-white/85 backdrop-blur-xl border border-zinc-200/50";
   const glassSecondary = isDark ? "bg-[#1C1A18]/40 backdrop-blur-md border border-white/10" : "bg-white/40 backdrop-blur-md border border-white/60";
   const glassPrimary = isDark ? "bg-[#A87C4F]/70 backdrop-blur-md border border-white/20 shadow-[0_5px_15px_rgba(168,124,79,0.2)]" : "bg-[#A87C4F]/85 backdrop-blur-md border border-white/40 shadow-[0_5px_15px_rgba(168,124,79,0.3)]";
 
   return (
     <div className="mt-6 mb-6">
       
+      {/* TÍTULOS EDITABLES */}
       <div className="mb-4 px-2 flex justify-between items-center">
           <h3 className={`text-xl font-serif ${colors?.textMain || 'text-zinc-900'} tracking-wide transition-colors`}>{env.z3Title || 'Variantes de Material'}</h3>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2.5 h-2.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full opacity-80 animate-pulse`}></div>
+            <div className={`w-2.5 h-2.5 bg-[#A87C4F] rounded-full opacity-80 animate-pulse`}></div>
             <span className={`text-[7px] font-bold uppercase tracking-widest ${colors?.textMuted || 'text-zinc-500'}`}>{env.z3Subtitle || 'Toca los puntos'}</span>
           </div>
       </div>
       
       <div className={`relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden transition-colors duration-700 ${colors?.glassCard || 'bg-white'} group cursor-default`}>
         
-        {/* EL TRUCO DEL EFECTO VIDRIO: Blur-3xl de fondo */}
+        {/* EL TRUCO DEL EFECTO VIDRIO: Blur-3xl de fondo para difuminar */}
         <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover blur-3xl transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-40' : 'opacity-50'}`} alt="blur-bg" />
-        <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
-        <div className={`absolute inset-0 ${colors?.accentColor || 'bg-[#A87C4F]'} opacity-[0.05] mix-blend-multiply pointer-events-none z-10`}></div>
+        <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
         
+        <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
+        
+        {/* NAVEGACIÓN SUPERIOR */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-full flex items-center gap-4 z-30 shadow-lg">
           <button onClick={(e) => { e.stopPropagation(); prevSlide(); }} className="hover:scale-110 transition-transform"><ChevronLeft size={14} className="text-white"/></button>
           <div className="flex flex-col items-center pointer-events-none">
             <span className="text-[9px] text-[#F8F6F0] font-black uppercase tracking-widest drop-shadow-md truncate max-w-[120px]">{varActual.nombre}</span>
-            <div className="flex gap-1 mt-1">{variantes.map((_, idx) => (<div key={idx} className={`h-1 rounded-full transition-all duration-300 ${idx === activeSlide ? `w-3 ${colors?.accentColor || 'bg-[#A87C4F]'}` : 'w-1 bg-white/30'}`}></div>))}</div>
+            <div className="flex gap-1 mt-1">{variantes.map((_, idx) => (<div key={idx} className={`h-1 rounded-full transition-all duration-300 ${idx === activeSlide ? `w-3 bg-[#A87C4F]` : 'w-1 bg-white/30'}`}></div>))}</div>
           </div>
           <button onClick={(e) => { e.stopPropagation(); nextSlide(); }} className="hover:scale-110 transition-transform"><ChevronRight size={14} className="text-white"/></button>
         </div>
 
+        {/* MODAL COMENTARIO */}
         {isCommenting && (
           <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-md p-5 flex flex-col justify-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className={`${colors?.glassCard || 'bg-white'} rounded-3xl p-5 shadow-2xl relative`}>
@@ -1123,17 +1127,18 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
                 ></textarea>
                 <div className="flex gap-2">
                   <button onClick={(e) => { e.stopPropagation(); handleShareVar(); }} className={`bg-zinc-800/50 ${colors?.textMain || 'text-white'} px-4 py-3.5 rounded-xl hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0`} title="Compartir esta opción"><Share2 size={16}/></button>
-                  <button onClick={(e) => { e.stopPropagation(); handleSendNoteWpp(); }} className={`flex-1 ${colors?.accentColor || 'bg-[#A87C4F]'} text-[#F8F6F0] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border border-white/20`}>Enviar Nota</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleSendNoteWpp(); }} className={`flex-1 bg-[#A87C4F] text-[#F8F6F0] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border border-white/20`}>Enviar Nota</button>
                 </div>
             </div>
           </div>
         )}
 
+        {/* PUNTOS INTERACTIVOS CON ESTILO GLASS Y LAZOS */}
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
             <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); }} className={`relative flex items-center justify-center w-6 h-6 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 group`}>
-              <div className={`absolute w-[250%] h-[250%] ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full blur-md opacity-30 group-hover:opacity-50 transition-opacity`}></div>
-              <div className={`w-3.5 h-3.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full relative z-10 border-2 ${isDark ? 'border-[#262320]' : 'border-[#F8F6F0]'}`}></div>
+              <div className={`absolute w-[250%] h-[250%] bg-[#A87C4F] rounded-full blur-md opacity-30 group-hover:opacity-50 transition-opacity`}></div>
+              <div className={`w-3.5 h-3.5 bg-[#A87C4F] rounded-full relative z-10 border-2 ${isDark ? 'border-[#262320]' : 'border-[#F8F6F0]'}`}></div>
             </button>
             
             {activeTooltip === punto.id && (
@@ -1151,6 +1156,7 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
           </div>
         ))}
 
+        {/* DOCK INFERIOR (GLASSMORPHISM SEPARADO) */}
         <div className="absolute bottom-4 left-0 w-full px-4 flex justify-between items-center gap-2 z-30 transition-colors">
             <button onClick={handleLike} className={`w-10 h-10 rounded-full ${glassSecondary} flex items-center justify-center ${colors?.textMuted || 'text-zinc-500'} shadow-sm hover:scale-105 transition-transform shrink-0`} title="Me gusta">
               <Heart size={16} strokeWidth={1.5} className={isLiked ? `fill-[#A87C4F]` : ""} />

@@ -832,7 +832,6 @@ function VistaCliente() {
   };
   
 
-
   useEffect(() => {
     if (CLARITY_PROJECT_ID && !(window as any).clarity) {
       (function(c:any,l,a,r,i,t,y){
@@ -962,7 +961,7 @@ function VistaCliente() {
               onMouseEnter={() => handleZoneEnter('Z1')} onMouseLeave={() => handleZoneLeave('Z1')} onTouchStart={() => handleZoneEnter('Z1')} onTouchEnd={() => handleZoneLeave('Z1')}
               onClick={(e) => trackClick('Z1_RENDER', e)} id="sensor-Z1" data-zona="Z1" className ="relative h-[60vh] min-h-[450px] w-full mb-6 cursor-default animate-in fade-in fill-mode-both"
             >
-               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} />
+               <SliderAntesDespues env={env} activeTab={activeTab} onSliderMove={trackSliderMove} isDark={isDark} colors={colors} />
             </div>
 
             {/* Títulos Opción A Elegante */}
@@ -1007,7 +1006,7 @@ function VistaCliente() {
               {/* Z3 ALTERNATIVAS CON BOTONES GLASSMORPHISM Y TÍTULOS EDITABLES */}
               {variantes.length > 0 && (
                 <div onMouseEnter={() => handleZoneEnter('Z3')} onMouseLeave={() => handleZoneLeave('Z3')} onTouchStart={() => handleZoneEnter('Z3')} onTouchEnd={() => handleZoneLeave('Z3')} className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700 fill-mode-both">
-                   <Z3Alternativas variantes={variantes} trackClick={trackClick} logEvent={logEvent} wppNum={p.whatsapp} isDark={isDark} colors={colors} tituloZ3={env.z3Titulo} subtituloZ3={env.z3Subtitulo} />
+                   <Z3Alternativas variantes={variantes} env={env} trackClick={trackClick} logEvent={logEvent} wppNum={p.whatsapp} isDark={isDark} colors={colors} />
                 </div>
               )}
             </div>
@@ -1017,7 +1016,7 @@ function VistaCliente() {
         {/* BOTÓN FLOTANTE WPP FIJO */}
         <div className={`absolute bottom-0 left-0 w-full p-5 pb-8 pt-16 z-40 pointer-events-none transition-colors duration-700`}
              style={{ backgroundImage: `linear-gradient(to top, ${isDark ? '#1C1A18' : '#EAE5DF'} 20%, ${isDark ? 'rgba(28,26,24,0.8)' : 'rgba(234,229,223,0.8)'} 60%, transparent)` }}>
-          <a href={`https://wa.me/${p.whatsapp}?text=Hola! Estuve viendo la propuesta y quiero avanzar.`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className={`pointer-events-auto w-full ${colors.accentColor} text-[#F8F6F0] py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 ${colors.accentGlow} hover:scale-[1.02] transition-transform border border-white/20 shadow-xl`}>
+          <a href={`https://wa.me/${p.whatsapp}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className={`pointer-events-auto w-full ${colors.accentColor} text-[#F8F6F0] py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 ${colors.accentGlow} hover:scale-[1.02] transition-transform border border-white/20 shadow-xl`}>
             <Phone size={18} strokeWidth={1.5} fill="currentColor" /> Escribir por WhatsApp
           </a>
         </div>
@@ -1099,7 +1098,7 @@ function SliderAntesDespues({ env, activeTab, onSliderMove, isDark, colors }: { 
         {/* LÍNEA DIVISORIA (ESTILO VIDRIO Y BRONCE) */}
         <div className={`absolute top-0 bottom-0 w-[1.5px] bg-white/80 z-10 -translate-x-1/2 shadow-sm ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/50 flex items-center justify-center backdrop-blur-md bg-black/10 shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
-            <div className={`w-2.5 h-2.5 bg-[#A87C4F] rounded-full`}></div>
+            <div className={`w-2.5 h-2.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full`}></div>
           </div>
         </div>
         <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
@@ -1203,7 +1202,7 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
       <div className="mb-4 px-2 flex justify-between items-center">
           <h3 className={`text-xl font-serif ${colors?.textMain || 'text-zinc-900'} tracking-wide transition-colors`}>{env.z3Title || 'Variantes de Material'}</h3>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2.5 h-2.5 bg-[#A87C4F] rounded-full opacity-80 animate-pulse`}></div>
+            <div className={`w-2.5 h-2.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full opacity-80 animate-pulse`}></div>
             <span className={`text-[7px] font-bold uppercase tracking-widest ${colors?.textMuted || 'text-zinc-500'}`}>{env.z3Subtitle || 'Toca los puntos'}</span>
           </div>
       </div>
@@ -1215,14 +1214,14 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
         
         <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-70' : 'opacity-90'}`} alt="blur-bg" />
         <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
-        <div className={`absolute inset-0 bg-[#A87C4F] opacity-[0.05] mix-blend-multiply pointer-events-none z-10`}></div>
+        <div className={`absolute inset-0 ${colors?.accentColor || 'bg-[#A87C4F]'} opacity-[0.05] mix-blend-multiply pointer-events-none z-10`}></div>
         
         {/* NAVEGACIÓN SUPERIOR */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-full flex items-center gap-4 z-30 shadow-lg">
           <button onClick={(e) => { e.stopPropagation(); prevSlide(); trackClick('Z3_SWIPE', e); }} className="hover:scale-110 transition-transform"><ChevronLeft size={14} className="text-white"/></button>
           <div className="flex flex-col items-center pointer-events-none">
             <span className="text-[9px] text-[#F8F6F0] font-black uppercase tracking-widest drop-shadow-md truncate max-w-[120px]">{varActual.nombre}</span>
-            <div className="flex gap-1 mt-1">{variantes.map((_, idx) => (<div key={idx} className={`h-1 rounded-full transition-all duration-300 ${idx === activeSlide ? `w-3 bg-[#A87C4F]` : 'w-1 bg-white/30'}`}></div>))}</div>
+            <div className="flex gap-1 mt-1">{variantes.map((_, idx) => (<div key={idx} className={`h-1 rounded-full transition-all duration-300 ${idx === activeSlide ? `w-3 ${colors?.accentColor || 'bg-[#A87C4F]'}` : 'w-1 bg-white/30'}`}></div>))}</div>
           </div>
           <button onClick={(e) => { e.stopPropagation(); nextSlide(); trackClick('Z3_SWIPE', e); }} className="hover:scale-110 transition-transform"><ChevronRight size={14} className="text-white"/></button>
         </div>
@@ -1240,7 +1239,7 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
                 ></textarea>
                 <div className="flex gap-2">
                   <button onClick={(e) => { e.stopPropagation(); handleShareVar(); }} className={`bg-zinc-800/50 ${colors?.textMain || 'text-white'} px-4 py-3.5 rounded-xl hover:bg-zinc-700 transition-colors flex items-center justify-center shrink-0`} title="Compartir esta opción"><Share2 size={16}/></button>
-                  <button onClick={(e) => { e.stopPropagation(); handleSendNoteWpp(); }} className={`flex-1 bg-[#A87C4F] text-[#F8F6F0] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border border-white/20`}>Enviar Nota</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleSendNoteWpp(); }} className={`flex-1 ${colors?.accentColor || 'bg-[#A87C4F]'} text-[#F8F6F0] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 border border-white/20`}>Enviar Nota</button>
                 </div>
             </div>
           </div>
@@ -1250,8 +1249,8 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
             <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); trackClick('Z3_DETALLES_PUNTO', e, punto.material); }} className={`relative flex items-center justify-center w-6 h-6 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 group`}>
-              <div className={`absolute w-[250%] h-[250%] bg-[#A87C4F] rounded-full blur-md opacity-30 group-hover:opacity-50 transition-opacity`}></div>
-              <div className={`w-3.5 h-3.5 bg-[#A87C4F] rounded-full relative z-10 border-2 ${isDark ? 'border-[#262320]' : 'border-[#F8F6F0]'}`}></div>
+              <div className={`absolute w-[250%] h-[250%] ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full blur-md opacity-30 group-hover:opacity-50 transition-opacity`}></div>
+              <div className={`w-3.5 h-3.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full relative z-10 border-2 ${isDark ? 'border-[#262320]' : 'border-[#F8F6F0]'}`}></div>
             </button>
             
             {activeTooltip === punto.id && (

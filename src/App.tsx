@@ -4,7 +4,7 @@ import {
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Activity, Play, Monitor, Link2, UploadCloud, Settings, LayoutDashboard,
-  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, ThumbsUp, Maximize
+  Smartphone, MapPin, Wifi, BatteryMedium, Cpu, Zap, Sun, Moon, CalendarDays, RefreshCw, Info, Share2, Layers, Trophy, Heart, MessageSquarePlus, ThumbsUp, Maximize, Phone
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -409,6 +409,13 @@ function AdminEditor() {
     updateEnv('items', itemsActuales.filter((it:any) => it.id !== itemId));
   };
 
+  // Helper para apretar Enter al editar el nombre de un punto
+  const handleKeyDownPunto = (e: React.KeyboardEvent, ptId: string) => {
+    if (e.key === 'Enter') {
+      setEditingPoint(null);
+    }
+  };
+
   if (!p) return <div className="min-h-screen flex items-center justify-center bg-zinc-50"><Loader2 className="animate-spin text-amber-600 w-10 h-10" /></div>;
 
   const env = p.ambientes[activeTab] || {};
@@ -682,6 +689,7 @@ function AdminEditor() {
                                         className="w-full bg-zinc-100 px-4 py-3 rounded-xl text-sm font-bold text-zinc-900 border border-zinc-200 outline-none focus:border-amber-500 mb-4" 
                                         value={pt.material}
                                         onChange={(e) => updatePuntoMaterial(pt.id, e.target.value)}
+                                        onKeyDown={(e) => handleKeyDownPunto(e, pt.id)}
                                         autoFocus 
                                       />
                                       <div className="flex justify-between items-center border-t border-zinc-100 pt-4">
@@ -1016,7 +1024,7 @@ function VistaCliente() {
         {/* BOTÓN FLOTANTE WPP FIJO */}
         <div className={`absolute bottom-0 left-0 w-full p-5 pb-8 pt-16 z-40 pointer-events-none transition-colors duration-700`}
              style={{ backgroundImage: `linear-gradient(to top, ${isDark ? '#1C1A18' : '#EAE5DF'} 20%, ${isDark ? 'rgba(28,26,24,0.8)' : 'rgba(234,229,223,0.8)'} 60%, transparent)` }}>
-          <a href={`https://wa.me/${p.whatsapp}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className={`pointer-events-auto w-full ${colors.accentColor} text-[#F8F6F0] py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 ${colors.accentGlow} hover:scale-[1.02] transition-transform border border-white/20 shadow-xl`}>
+          <a href={`https://wa.me/${p.whatsapp || ''}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" onClick={() => logEvent('WPP_CLICK')} className={`pointer-events-auto w-full ${colors.accentColor} text-[#F8F6F0] py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 ${colors.accentGlow} hover:scale-[1.02] transition-transform border border-white/20 shadow-xl`}>
             <Phone size={18} strokeWidth={1.5} fill="currentColor" /> Escribir por WhatsApp
           </a>
         </div>
@@ -1169,14 +1177,14 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
     e.stopPropagation();
     const text = `¡Hola! Estuve viendo la propuesta y me encantó la opción de material: *${varActual.nombre}*. ¿Podemos avanzar con esta?`;
     logEvent('WPP_CLICK', { tipo: 'direct_z3', material: varActual.nombre });
-    window.open(`https://wa.me/${wppNum}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/${wppNum || ''}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleSendNoteWpp = () => {
     const text = `Nota sobre opción *${varActual.nombre}*:\n\n"${noteText}"`;
     logEvent('Z3_NOTE_WPP', { material: varActual.nombre, nota: noteText });
     setIsCommenting(false);
-    window.open(`https://wa.me/${wppNum}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/${wppNum || ''}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleShareVar = async () => {
@@ -1256,7 +1264,7 @@ function Z3Alternativas({ variantes, env, trackClick, logEvent, wppNum, isDark =
             {activeTooltip === punto.id && (
               <>
                  <div className={`absolute ${punto.y > 50 ? 'bottom-5' : 'top-5'} left-1/2 -translate-x-1/2 w-[1px] h-8 bg-gradient-to-b ${punto.y > 50 ? `from-[#A87C4F]/60` : 'from-transparent'} ${punto.y > 50 ? 'to-transparent' : `to-[#A87C4F]/60`} z-40 animate-in fade-in duration-300`}></div>
-                 <div className={`absolute ${punto.y > 50 ? 'bottom-12' : 'top-12'} ${punto.x > 70 ? 'right-[-10px]' : punto.x < 30 ? 'left-[-10px]' : 'left-1/2 -translate-x-1/2'} w-max min-w-[140px] max-w-[200px] ${glassDockTooltip} p-3 pr-6 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200`}>
+                 <div className={`absolute ${punto.y > 50 ? 'bottom-12' : 'top-12'} ${punto.x > 70 ? 'right-2' : punto.x < 30 ? 'left-2' : 'left-1/2 -translate-x-1/2'} w-max min-w-[140px] max-w-[200px] ${glassDockTooltip} p-3 pr-6 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200`}>
                    <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2 right-2 ${colors?.textMuted || 'text-zinc-500'} opacity-70 hover:opacity-100 transition-opacity`}><X size={12} /></button>
                    <div className="flex flex-col">
                        <span className={`block text-[6px] font-bold uppercase tracking-[0.2em] ${colors?.textMuted || 'text-zinc-500'} mb-0.5`}>Material</span>

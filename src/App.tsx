@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, MessageCircle, Edit3, Eye, EyeOff, Image as ImageIcon, 
-  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
+  DollarSign, Plus, ArrowLeft, Trash2, Loader2, Check, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
   Play, Link2, UploadCloud, Settings, Sun, Moon, Info, Share2, Layers, Heart, MessageSquarePlus, Maximize, Phone
 } from 'lucide-react';
@@ -468,9 +468,6 @@ function AdminEditor() {
               {copiedStates['editorLink'] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>} 
               {copiedStates['editorLink'] ? '¡Link Copiado!' : 'Copiar Link'}
             </button>
-            <button onClick={() => handleShareWpp(id)} className="px-5 py-2.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-[#25D366] hover:text-white transition">
-              <MessageCircle size={14}/> Enviar por Wpp
-            </button>
             <button onClick={() => window.open(`/ver/${id}`, '_blank')} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md shadow-amber-600/20 hover:bg-amber-700 transition">
               <Play size={14}/> Ver App
             </button>
@@ -706,6 +703,7 @@ function AdminEditor() {
   );
 }
 
+
 // =====================================================================
 // 📱 VISTA 3: CLIENTE FINAL (LIGHT MODE DEFAULT)
 // =====================================================================
@@ -715,6 +713,7 @@ function VistaCliente() {
   const [activeTab, setActiveTab] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
   const [isSimulatingLoad, setIsSimulatingLoad] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(false);
   
   // TEMA CLARO POR DEFECTO
   const [clientTheme, setClientTheme] = useState('light');
@@ -733,7 +732,6 @@ function VistaCliente() {
     accentGlow: 'shadow-[0_0_30px_rgba(168,124,79,0.3)]',
   };
   
-
   useEffect(() => {
     if (CLARITY_PROJECT_ID && !(window as any).clarity) {
       (function(c:any,l,a,r,i,t,y){
@@ -787,10 +785,17 @@ function VistaCliente() {
     }
   };
 
+  const handleScroll = (e: any) => {
+    const el = e.target;
+    // Detectamos si está a menos de 50px del fondo real del contenido
+    const bottomThreshold = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
+    setIsAtBottom(bottomThreshold);
+  };
+
   return (
-    <div className={`h-[100dvh] ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
+    <div className={`h-[100dvh] md:min-h-screen ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
       
-      {/* Background PC Blur */}
+      {/* Background PC Blur (Solo PC para no matar la batería del celular) */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         <img src={env.obra || env.galeriaObra?.[0] || env.render || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200"} className={`w-full h-full object-cover blur-3xl scale-110 transition-opacity duration-500 ${isDark ? 'opacity-10' : 'opacity-20'}`} alt="bg"/>
         <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/50 to-[#1C1A18]/90' : 'from-white/50 to-[#EAE5DF]/90'}`}></div>
@@ -840,7 +845,7 @@ function VistaCliente() {
 
         {/* VISTA DE AMBIENTE INDIVIDUAL */}
         {!showIndex && (
-          <div className={`flex-1 overflow-y-auto pb-32 hide-scroll scroll-smooth relative transition-colors`}>
+          <div onScroll={handleScroll} className={`flex-1 overflow-y-auto pb-32 hide-scroll scroll-smooth relative transition-colors`}>
             <div className="h-20 md:h-24 shrink-0"></div> {/* Espaciador por header fijo */}
 
             {/* TABS SI HAY VARIOS Y NAVEGACION TABS */}
@@ -906,10 +911,15 @@ function VistaCliente() {
           </div>
         )}
 
-        {/* BOTÓN FLOTANTE WPP FIJO */}
-        <div className={`absolute bottom-0 left-0 w-full p-5 pb-8 pt-16 z-40 pointer-events-none transition-colors duration-700`}
-             style={{ backgroundImage: `linear-gradient(to top, ${isDark ? '#1C1A18' : '#EAE5DF'} 20%, ${isDark ? 'rgba(28,26,24,0.8)' : 'rgba(234,229,223,0.8)'} 60%, transparent)` }}>
-          <a href={`https://wa.me/${p?.whatsapp || ''}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" className={`pointer-events-auto w-full ${colors.accentColor} text-[#F8F6F0] py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 ${colors.accentGlow} hover:scale-[1.02] transition-transform border border-white/20 shadow-xl`}>
+        {/* BOTÓN FLOTANTE WPP FIJO Y CAMALEÓN (Tu idea UX) */}
+        <div className={`absolute bottom-0 left-0 w-full p-5 pb-8 pt-16 z-40 pointer-events-none transition-all duration-700 ${isAtBottom ? 'translate-y-0' : 'translate-y-1'}`}
+             style={{ backgroundImage: `linear-gradient(to top, ${isDark ? '#1C1A18' : '#EAE5DF'} 20%, transparent)` }}>
+          <a href={`https://wa.me/${p?.whatsapp || ''}?text=${encodeURIComponent('Hola! Estuve viendo la propuesta y quiero avanzar.')}`} target="_blank" rel="noreferrer" 
+             className={`pointer-events-auto w-full py-4 rounded-full font-serif text-[1.1rem] tracking-wide flex items-center justify-center gap-3 transition-all duration-700 border ${
+               isAtBottom 
+                ? `${colors.accentColor} text-[#F8F6F0] border-white/20 shadow-xl ${colors.accentGlow} hover:scale-[1.02]` 
+                : `bg-black/30 backdrop-blur-md border-white/20 text-[#F8F6F0] shadow-sm hover:bg-black/40`
+             }`}>
             <Phone size={18} strokeWidth={1.5} fill="currentColor" /> Escribir por WhatsApp
           </a>
         </div>
@@ -984,9 +994,9 @@ function SliderAntesDespues({ env, activeTab, isDark, colors }: { env: any, acti
           )}
         </div>
 
-        <div className={`absolute top-0 bottom-0 w-[1.5px] bg-white/80 z-10 -translate-x-1/2 shadow-sm ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+        <div className={`absolute top-0 bottom-0 w-[2.5px] bg-[#A87C4F] z-10 -translate-x-1/2 shadow-[0_0_10px_rgba(168,124,79,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/50 flex items-center justify-center backdrop-blur-md bg-black/10 shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
-            <div className={`w-2.5 h-2.5 ${colors?.accentColor || 'bg-[#A87C4F]'} rounded-full`}></div>
+            <div className={`w-2.5 h-2.5 bg-[#A87C4F] rounded-full`}></div>
           </div>
         </div>
         <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
@@ -1087,7 +1097,8 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
       
       <div className={`relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden transition-colors duration-700 ${colors?.glassCard || 'bg-white'} group cursor-default`}>
         
-        <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-70' : 'opacity-90'}`} alt="blur-bg" />
+        {/* EL TRUCO DEL EFECTO VIDRIO: Blur-3xl de fondo */}
+        <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover blur-3xl transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-40' : 'opacity-50'}`} alt="blur-bg" />
         <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
         <div className={`absolute inset-0 ${colors?.accentColor || 'bg-[#A87C4F]'} opacity-[0.05] mix-blend-multiply pointer-events-none z-10`}></div>
         

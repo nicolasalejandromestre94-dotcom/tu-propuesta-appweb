@@ -3,7 +3,7 @@ import {
   CheckCircle2, MessageCircle, Edit3, Eye, EyeOff, Image as ImageIcon, 
   DollarSign, Plus, ArrowLeft, Trash2, Loader2, Link as LinkIcon, Check, Upload, 
   LogOut, Lock, ArrowLeftRight, ChevronRight, ChevronLeft, X,
-  Play, Link2, UploadCloud, Settings, Sun, Moon, Info, Share2, Layers, Heart, MessageSquarePlus, Maximize
+  Play, Link2, UploadCloud, Settings, Sun, Moon, Info, Share2, Layers, Heart, MessageSquarePlus, Maximize, Phone
 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
@@ -468,6 +468,9 @@ function AdminEditor() {
               {copiedStates['editorLink'] ? <Check size={14} className="text-green-500"/> : <Link2 size={14}/>} 
               {copiedStates['editorLink'] ? '¡Link Copiado!' : 'Copiar Link'}
             </button>
+            <button onClick={() => handleShareWpp(id)} className="px-5 py-2.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-sm hover:bg-[#25D366] hover:text-white transition">
+              <MessageCircle size={14}/> Enviar por Wpp
+            </button>
             <button onClick={() => window.open(`/ver/${id}`, '_blank')} className="px-5 py-2.5 bg-amber-600 text-white rounded-xl text-[10px] uppercase tracking-widest font-black flex items-center gap-2 shadow-md shadow-amber-600/20 hover:bg-amber-700 transition">
               <Play size={14}/> Ver App
             </button>
@@ -786,13 +789,12 @@ function VistaCliente() {
 
   const handleScroll = (e: any) => {
     const el = e.target;
-    // Detectamos si está a menos de 50px del fondo real del contenido
     const bottomThreshold = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
     setIsAtBottom(bottomThreshold);
   };
 
   return (
-    <div className={`h-[100dvh] ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
+    <div className={`h-[100dvh] md:min-h-screen ${colors.bgMain} font-sans relative flex flex-col items-center justify-center overflow-hidden md:py-10 transition-colors duration-500`}>
       
       {/* Background PC Blur - Solo Visible en Desktop */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
@@ -944,8 +946,15 @@ function SliderAntesDespues({ env, activeTab, isDark, colors }: { env: any, acti
   const handleDrag = (e: any) => { setAnim(''); setVal(e.target.value); };
   const snap = (v: number) => { setAnim('transition-all duration-300 ease-out'); setVal(v); setTimeout(() => setAnim(''), 300); };
 
-  let arrIzq = !env.invertido ? (env.galeriaObra || [env.obra]) : (env.galeriaRender || [env.render]);
-  let arrDer = env.invertido ? (env.galeriaObra || [env.obra]) : (env.galeriaRender || [env.render]);
+  // Lógica blindada para evitar arrays vacíos y fallback a Unsplash
+  let arrIzq = !env.invertido 
+    ? (env.galeriaObra?.length > 0 ? env.galeriaObra : (env.obra ? [env.obra] : []))
+    : (env.galeriaRender?.length > 0 ? env.galeriaRender : (env.render ? [env.render] : []));
+  
+  let arrDer = env.invertido 
+    ? (env.galeriaObra?.length > 0 ? env.galeriaObra : (env.obra ? [env.obra] : []))
+    : (env.galeriaRender?.length > 0 ? env.galeriaRender : (env.render ? [env.render] : []));
+
   if(!arrIzq[0]) arrIzq = ["https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800"];
   if(!arrDer[0]) arrDer = ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800"];
 
@@ -969,47 +978,58 @@ function SliderAntesDespues({ env, activeTab, isDark, colors }: { env: any, acti
     <>
       <div className={`w-full h-full relative cursor-default pointer-events-auto transition-colors overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-zinc-200'} rounded-[2.5rem]`}>
         
-        <div className="absolute inset-0 w-full h-full pointer-events-none">
+        {/* IMAGEN DERECHA (RENDER) EN CAPA 0 */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
           <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-der" />
           <img src={arrDer[idxDer]} className="absolute inset-0 w-full h-full object-cover z-10" alt="render" />
-          
-          {arrDer.length > 1 && (
-            <div className="absolute inset-0 pointer-events-none z-30">
-              <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
-              <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
-              <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxDer+1}/{arrDer.length}</div>
-            </div>
-          )}
         </div>
 
-        <div className={`absolute inset-0 w-full h-full pointer-events-none ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
-          <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover" alt="obra" />
-          {arrIzq.length > 1 && (
-            <div className="absolute inset-0 pointer-events-none z-30">
-              <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronLeft size={18}/></button>
-              <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition"><ChevronRight size={18}/></button>
-              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
-            </div>
-          )}
+        {/* IMAGEN IZQUIERDA (OBRA) EN CAPA 10 (Se recorta sola) */}
+        <div className={`absolute inset-0 w-full h-full pointer-events-none z-10 ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
+          <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110" alt="blur-izq" />
+          <img src={arrIzq[idxIzq]} className="absolute inset-0 w-full h-full object-cover z-10" alt="obra" />
         </div>
 
-        <div className={`absolute top-0 bottom-0 w-[2.5px] bg-[#A87C4F] z-10 -translate-x-1/2 shadow-[0_0_10px_rgba(168,124,79,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
+        {/* CONTROLES DEL DRAG EN CAPA 20 */}
+        <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
+        
+        {/* LÍNEA DIVISORIA EN CAPA 30 */}
+        <div className={`absolute top-0 bottom-0 w-[2.5px] bg-[#A87C4F] z-30 -translate-x-1/2 shadow-[0_0_10px_rgba(168,124,79,0.8)] ${anim} pointer-events-none`} style={{ left: `${val}%` }}>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/50 flex items-center justify-center backdrop-blur-md bg-black/10 shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
             <div className={`w-2.5 h-2.5 bg-[#A87C4F] rounded-full`}></div>
           </div>
         </div>
-        <input type="range" min="0" max="100" value={val} onChange={handleDrag} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
+
+        {/* FLECHAS GALERÍA DERECHA EN CAPA 40 (Visibles solo del lado derecho) */}
+        {arrDer.length > 1 && (
+          <div className={`absolute inset-0 pointer-events-none z-40 ${anim}`} style={{ clipPath: `inset(0 0 0 ${val}%)` }}>
+            <button onClick={prevDer} className="pointer-events-auto absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition shadow-lg"><ChevronLeft size={18}/></button>
+            <button onClick={nextDer} className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition shadow-lg"><ChevronRight size={18}/></button>
+            <div className="absolute top-4 right-14 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxDer+1}/{arrDer.length}</div>
+          </div>
+        )}
+
+        {/* FLECHAS GALERÍA IZQUIERDA EN CAPA 40 (Visibles solo del lado izquierdo) */}
+        {arrIzq.length > 1 && (
+          <div className={`absolute inset-0 pointer-events-none z-40 ${anim}`} style={{ clipPath: `inset(0 ${100 - val}% 0 0)` }}>
+            <button onClick={prevIzq} className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition shadow-lg"><ChevronLeft size={18}/></button>
+            <button onClick={nextIzq} className="pointer-events-auto absolute left-12 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/80 transition shadow-lg"><ChevronRight size={18}/></button>
+            <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md text-[8px] text-white font-bold tracking-widest border border-white/10">{idxIzq+1}/{arrIzq.length}</div>
+          </div>
+        )}
         
-        <button onClick={openFullscreen} className="absolute top-4 right-4 bg-black/40 backdrop-blur-xl border border-white/20 text-white p-2 rounded-full z-30 shadow-lg hover:scale-110 transition-transform">
+        {/* BOTONES FLOTANTES EN CAPA 50 */}
+        <button onClick={openFullscreen} className="absolute top-4 right-4 bg-black/40 backdrop-blur-xl border border-white/20 text-white p-2 rounded-full z-50 shadow-lg hover:scale-110 transition-transform">
             <Maximize size={16} />
         </button>
 
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex bg-black/40 backdrop-blur-xl p-1.5 rounded-full shadow-2xl border border-white/20 z-30 pointer-events-auto">
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex bg-black/40 backdrop-blur-xl p-1.5 rounded-full shadow-2xl border border-white/20 z-50 pointer-events-auto">
           <button onClick={(e)=>{ e.stopPropagation(); snap(100); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val > 65 ? 'bg-[#F8F6F0] text-[#1A1A1A]' : 'text-zinc-300 hover:text-white'}`}>{env.lblIzq || 'Antes'}</button>
           <button onClick={(e)=>{ e.stopPropagation(); snap(0); }} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${val < 35 ? 'bg-[#F8F6F0] text-[#1A1A1A]' : 'text-zinc-300 hover:text-white'}`}>{env.lblDer || 'Render'}</button>
         </div>
       </div>
 
+      {/* GALERÍA FULLSCREEN (Intacta) */}
       {isFullscreen && (
           <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center p-5 text-white z-50 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 w-full pointer-events-none">
@@ -1080,7 +1100,7 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
   if(!varActual) return null;
 
   // Estilos de botones Glass para la Z3
-  const glassDockTooltip = isDark ? "bg-[#11100F]/70 backdrop-blur-xl border border-white/10" : "bg-white/85 backdrop-blur-xl border border-zinc-200/50";
+  const glassDockTooltip = isDark ? "bg-[#11100F]/85 border-[#A87C4F]/30" : "bg-white/90 border-[#A87C4F]/40";
   const glassSecondary = isDark ? "bg-[#1C1A18]/40 backdrop-blur-md border border-white/10" : "bg-white/40 backdrop-blur-md border border-white/60";
   const glassPrimary = isDark ? "bg-[#A87C4F]/70 backdrop-blur-md border border-white/20 shadow-[0_5px_15px_rgba(168,124,79,0.2)]" : "bg-[#A87C4F]/85 backdrop-blur-md border border-white/40 shadow-[0_5px_15px_rgba(168,124,79,0.3)]";
 
@@ -1098,9 +1118,9 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
       
       <div className={`relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden transition-colors duration-700 ${colors?.glassCard || 'bg-white'} group cursor-default`}>
         
-        {/* EL TRUCO DEL EFECTO VIDRIO: Blur-3xl de fondo para difuminar */}
-        <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover blur-3xl transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-40' : 'opacity-50'}`} alt="blur-bg" />
-        <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
+        {/* EL TRUCO DEL EFECTO VIDRIO: Blur extremo y Scale para evitar bordes blancos */}
+        <img key={`blur-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-cover blur-[40px] scale-110 transition-opacity duration-700 pointer-events-none ${isDark ? 'opacity-40' : 'opacity-60'}`} style={{ transform: 'translate3d(0,0,0)' }} alt="blur-bg" />
+        <div className={`absolute inset-0 ${isDark ? 'bg-black/40' : 'bg-white/20'} pointer-events-none z-0`}></div>
         
         <img key={`img-${varActual.id}`} src={varActual.img} className={`absolute inset-0 w-full h-full object-contain transition-all duration-700 pointer-events-none z-10 ${isCommenting ? 'opacity-30 blur-md scale-105' : 'opacity-100'}`} alt="Variante" />
         
@@ -1133,22 +1153,28 @@ function Z3Alternativas({ variantes, env, wppNum, isDark = true, colors }: { var
           </div>
         )}
 
-        {/* PUNTOS INTERACTIVOS CON ESTILO GLASS Y LAZOS */}
+        {/* PUNTOS INTERACTIVOS PREMIUM CON ESTILO GLASS Y LAZOS */}
         {!isCommenting && (varActual.puntos || []).map((punto:any) => (
           <div key={punto.id} className="absolute z-20" style={{ top: `${punto.y}%`, left: `${punto.x}%`, transform: 'translate(-50%, -50%)' }}>
-            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); }} className={`relative flex items-center justify-center w-6 h-6 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 group`}>
-              <div className={`absolute w-[250%] h-[250%] bg-[#A87C4F] rounded-full blur-md opacity-30 group-hover:opacity-50 transition-opacity`}></div>
-              <div className={`w-3.5 h-3.5 bg-[#A87C4F] rounded-full relative z-10 border-2 ${isDark ? 'border-[#262320]' : 'border-[#F8F6F0]'}`}></div>
+            
+            {/* NUEVO DISEÑO DE HOTSPOT: Cristal con anillo brillante */}
+            <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === punto.id ? null : punto.id); }} className={`relative flex items-center justify-center w-7 h-7 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group`}>
+              <div className={`absolute inset-0 bg-[#A87C4F] rounded-full blur-[6px] opacity-50 group-hover:opacity-80 transition-opacity`}></div>
+              <div className={`absolute inset-0 border-[1.5px] border-white/60 rounded-full backdrop-blur-md bg-black/20`}></div>
+              <div className={`w-2.5 h-2.5 bg-white rounded-full relative z-10 shadow-[0_0_10px_#fff]`}></div>
             </button>
             
             {activeTooltip === punto.id && (
               <>
-                 <div className={`absolute ${punto.y > 50 ? 'bottom-5' : 'top-5'} left-1/2 -translate-x-1/2 w-[1px] h-8 bg-gradient-to-b ${punto.y > 50 ? `from-[#A87C4F]/60` : 'from-transparent'} ${punto.y > 50 ? 'to-transparent' : `to-[#A87C4F]/60`} z-40 animate-in fade-in duration-300`}></div>
-                 <div className={`absolute ${punto.y > 50 ? 'bottom-12' : 'top-12'} ${punto.x > 70 ? 'right-2' : punto.x < 30 ? 'left-2' : 'left-1/2 -translate-x-1/2'} w-max min-w-[140px] max-w-[200px] ${glassDockTooltip} p-3 pr-6 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200`}>
-                   <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2 right-2 ${colors?.textMuted || 'text-zinc-500'} opacity-70 hover:opacity-100 transition-opacity`}><X size={12} /></button>
-                   <div className="flex flex-col">
-                       <span className={`block text-[6px] font-bold uppercase tracking-[0.2em] ${colors?.textMuted || 'text-zinc-500'} mb-0.5`}>Material</span>
-                       <span className={`block text-xs font-serif tracking-wide ${colors?.textMain || 'text-zinc-900'} leading-tight`}>{punto.material}</span>
+                 {/* LAZO DE CONEXIÓN MÁS ELEGANTE */}
+                 <div className={`absolute ${punto.y > 50 ? 'bottom-6' : 'top-6'} left-1/2 -translate-x-1/2 w-[1.5px] h-8 bg-gradient-to-b ${punto.y > 50 ? `from-white/60 to-transparent` : `from-transparent to-white/60`} z-40 animate-in fade-in duration-300`}></div>
+                 
+                 {/* CARTEL TOOLTIP PREMIUM LUXURY */}
+                 <div className={`absolute ${punto.y > 50 ? 'bottom-14' : 'top-14'} ${punto.x > 70 ? 'right-0 translate-x-4' : punto.x < 30 ? 'left-0 -translate-x-4' : 'left-1/2 -translate-x-1/2'} w-max min-w-[150px] max-w-[220px] ${glassDockTooltip} backdrop-blur-xl p-3.5 pr-8 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)] z-50 animate-in fade-in zoom-in-95 duration-200 border`}>
+                   <button onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }} className={`absolute top-2.5 right-2.5 ${colors?.textMuted || 'text-zinc-500'} opacity-60 hover:opacity-100 transition-opacity`}><X size={14} /></button>
+                   <div className="flex flex-col gap-1">
+                       <span className={`block text-[6.5px] font-black uppercase tracking-[0.3em] ${colors?.textMuted || 'text-zinc-500'}`}>Especificación</span>
+                       <span className={`block text-[13px] font-serif tracking-wide ${colors?.textMain || 'text-zinc-900'} leading-tight drop-shadow-sm`}>{punto.material}</span>
                    </div>
                  </div>
               </>
